@@ -3,6 +3,7 @@ import os
 import  numpy as np
 from working_dir_root import Dataset_video_root, Dataset_label_root
 import csv
+import re
 categories = [
     'bipolar dissector',
     'bipolar forceps',
@@ -82,8 +83,34 @@ for filename in os.listdir(folder_path):
         this_label = label_dict [clip_name]
         binary_vector = np.array([1 if category in this_label else 0 for category in categories], dtype=int)
         # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
-        this_label_l = this_label[0]
-        this_label_r = this_label[2:3]
+
+        label_element  = re.findall(r'\w+(?:\s\w+)*|nan', this_label) # change to vector format instead of string
+
+        # Initialize the label vector with 'nan' values
+        label_vector = ['nan'] * 4  # Assuming a fixed length of 4 elements
+
+        # Fill the label vector with category names
+        for i, element in enumerate(label_element):
+            label_vector[i] = element
+
+
+        # label_vector_l = label_vector[0:2]
+        # label_vector_r = label_vector[2:4]
+        # binary_vector_l = np.array([1 if category in label_vector_l else 0 for category in categories], dtype=int)
+        # binary_vector_r = np.array([1 if category in label_vector_r else 0 for category in categories], dtype=int)
+        binary_vector_l = np.zeros(len(categories), dtype=int)
+        binary_vector_r = np.zeros(len(categories), dtype=int)
+
+        # Iterate through the label vector and set corresponding binary values
+        for i in range (len( label_vector)):
+            this_ele = label_vector[i]
+            if this_ele in categories:
+                category_index = categories.index(this_ele)
+                # Determine if the category is in the left or right direction
+                if i < (len(label_vector) /2):
+                    binary_vector_l[category_index] = 1
+                else:
+                    binary_vector_r[category_index] = 1
         # Display the binary vector
         print(binary_vector)
         # Initialize a VideoCapture object
