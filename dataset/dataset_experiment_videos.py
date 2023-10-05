@@ -4,6 +4,10 @@ import  numpy as np
 from working_dir_root import Dataset_video_root, Dataset_label_root
 import csv
 import re
+# idea record: If seperate the encoded left and right changels, then 14*2 out channels are required, and the flip data augmentation should swap the
+#first 14 and last 14 channelds
+
+
 categories = [
     'bipolar dissector',
     'bipolar forceps',
