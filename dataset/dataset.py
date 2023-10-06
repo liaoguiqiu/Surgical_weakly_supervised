@@ -10,10 +10,10 @@ import os
 
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
-from working_dir_root import Dataset_video_root, Dataset_label_root
-image_size = 300
+from working_dir_root import Dataset_video_root, Dataset_label_root, Output_root
+img_size = 300
 input_ch = 3 # input channel of each image/video
-
+Display_loading_video = True
 categories = [
     'bipolar dissector',
     'bipolar forceps',
@@ -35,12 +35,13 @@ class myDataloader(object):
         self.batch_size = 2
         self.obj_num = 14
         self.video_down_sample = 60  # 60 FPS
+        self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s
         self.OLG_flag = OLG
         self.GT = True
         self.noisyflag = False
         self.Random_rotate = True
         self.Random_vertical_shift = True
-        self.input_images= np.zeros((self.batch_size, 1, image_size, image_size))
+        self.input_images= np.zeros((self.batch_size, 1, img_size, img_size))
         # the number of the contour has been increased, and another vector has beeen added
         self.labels = np.zeros((self.batch_size, self.obj_num, 2))  # predifine the path number is 2
         self.save_id =0
@@ -93,7 +94,76 @@ class myDataloader(object):
 
         all_labels = label_dict
         return all_labels
+    def convert_left_right_v(self,this_label):
+        label_element = re.findall(r'\w+(?:\s\w+)*|nan',
+                                   this_label)  # change to vector format instead of string
 
+        # Initialize the label vector with 'nan' values
+        label_vector = ['nan'] * 4  # Assuming a fixed length of 4 elements
+        for i, element in enumerate(label_element):
+            label_vector[i] = element
+        binary_vector_l = np.zeros(len(categories), dtype=int)
+        binary_vector_r = np.zeros(len(categories), dtype=int)
+
+        # Iterate through the label vector and set corresponding binary values
+        for i in range(len(label_vector)):
+            this_ele = label_vector[i]
+            if this_ele in categories:
+                category_index = categories.index(this_ele)
+                # Determine if the category is in the left or right direction
+                if i < (len(label_vector) / 2):
+                    binary_vector_l[category_index] = 1
+                else:
+                    binary_vector_r[category_index] = 1
+        # readd
+        return binary_vector_l, binary_vector_r
+    def load_this_video_buffer(self,video_path,this_label):
+        cap = cv2.VideoCapture(video_path)
+
+        # Read frames from the video clip
+        frame_count = 0
+        buffer_count = 0
+        # Read frames from the video clip
+        video_buffer = np.zeros((self.video_buff_size,3,img_size,img_size))
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+
+            # Sample one frame per second (assuming original frame rate is 60 fps)
+            if frame_count % (self.video_down_sample) == 0:
+                # cv2.imwrite(Output_root +
+                #             str(frame_count) + ".jpg", frame)
+                H,W,_ = frame.shape
+                crop = frame[0:H, 192:1088]
+                this_resize = cv2.resize(crop, (  img_size, img_size), interpolation=cv2.INTER_AREA)
+                reshaped= np.transpose(this_resize, (2, 0, 1))
+                video_buffer[buffer_count,:,:,:] = reshaped
+                # video_buffer[frame_count,:,:] = this_resize
+                # frames_array.append(frame)
+                # video_buffer
+
+                buffer_count +=1
+                if buffer_count>=self.video_buff_size:
+                    buffer_count=0
+                    break
+
+            frame_count += 1
+
+        cap.release()
+        # Squeeze the RGB channel
+        squeezed = np.reshape(video_buffer, (self.video_buff_size*3, img_size, img_size))
+        if Display_loading_video == True:
+            x, y = 0, 10  # Position of the text
+            # Font settings
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.4
+            font_color = (255, 255, 255)  # White color
+            font_thickness = 1
+            # cv2.putText(this_resize, this_label, (x, y), font, font_scale, font_color, font_thickness)
+            cv2.imshow("First Frame", squeezed[0, :, :].astype((np.uint8)))
+            cv2.waitKey(1)
     def read_a_batch(self):
         folder_path = Dataset_video_root
 
@@ -112,14 +182,8 @@ class myDataloader(object):
                 this_label = self.all_labels[clip_name]
                 binary_vector = np.array([1 if category in this_label else 0 for category in categories], dtype=int)
                 # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
-
-                label_element = re.findall(r'\w+(?:\s\w+)*|nan',
-                                           this_label)  # change to vector format instead of string
-
-                # Initialize the label vector with 'nan' values
-                label_vector = ['nan'] * 4  # Assuming a fixed length of 4 elements
-
-            # readd
+                binary_vector_l, binary_vector_r = self. convert_left_right_v(this_label)
+                self.load_this_video_buffer(video_path,this_label)
 
             print(filename)
             print(this_label)

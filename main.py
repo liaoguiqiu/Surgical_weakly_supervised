@@ -3,7 +3,8 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 # from model import CE_build3  # the mmodel
-
+import os
+import shutil
 # from train_display import *
 # the model
 # import arg_parse
@@ -16,6 +17,19 @@ from model import  model_experiement
 from dataset.dataset import myDataloader
 Continue_flag = False
  # create the model
+def is_external_drive(drive_path):
+    # Check if the drive is a removable drive (usually external)
+    return os.path.ismount(drive_path) and shutil.disk_usage(drive_path).total > 0
+
+def find_external_drives():
+    # List all drives on the system
+    drives = [d for d in os.listdir('/') if os.path.isdir(os.path.join('/', d))]
+
+    # Filter out external drives and exclude certain paths
+    external_drives = [drive for drive in drives if is_external_drive(os.path.join('/', drive))
+                       and not drive.startswith(('media', 'run', 'dev'))]
+
+    return external_drives
 
 # weight init
 def weights_init(m):
@@ -26,6 +40,17 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
     pass
+############ for the linux to find the extenral drive
+external_drives = find_external_drives()
+
+if external_drives:
+    print("External drives found:")
+    for drive in external_drives:
+        print(drive)
+else:
+    print("No external drives found.")
+############ for the linux to find the extenral drive
+
 Model = model_experiement._netPath()
 dataLoader = myDataloader()
 
