@@ -69,6 +69,10 @@ iteration_num = 0
 while (1):
 
     input_videos, labels= dataLoader.read_a_batch()
+    if dataLoader.all_read_flag ==1:
+        #remove this for none converting mode
+        print("finished")
+        break
 
 
     # print(labels)

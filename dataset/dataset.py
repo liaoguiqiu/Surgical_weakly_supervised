@@ -6,6 +6,11 @@ import re
 import os
 from time import  time
 import dataset.io as io
+import imageio
+import imageio_ffmpeg as ffmpeg
+# from decord import VideoReader
+# from decord import cpu
+# import imageio
 # from analy import MY_ANALYSIS
 # from dataTool import generator_contour
 # from dataTool import generator_contour_ivus
@@ -15,8 +20,8 @@ import dataset.io as io
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
 img_size = 128
 input_ch = 3 # input channel of each image/video
-Display_loading_video = True
-Read_from_pkl= True
+Display_loading_video = False
+Read_from_pkl= False
 Save_pkl = True
 categories = [
     'bipolar dissector',
@@ -52,7 +57,7 @@ class myDataloader(object):
         self.labels_LR= np.zeros((self.batch_size,2, self.obj_num))  # predifine the path number is 2 to seperate Left and right
         self.labels= np.zeros((self.batch_size, self.obj_num))  # left right merge
 
-
+        self.all_read_flag =0
         self.save_id =0
         self.read_record = 0
         self.all_labels = self.load_all_lables()
@@ -141,36 +146,54 @@ class myDataloader(object):
         frame_count = 0
         buffer_count = 0
         # Read frames from the video clip
-        video_buffer = np.zeros((self.video_buff_size,3,img_size,img_size))
+        video_buffer = np.zeros((self.video_buff_size, 3, img_size, img_size))
+        frame_number =0
+
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+            # cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+            if (frame_count % self.video_down_sample) ==0:
+                start_time = time()
+
+                ret, frame = cap.read()
+                end_time = time()
+                # print("inner time" + str(end_time - start_time))
 
 
             # Sample one frame per second (assuming original frame rate is 60 fps)
-            if frame_count % (self.video_down_sample) == 0:
+
+            # if (frame_count % self.video_down_sample) == 0:
+
                 # cv2.imwrite(Output_root +
                 #             str(frame_count) + ".jpg", frame)
-                H,W,_ = frame.shape
+                H, W, _ = frame.shape
                 crop = frame[0:H, 192:1088]
-                this_resize = cv2.resize(crop, (  img_size, img_size), interpolation=cv2.INTER_AREA)
-                reshaped= np.transpose(this_resize, (2, 0, 1))
-                video_buffer[buffer_count,:,:,:] = reshaped
+                if Display_loading_video == True:
+
+                    cv2.imshow("crop", crop.astype((np.uint8)))
+                    cv2.waitKey(1)
+
+                this_resize = cv2.resize(crop, (img_size, img_size), interpolation=cv2.INTER_AREA)
+                reshaped = np.transpose(this_resize, (2, 0, 1))
+                video_buffer[buffer_count, :, :, :] = reshaped
                 # video_buffer[frame_count,:,:] = this_resize
                 # frames_array.append(frame)
                 # video_buffer
 
-                buffer_count +=1
-                if buffer_count>=self.video_buff_size:
-                    buffer_count=0
+                buffer_count += 1
+                if buffer_count >= self.video_buff_size:
+                    buffer_count = 0
                     break
-
+            else:
+                ret = cap.grab()
+                # counter += 1
+            if not ret:
+                break
             frame_count += 1
+            frame_number +=1
 
         cap.release()
         # Squeeze the RGB channel
-        squeezed = np.reshape(video_buffer, (self.video_buff_size*3, img_size, img_size))
+        squeezed = np.reshape(video_buffer, (self.video_buff_size * 3, img_size, img_size))
         if Display_loading_video == True:
             x, y = 0, 10  # Position of the text
             # Font settings
@@ -179,13 +202,17 @@ class myDataloader(object):
             font_color = (255, 255, 255)  # White color
             font_thickness = 1
             # cv2.putText(this_resize, this_label, (x, y), font, font_scale, font_color, font_thickness)
-            cv2.imshow("First Frame R", squeezed[60, :, :].astype((np.uint8)))
-            cv2.imshow("First Frame G", squeezed[61, :, :].astype((np.uint8)))
-            cv2.imshow("First Frame B", squeezed[62, :, :].astype((np.uint8)))
-
-
+            cv2.imshow("First Frame R", squeezed[0, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame G", squeezed[1, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame B", squeezed[2, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame R1", squeezed[30, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame G1", squeezed[31, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame B1", squeezed[32, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame R2", squeezed[60, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame G2", squeezed[61, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame B2", squeezed[62, :, :].astype((np.uint8)))
             cv2.waitKey(1)
-        return video_buffer,squeezed
+        return video_buffer, squeezed
     def read_a_batch(self):
         if Read_from_pkl == False:
             folder_path = Dataset_video_root
@@ -211,6 +238,7 @@ class myDataloader(object):
                 # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
                 binary_vector_l, binary_vector_r = self. convert_left_right_v(this_label)
                 # load the squess and unsquess
+                start_time = time()
                 if Read_from_pkl == False:
                     self.video_buff , self.video_buff_s = self.load_this_video_buffer(video_path,this_label)
                     if Save_pkl == True:
@@ -225,6 +253,7 @@ class myDataloader(object):
                     cv2.imshow("SS First Frame G", this_video_buff_s[61, :, :].astype((np.uint8)))
                     cv2.imshow("SS First Frame B", this_video_buff_s[62, :, :].astype((np.uint8)))
                     cv2.waitKey(1)
+                end_time = time()
 
                 # fill the batch
                 self.input_videos [i,:,:,:] = self.video_buff_s
@@ -235,10 +264,11 @@ class myDataloader(object):
             print(filename)
             print(this_label)
             print(self.read_record)
-
+            print("time is :" + str(end_time - start_time))
             self.read_record +=1
             if self.read_record>= self.video_num:
                 print("all videos have been readed")
+                self.all_read_flag = 1
                 self.read_record =0
 
             pass
