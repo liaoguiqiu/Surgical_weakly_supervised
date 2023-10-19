@@ -4,6 +4,7 @@ import numpy as np
 import csv
 import re
 import os
+from time import  time
 # from analy import MY_ANALYSIS
 # from dataTool import generator_contour
 # from dataTool import generator_contour_ivus
@@ -13,7 +14,7 @@ import os
 from working_dir_root import Dataset_video_root, Dataset_label_root, Output_root
 img_size = 300
 input_ch = 3 # input channel of each image/video
-Display_loading_video = True
+Display_loading_video = False
 categories = [
     'bipolar dissector',
     'bipolar forceps',
@@ -32,6 +33,7 @@ categories = [
 ]
 class myDataloader(object):
     def __init__(self, OLG=False):
+        print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
         self.batch_size = 2
         self.obj_num = 14
         self.video_down_sample = 60  # 60 FPS
@@ -42,8 +44,12 @@ class myDataloader(object):
         self.Random_rotate = True
         self.Random_vertical_shift = True
         self.input_images= np.zeros((self.batch_size, 1, img_size, img_size))
+        self.input_videos = np.zeros((self.batch_size,self.video_buff_size*3,img_size,img_size )) # RGB together
         # the number of the contour has been increased, and another vector has beeen added
-        self.labels = np.zeros((self.batch_size, self.obj_num, 2))  # predifine the path number is 2
+        self.labels_LR= np.zeros((self.batch_size,2, self.obj_num))  # predifine the path number is 2 to seperate Left and right
+        self.labels= np.zeros((self.batch_size, self.obj_num))  # left right merge
+
+
         self.save_id =0
         self.read_record = 0
         self.all_labels = self.load_all_lables()
@@ -117,6 +123,9 @@ class myDataloader(object):
                     binary_vector_r[category_index] = 1
         # readd
         return binary_vector_l, binary_vector_r
+
+    # load one video buffer (self.video_buff_size , 3, img_size, img_size),
+    # and its squeesed which RGB are put together (self.video_buff_size * 3, img_size, img_size),
     def load_this_video_buffer(self,video_path,this_label):
         cap = cv2.VideoCapture(video_path)
 
@@ -162,8 +171,13 @@ class myDataloader(object):
             font_color = (255, 255, 255)  # White color
             font_thickness = 1
             # cv2.putText(this_resize, this_label, (x, y), font, font_scale, font_color, font_thickness)
-            cv2.imshow("First Frame", squeezed[0, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame R", squeezed[60, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame G", squeezed[61, :, :].astype((np.uint8)))
+            cv2.imshow("First Frame B", squeezed[62, :, :].astype((np.uint8)))
+
+
             cv2.waitKey(1)
+        return video_buffer,squeezed
     def read_a_batch(self):
         folder_path = Dataset_video_root
 
@@ -183,12 +197,20 @@ class myDataloader(object):
                 binary_vector = np.array([1 if category in this_label else 0 for category in categories], dtype=int)
                 # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
                 binary_vector_l, binary_vector_r = self. convert_left_right_v(this_label)
-                self.load_this_video_buffer(video_path,this_label)
+                # load the squess and unsquess
+                start_time = time()
+                self.video_buff , self.video_buff_s = self.load_this_video_buffer(video_path,this_label)
+                test_time =  time()
+                # fill the batch
+                self.input_videos [i,:,:,:] = self.video_buff_s
+                self.labels [i, :] = binary_vector
+                self. labels_LR[i,0,:] = binary_vector_l
+                self.labels_LR[i,1,:] = binary_vector_r
 
             print(filename)
             print(this_label)
             print(self.read_record)
-
+            print("time is" +str(test_time-start_time))
             self.read_record +=1
             if self.read_record>= self.video_num:
                 print("all videos have been readed")
@@ -203,4 +225,4 @@ class myDataloader(object):
         # # read_end  = self.read_record+ self.batch_size
         # this_signal = self.signal[self.folder_pointer]
 
-        return self.input_images, self.labels
+        return self.input_videos, self.labels_LR

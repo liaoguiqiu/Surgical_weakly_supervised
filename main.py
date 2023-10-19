@@ -68,7 +68,8 @@ iteration_num = 0
 #############training
 while (1):
 
-    images, labels= dataLoader.read_a_batch()
+    input_videos, labels= dataLoader.read_a_batch()
+
 
     # print(labels)
 
