@@ -5,16 +5,19 @@ import csv
 import re
 import os
 from time import  time
+import dataset.io as io
 # from analy import MY_ANALYSIS
 # from dataTool import generator_contour
 # from dataTool import generator_contour_ivus
 
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
-from working_dir_root import Dataset_video_root, Dataset_label_root, Output_root
-img_size = 300
+from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
+img_size = 128
 input_ch = 3 # input channel of each image/video
-Display_loading_video = False
+Display_loading_video = True
+Read_from_pkl= True
+Save_pkl = True
 categories = [
     'bipolar dissector',
     'bipolar forceps',
@@ -53,8 +56,13 @@ class myDataloader(object):
         self.save_id =0
         self.read_record = 0
         self.all_labels = self.load_all_lables()
-        self.all_video_dir_list = os.listdir(Dataset_video_root)
+        if Read_from_pkl == False:
+            self.all_video_dir_list = os.listdir(Dataset_video_root)
+        else:
+            self.all_video_dir_list = os.listdir(Dataset_video_pkl_root)
+
         self.video_num = len (self.all_video_dir_list)
+
         #Guiqiu modified for my computer
         # self.com_dir =  Generator_Contour_sheath().com_dir # this dir is for the OLG
         # if self.OLG_flag == True:
@@ -179,12 +187,17 @@ class myDataloader(object):
             cv2.waitKey(1)
         return video_buffer,squeezed
     def read_a_batch(self):
-        folder_path = Dataset_video_root
+        if Read_from_pkl == False:
+            folder_path = Dataset_video_root
+            file_name_extention = ".mp4"
+        else:
+            folder_path = Dataset_video_pkl_root
+            file_name_extention = ".pkl"
 
         for i in range(self.batch_size): # load a batch of images
             index = self.read_record
             filename = self.all_video_dir_list[index]
-            if filename.endswith(".mp4"):
+            if filename.endswith(file_name_extention):
                 # Extract clip ID from the filename
                 clip_id = int(filename.split("_")[1].split(".")[0])
                 clip_name = filename.split('.')[0]
@@ -198,9 +211,21 @@ class myDataloader(object):
                 # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
                 binary_vector_l, binary_vector_r = self. convert_left_right_v(this_label)
                 # load the squess and unsquess
-                start_time = time()
-                self.video_buff , self.video_buff_s = self.load_this_video_buffer(video_path,this_label)
-                test_time =  time()
+                if Read_from_pkl == False:
+                    self.video_buff , self.video_buff_s = self.load_this_video_buffer(video_path,this_label)
+                    if Save_pkl == True:
+                        this_video_buff_s = self.video_buff_s.astype((np.uint8))
+                        io.save_a_pkl(Dataset_video_pkl_root,clip_name,this_video_buff_s)
+                else:
+                        this_video_buff_s = io.read_a_pkl(Dataset_video_pkl_root,clip_name)
+                        self.video_buff_s = this_video_buff_s
+                if Display_loading_video == True:
+
+                    cv2.imshow("SS First Frame R", this_video_buff_s[60, :, :].astype((np.uint8)))
+                    cv2.imshow("SS First Frame G", this_video_buff_s[61, :, :].astype((np.uint8)))
+                    cv2.imshow("SS First Frame B", this_video_buff_s[62, :, :].astype((np.uint8)))
+                    cv2.waitKey(1)
+
                 # fill the batch
                 self.input_videos [i,:,:,:] = self.video_buff_s
                 self.labels [i, :] = binary_vector
@@ -210,7 +235,7 @@ class myDataloader(object):
             print(filename)
             print(this_label)
             print(self.read_record)
-            print("time is" +str(test_time-start_time))
+
             self.read_record +=1
             if self.read_record>= self.video_num:
                 print("all videos have been readed")
