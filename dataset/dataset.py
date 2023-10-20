@@ -20,7 +20,7 @@ import imageio_ffmpeg as ffmpeg
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
 img_size = 128
 input_ch = 3 # input channel of each image/video
-Display_loading_video = True
+Display_loading_video = False
 Read_from_pkl= False
 Save_pkl = True
 categories = [
@@ -39,11 +39,12 @@ categories = [
     'tip-up fenestrated grasper',
     'vessel sealer'
 ]
+Obj_num = len(categories)
 class myDataloader(object):
     def __init__(self, OLG=False):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
         self.batch_size = 2
-        self.obj_num = 14
+        self.obj_num = Obj_num
         self.video_down_sample = 60  # 60 FPS
         self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s
         self.OLG_flag = OLG

@@ -25,10 +25,10 @@ def build_3dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
             # nn.LeakyReLU(0.1, inplace=True)
         )
     return module
-class conv_keep_W(nn.Module):
-    def __init__ (self, indepth,outdepth,k=(4,3),s=(2,1),p=(1,1)):
-        super(conv_keep_W, self).__init__()
-        self.conv_block =  build_conv_block(indepth,outdepth,k,s,p)
+class conv_devide_H(nn.Module): # devide the H by half and keep the D and W
+    def __init__ (self, indepth,outdepth,k=(1,4,3),s=(1,2,1),p=(0,1,1)):
+        super(conv_devide_H, self).__init__()
+        self.conv_block =  build_3dconv_block (indepth,outdepth,k,s,p)
 
     def forward(self, x):
         #"""Forward function (with skip connections)"""
@@ -43,4 +43,33 @@ class conv_keep_W(nn.Module):
         return out
 
 
+class conv_keep_all(nn.Module):
+    def __init__(self, indepth, outdepth, k=(1,3, 3), s=(1,1, 1), p=(0,1, 1), resnet=False, final=False):
+        super(conv_keep_all, self).__init__()
+        self.conv_block = build_3dconv_block(indepth, outdepth, k, s, p, final)
+        self.resnet = resnet
 
+    def forward(self, x):
+        # """Forward function (with skip connections)"""
+        # out = x+ self.conv_block(x)  # add skip connections
+        if self.resnet == False:
+            out = self.conv_block(x)  # add skip connections
+        else:
+            out = x + self.conv_block(x)
+        return out
+
+
+class conv_dv_WH(nn.Module): # devide H and W keep the D
+    def __init__(self, indepth, outdepth, k=(1,4, 4), s=(1,2, 2), p=(0,1, 1)):
+        super(conv_dv_WH, self).__init__()
+        self.conv_block = build_3dconv_block(indepth, outdepth, k, s, p)
+
+    def forward(self, x):
+        # """Forward function (with skip connections)"""
+
+        out = self.conv_block(x)  # add skip connections
+        # local_bz,channel,H,W = out.size()
+        # downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        # _,channel2,_,_ = downsample.size()
+        # out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+        return out
