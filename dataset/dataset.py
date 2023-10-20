@@ -18,7 +18,7 @@ import imageio_ffmpeg as ffmpeg
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
-img_size = 128
+img_size = 64
 input_ch = 3 # input channel of each image/video
 Display_loading_video = False
 Read_from_pkl= False
@@ -43,7 +43,7 @@ Obj_num = len(categories)
 class myDataloader(object):
     def __init__(self, OLG=False):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
-        self.batch_size = 2
+        self.batch_size = 1
         self.obj_num = Obj_num
         self.video_down_sample = 60  # 60 FPS
         self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s

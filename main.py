@@ -9,13 +9,22 @@ import shutil
 # the model
 # import arg_parse
 import cv2
-import numpy
+import numpy as np
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import  model_experiement
+from model import  model_experiement, model_infer
+
 from dataset.dataset import myDataloader
 Continue_flag = False
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(torch.cuda.current_device())
+print(torch.cuda.device(0))
+print(torch.cuda.device_count())
+print(torch.cuda.get_device_name(0))
+print(torch.cuda.is_available())
+# dataroot = "../dataset/CostMatrix/"
+torch.set_num_threads(2)
  # create the model
 def is_external_drive(drive_path):
     # Check if the drive is a removable drive (usually external)
@@ -51,11 +60,12 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model = model_experiement._netPath()
+Model_infer = model_infer._Model_infer()
+# Model.cuda()
 dataLoader = myDataloader()
 
 if Continue_flag == False:
-    Model.apply(weights_init)
+    Model_infer.VideoNets.apply(weights_init)
 
 
 read_id = 0
@@ -69,6 +79,12 @@ iteration_num = 0
 while (1):
 
     input_videos, labels= dataLoader.read_a_batch()
+    input_videos_GPU = torch.from_numpy(np.float32(input_videos))
+    labels_GPU = torch.from_numpy(np.float32(labels))
+    input_videos_GPU = input_videos_GPU.to (device)
+    labels_GPU = labels_GPU.to (device)
+    Model_infer.forward(input_videos_GPU)
+
     if dataLoader.all_read_flag ==1:
         #remove this for none converting mode
         print("finished")

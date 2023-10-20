@@ -34,7 +34,7 @@ class _VideoCNN(nn.Module):
         base_f = base_f * 2
 
         self.blocks.append(block_buider.conv_dv_WH(base_f, base_f*2))  # 2*256
-        self.depth = base_f*2
+        base_f = base_f*2
 
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
@@ -47,9 +47,9 @@ class _VideoCNN(nn.Module):
 
         # final equal to class
         if Seperate_LR == True:
-            self.self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num * 2))  # 4*256
+            self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num * 2))  # 4*256
         else:
-            self.self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num))  # 4*256
+            self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num))  # 4*256
 
 
     def maxpooling(self,input):
@@ -63,7 +63,7 @@ class _VideoCNN(nn.Module):
     def forward(self, x):
         out = x
         for j, name in enumerate(self.blocks):
-            out = self.side_branch1[j](out)
+            out = self.blocks[j](out)
         # Check the size of the final feature map
         bz, ch, D, H, W = out.size()
         final, slice_valid = self.maxpooling(out)
