@@ -21,7 +21,7 @@ from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_vid
 img_size = 128
 input_ch = 3 # input channel of each image/video
 Display_loading_video = False
-Read_from_pkl= False
+Read_from_pkl= True
 Save_pkl = True
 categories = [
     'bipolar dissector',
@@ -126,7 +126,7 @@ class myDataloader(object):
 
     # load one video buffer (self.video_buff_size , 3, img_size, img_size),
     # and its squeesed which RGB are put together (self.video_buff_size * 3, img_size, img_size),
-    def load_this_video_buffer(self,video_path,this_label):
+    def load_this_video_buffer(self,video_path ):
         cap = cv2.VideoCapture(video_path)
 
         # Read frames from the video clip
@@ -135,7 +135,7 @@ class myDataloader(object):
         # Read frames from the video clip
         video_buffer = np.zeros((self.video_buff_size, 3, img_size, img_size))
         frame_number =0
-
+        Valid_video=False
         while True:
             # cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             if (frame_count % self.video_down_sample) ==0:
@@ -152,24 +152,26 @@ class myDataloader(object):
 
                 # cv2.imwrite(Output_root +
                 #             str(frame_count) + ".jpg", frame)
-                H, W, _ = frame.shape
-                crop = frame[0:H, 192:1088]
-                if Display_loading_video == True:
+                if ret == True:
+                    H, W, _ = frame.shape
+                    crop = frame[0:H, 192:1088]
+                    if Display_loading_video == True:
 
-                    cv2.imshow("crop", crop.astype((np.uint8)))
-                    cv2.waitKey(1)
+                        cv2.imshow("crop", crop.astype((np.uint8)))
+                        cv2.waitKey(1)
 
-                this_resize = cv2.resize(crop, (img_size, img_size), interpolation=cv2.INTER_AREA)
-                reshaped = np.transpose(this_resize, (2, 0, 1))
-                video_buffer[buffer_count, :, :, :] = reshaped
-                # video_buffer[frame_count,:,:] = this_resize
-                # frames_array.append(frame)
-                # video_buffer
+                    this_resize = cv2.resize(crop, (img_size, img_size), interpolation=cv2.INTER_AREA)
+                    reshaped = np.transpose(this_resize, (2, 0, 1))
+                    video_buffer[buffer_count, :, :, :] = reshaped
+                    # video_buffer[frame_count,:,:] = this_resize
+                    # frames_array.append(frame)
+                    # video_buffer
 
-                buffer_count += 1
-                if buffer_count >= self.video_buff_size:
-                    buffer_count = 0
-                    break
+                    buffer_count += 1
+                    if buffer_count >= self.video_buff_size:
+                        buffer_count = 0
+                        Valid_video =True
+                        break
             else:
                 ret = cap.grab()
                 # counter += 1
@@ -182,12 +184,12 @@ class myDataloader(object):
         # Squeeze the RGB channel
         squeezed = np.reshape(video_buffer, (self.video_buff_size * 3, img_size, img_size))
         if Display_loading_video == True:
-            x, y = 0, 10  # Position of the text
-            # Font settings
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.4
-            font_color = (255, 255, 255)  # White color
-            font_thickness = 1
+            # x, y = 0, 10  # Position of the text
+            # # Font settings
+            # font = cv2.FONT_HERSHEY_SIMPLEX
+            # font_scale = 0.4
+            # font_color = (255, 255, 255)  # White color
+            # font_thickness = 1
             # cv2.putText(this_resize, this_label, (x, y), font, font_scale, font_color, font_thickness)
             cv2.imshow("First Frame R", squeezed[0, :, :].astype((np.uint8)))
             cv2.imshow("First Frame G", squeezed[1, :, :].astype((np.uint8)))
@@ -199,7 +201,7 @@ class myDataloader(object):
             cv2.imshow("First Frame G2", squeezed[61, :, :].astype((np.uint8)))
             cv2.imshow("First Frame B2", squeezed[62, :, :].astype((np.uint8)))
             cv2.waitKey(1)
-        return video_buffer, squeezed
+        return video_buffer, squeezed,Valid_video
     def read_a_batch(self):
         if Read_from_pkl == False:
             folder_path = Dataset_video_root
@@ -209,6 +211,8 @@ class myDataloader(object):
             file_name_extention = ".pkl"
 
         for i in range(self.batch_size): # load a batch of images
+            start_time = time()
+
             index = self.read_record
             filename = self.all_video_dir_list[index]
             print(filename)
@@ -217,16 +221,26 @@ class myDataloader(object):
                 # Extract clip ID from the filename
                 clip_id = int(filename.split("_")[1].split(".")[0])
                 clip_name = filename.split('.')[0]
-                # clip_name = 'clip_020215'
+                # clip_name = 'clip_001714'
+                # filename =  'clip_001714.mp4'
                 # label_Index = labels.index("clip_"+str(clip_id))
                 # Check if the clip ID is within the range you want to read
                 # if clip_id <= num_clips_to_read:
                 # Construct the full path to the video clip
                 video_path = os.path.join(folder_path, filename)
-                # clip_name= 'test'
-                start_time = time()
+                if Read_from_pkl == False:
+                    self.video_buff, self.video_buff_s, Valid_video_flag = self.load_this_video_buffer(video_path)
 
-                if clip_name in self.all_labels:
+                    if Save_pkl == True and Valid_video_flag == True:
+                        this_video_buff_s = self.video_buff_s.astype((np.uint8))
+                        io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff_s)
+                else:
+                    this_video_buff_s = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
+                    self.video_buff_s = this_video_buff_s
+                    Valid_video_flag = True
+                # clip_name= 'test'
+
+                if clip_name in self.all_labels and Valid_video_flag==True:
                     this_label = self.all_labels[clip_name]
                     print(this_label)
 
@@ -234,14 +248,7 @@ class myDataloader(object):
                     # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
                     binary_vector_l, binary_vector_r = self.convert_left_right_v(this_label)
                     # load the squess and unsquess
-                    if Read_from_pkl == False:
-                        self.video_buff, self.video_buff_s = self.load_this_video_buffer(video_path, this_label)
-                        if Save_pkl == True:
-                            this_video_buff_s = self.video_buff_s.astype((np.uint8))
-                            io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff_s)
-                    else:
-                        this_video_buff_s = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
-                        self.video_buff_s = this_video_buff_s
+
                     if Display_loading_video == True:
                         cv2.imshow("SS First Frame R", this_video_buff_s[60, :, :].astype((np.uint8)))
                         cv2.imshow("SS First Frame G", this_video_buff_s[61, :, :].astype((np.uint8)))
@@ -249,6 +256,7 @@ class myDataloader(object):
                         cv2.waitKey(1)
 
                     # fill the batch
+                    # if Valid_video_flag == True:
                     self.input_videos[i, :, :, :] = self.video_buff_s
                     self.labels[i, :] = binary_vector
                     self.labels_LR[i, 0, :] = binary_vector_l
