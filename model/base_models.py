@@ -25,6 +25,22 @@ def build_3dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
             # nn.LeakyReLU(0.1, inplace=True)
         )
     return module
+class conv_keep_W(nn.Module):
+    def __init__ (self, indepth,outdepth,k=(4,3),s=(2,1),p=(1,1)):
+        super(conv_keep_W, self).__init__()
+        self.conv_block =  build_conv_block(indepth,outdepth,k,s,p)
+
+    def forward(self, x):
+        #"""Forward function (with skip connections)"""
+        out =  self.conv_block(x)  # add skip connections
+
+        # this is a self desined residual block for Deeper nets
+
+        #local_bz,channel,H,W = out.size()
+        #downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        #_,channel2,_,_ = downsample.size()
+        #out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+        return out
 
 
 

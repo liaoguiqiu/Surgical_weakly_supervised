@@ -20,8 +20,8 @@ import imageio_ffmpeg as ffmpeg
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
 img_size = 128
 input_ch = 3 # input channel of each image/video
-Display_loading_video = False
-Read_from_pkl= True
+Display_loading_video = True
+Read_from_pkl= False
 Save_pkl = True
 categories = [
     'bipolar dissector',
@@ -52,7 +52,7 @@ class myDataloader(object):
         self.Random_rotate = True
         self.Random_vertical_shift = True
         self.input_images= np.zeros((self.batch_size, 1, img_size, img_size))
-        self.input_videos = np.zeros((self.batch_size,self.video_buff_size*3,img_size,img_size )) # RGB together
+        self.input_videos = np.zeros((self.batch_size,3,self.video_buff_size,img_size,img_size )) # RGB together
         # the number of the contour has been increased, and another vector has beeen added
         self.labels_LR= np.zeros((self.batch_size,2, self.obj_num))  # predifine the path number is 2 to seperate Left and right
         self.labels= np.zeros((self.batch_size, self.obj_num))  # left right merge
@@ -133,7 +133,7 @@ class myDataloader(object):
         frame_count = 0
         buffer_count = 0
         # Read frames from the video clip
-        video_buffer = np.zeros((self.video_buff_size, 3, img_size, img_size))
+        video_buffer = np.zeros((3,self.video_buff_size,  img_size, img_size))
         frame_number =0
         Valid_video=False
         while True:
@@ -162,7 +162,7 @@ class myDataloader(object):
 
                     this_resize = cv2.resize(crop, (img_size, img_size), interpolation=cv2.INTER_AREA)
                     reshaped = np.transpose(this_resize, (2, 0, 1))
-                    video_buffer[buffer_count, :, :, :] = reshaped
+                    video_buffer[:, buffer_count, :, :] = reshaped
                     # video_buffer[frame_count,:,:] = this_resize
                     # frames_array.append(frame)
                     # video_buffer
@@ -232,11 +232,11 @@ class myDataloader(object):
                     self.video_buff, self.video_buff_s, Valid_video_flag = self.load_this_video_buffer(video_path)
 
                     if Save_pkl == True and Valid_video_flag == True:
-                        this_video_buff_s = self.video_buff_s.astype((np.uint8))
-                        io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff_s)
+                        this_video_buff = self.video_buff.astype((np.uint8))
+                        io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff)
                 else:
-                    this_video_buff_s = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
-                    self.video_buff_s = this_video_buff_s
+                    this_video_buff = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
+                    self.video_buff = this_video_buff
                     Valid_video_flag = True
                 # clip_name= 'test'
 
@@ -250,14 +250,14 @@ class myDataloader(object):
                     # load the squess and unsquess
 
                     if Display_loading_video == True:
-                        cv2.imshow("SS First Frame R", this_video_buff_s[60, :, :].astype((np.uint8)))
-                        cv2.imshow("SS First Frame G", this_video_buff_s[61, :, :].astype((np.uint8)))
-                        cv2.imshow("SS First Frame B", this_video_buff_s[62, :, :].astype((np.uint8)))
+                        cv2.imshow("SS First Frame R", this_video_buff[0,15, :, :].astype((np.uint8)))
+                        cv2.imshow("SS First Frame G", this_video_buff[1,15, :, :].astype((np.uint8)))
+                        cv2.imshow("SS First Frame B", this_video_buff[2, 15,:, :].astype((np.uint8)))
                         cv2.waitKey(1)
 
                     # fill the batch
                     # if Valid_video_flag == True:
-                    self.input_videos[i, :, :, :] = self.video_buff_s
+                    self.input_videos[i,:, :, :, :] = self.video_buff
                     self.labels[i, :] = binary_vector
                     self.labels_LR[i, 0, :] = binary_vector_l
                     self.labels_LR[i, 1, :] = binary_vector_r
