@@ -114,26 +114,13 @@ class myDataloader(object):
         all_labels = label_dict
         return all_labels
     def convert_left_right_v(self,this_label):
-        label_element = re.findall(r'\w+(?:\s\w+)*|nan',
-                                   this_label)  # change to vector format instead of string
+        # label_element = re.findall(r'[^,]+|nan', this_label)  # change to vector format instead of string
+        split_string = this_label.split(',', 2)
+        this_label_l = ','.join(split_string[:2])
+        this_label_r =  split_string[2]
+        binary_vector_l = np.array([1 if category in this_label_l else 0 for category in categories], dtype=int)
+        binary_vector_r = np.array([1 if category in this_label_r else 0 for category in categories], dtype=int)
 
-        # Initialize the label vector with 'nan' values
-        label_vector = ['nan'] * 4  # Assuming a fixed length of 4 elements
-        for i, element in enumerate(label_element):
-            label_vector[i] = element
-        binary_vector_l = np.zeros(len(categories), dtype=int)
-        binary_vector_r = np.zeros(len(categories), dtype=int)
-
-        # Iterate through the label vector and set corresponding binary values
-        for i in range(len(label_vector)):
-            this_ele = label_vector[i]
-            if this_ele in categories:
-                category_index = categories.index(this_ele)
-                # Determine if the category is in the left or right direction
-                if i < (len(label_vector) / 2):
-                    binary_vector_l[category_index] = 1
-                else:
-                    binary_vector_r[category_index] = 1
         # readd
         return binary_vector_l, binary_vector_r
 
@@ -224,45 +211,54 @@ class myDataloader(object):
         for i in range(self.batch_size): # load a batch of images
             index = self.read_record
             filename = self.all_video_dir_list[index]
+            print(filename)
+
             if filename.endswith(file_name_extention):
                 # Extract clip ID from the filename
                 clip_id = int(filename.split("_")[1].split(".")[0])
                 clip_name = filename.split('.')[0]
+                # clip_name = 'clip_020215'
                 # label_Index = labels.index("clip_"+str(clip_id))
                 # Check if the clip ID is within the range you want to read
                 # if clip_id <= num_clips_to_read:
                 # Construct the full path to the video clip
                 video_path = os.path.join(folder_path, filename)
-                this_label = self.all_labels[clip_name]
-                binary_vector = np.array([1 if category in this_label else 0 for category in categories], dtype=int)
-                # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
-                binary_vector_l, binary_vector_r = self. convert_left_right_v(this_label)
-                # load the squess and unsquess
+                # clip_name= 'test'
                 start_time = time()
-                if Read_from_pkl == False:
-                    self.video_buff , self.video_buff_s = self.load_this_video_buffer(video_path,this_label)
-                    if Save_pkl == True:
-                        this_video_buff_s = self.video_buff_s.astype((np.uint8))
-                        io.save_a_pkl(Dataset_video_pkl_root,clip_name,this_video_buff_s)
-                else:
-                        this_video_buff_s = io.read_a_pkl(Dataset_video_pkl_root,clip_name)
+
+                if clip_name in self.all_labels:
+                    this_label = self.all_labels[clip_name]
+                    print(this_label)
+
+                    binary_vector = np.array([1 if category in this_label else 0 for category in categories], dtype=int)
+                    # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
+                    binary_vector_l, binary_vector_r = self.convert_left_right_v(this_label)
+                    # load the squess and unsquess
+                    if Read_from_pkl == False:
+                        self.video_buff, self.video_buff_s = self.load_this_video_buffer(video_path, this_label)
+                        if Save_pkl == True:
+                            this_video_buff_s = self.video_buff_s.astype((np.uint8))
+                            io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff_s)
+                    else:
+                        this_video_buff_s = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
                         self.video_buff_s = this_video_buff_s
-                if Display_loading_video == True:
+                    if Display_loading_video == True:
+                        cv2.imshow("SS First Frame R", this_video_buff_s[60, :, :].astype((np.uint8)))
+                        cv2.imshow("SS First Frame G", this_video_buff_s[61, :, :].astype((np.uint8)))
+                        cv2.imshow("SS First Frame B", this_video_buff_s[62, :, :].astype((np.uint8)))
+                        cv2.waitKey(1)
 
-                    cv2.imshow("SS First Frame R", this_video_buff_s[60, :, :].astype((np.uint8)))
-                    cv2.imshow("SS First Frame G", this_video_buff_s[61, :, :].astype((np.uint8)))
-                    cv2.imshow("SS First Frame B", this_video_buff_s[62, :, :].astype((np.uint8)))
-                    cv2.waitKey(1)
-                end_time = time()
+                    # fill the batch
+                    self.input_videos[i, :, :, :] = self.video_buff_s
+                    self.labels[i, :] = binary_vector
+                    self.labels_LR[i, 0, :] = binary_vector_l
+                    self.labels_LR[i, 1, :] = binary_vector_r
+                else:
+                    print("Key does not exist in the dictionary.")
 
-                # fill the batch
-                self.input_videos [i,:,:,:] = self.video_buff_s
-                self.labels [i, :] = binary_vector
-                self. labels_LR[i,0,:] = binary_vector_l
-                self.labels_LR[i,1,:] = binary_vector_r
+            end_time = time()
 
-            print(filename)
-            print(this_label)
+
             print(self.read_record)
             print("time is :" + str(end_time - start_time))
             self.read_record +=1
