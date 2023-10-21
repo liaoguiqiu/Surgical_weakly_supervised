@@ -26,7 +26,13 @@ class _Model_infer(object):
                 for param in net.parameters():
                     param.requires_grad = requires_grad
     def forward(self,input):
-        self.output = self.VideoNets(input)
+        self.output,_ = self.VideoNets(input)
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
+        self.loss=  self.customeBCE(self.output[:,:,0,0,0], label)
+        # self.lossEa.backward(retain_graph=True)
+        self.loss.backward( )
+
+        self.optimizer.step()
+        self.lossDisplay = self.loss. data.mean()

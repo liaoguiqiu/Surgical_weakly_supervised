@@ -20,9 +20,9 @@ import imageio_ffmpeg as ffmpeg
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
 img_size = 64
 input_ch = 3 # input channel of each image/video
-Display_loading_video = False
-Read_from_pkl= False
-Save_pkl = True
+Display_loading_video = True
+Read_from_pkl= True
+Save_pkl = False
 categories = [
     'bipolar dissector',
     'bipolar forceps',
@@ -285,4 +285,4 @@ class myDataloader(object):
         # # read_end  = self.read_record+ self.batch_size
         # this_signal = self.signal[self.folder_pointer]
 
-        return self.input_videos, self.labels_LR
+        return self.input_videos, self.labels

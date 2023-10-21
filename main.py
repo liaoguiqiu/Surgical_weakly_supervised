@@ -17,6 +17,7 @@ from model import  model_experiement, model_infer
 
 from dataset.dataset import myDataloader
 Continue_flag = False
+Visdom_flag = True
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(torch.cuda.current_device())
 print(torch.cuda.device(0))
@@ -26,6 +27,12 @@ print(torch.cuda.is_available())
 # dataroot = "../dataset/CostMatrix/"
 torch.set_num_threads(2)
  # create the model
+
+if Visdom_flag == True:
+    from visual import VisdomLinePlotter
+
+    plotter = VisdomLinePlotter(env_name='path finding training Plots')
+
 def is_external_drive(drive_path):
     # Check if the drive is a removable drive (usually external)
     return os.path.ismount(drive_path) and shutil.disk_usage(drive_path).total > 0
@@ -84,13 +91,15 @@ while (1):
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
     Model_infer.forward(input_videos_GPU)
-
+    Model_infer.optimization(labels_GPU)
     if dataLoader.all_read_flag ==1:
         #remove this for none converting mode
         print("finished")
         break
+    if read_id % 1 == 0 and Visdom_flag == True  :
+        plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
 
-
+    read_id+=1
     # print(labels)
 
     # pass
