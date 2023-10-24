@@ -14,10 +14,13 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer
-
+from working_dir_root import Output_root
 from dataset.dataset import myDataloader
+from display import Display
 Continue_flag = False
-Visdom_flag = True
+Visdom_flag = False
+Display_flag = True
+loadmodel_index = '3.pth'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(torch.cuda.current_device())
 print(torch.cuda.device(0))
@@ -73,7 +76,16 @@ dataLoader = myDataloader()
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
+else:
+    pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index)
+    model_dict = Model_infer.VideoNets.state_dict()
 
+    # 1. filter out unnecessary keys
+    pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+    # 2. overwrite entries in the existing state dict
+    model_dict.update(pretrained_dict_trim)
+    # 3. load the new state dict
+    Model_infer.VideoNets.load_state_dict(model_dict)
 
 read_id = 0
 
@@ -83,6 +95,8 @@ epoch = 0
 iteration_num = 0
 #################
 #############training
+saver_id =0
+displayer = Display()
 while (1):
 
     input_videos, labels= dataLoader.read_a_batch()
@@ -92,13 +106,21 @@ while (1):
     labels_GPU = labels_GPU.to (device)
     Model_infer.forward(input_videos_GPU)
     Model_infer.optimization(labels_GPU)
+    if Display_flag == True:
+        displayer.train_display(Model_infer,dataLoader,read_id)
+        pass
+
     if dataLoader.all_read_flag ==1:
         #remove this for none converting mode
         print("finished")
-        break
+        # break
     if read_id % 1 == 0 and Visdom_flag == True  :
         plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
-
+    if read_id % 10 == 0  :
+        torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
+        saver_id +=1
+        if saver_id >5:
+            saver_id =0
     read_id+=1
     # print(labels)
 

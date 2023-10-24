@@ -6,6 +6,7 @@ import re
 import os
 from time import  time
 import dataset.io as io
+import random
 import imageio
 import imageio_ffmpeg as ffmpeg
 # from decord import VideoReader
@@ -18,26 +19,27 @@ import imageio_ffmpeg as ffmpeg
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
+Seperate_LR = True
 img_size = 64
 input_ch = 3 # input channel of each image/video
-Display_loading_video = True
+Display_loading_video = False
 Read_from_pkl= True
 Save_pkl = False
 categories = [
-    'bipolar dissector',
-    'bipolar forceps',
-    'cadiere forceps',
-    'clip applier',
-    'force bipolar',
-    'grasping retractor',
-    'monopolar curved scissors',
-    'needle driver',
-    'permanent cautery hook/spatula',
-    'prograsp forceps',
-    'stapler',
-    'suction irrigator',
-    'tip-up fenestrated grasper',
-    'vessel sealer'
+    'bipolar dissector', #0
+    'bipolar forceps', #1
+    'cadiere forceps', #2
+    'clip applier', #3
+    'force bipolar',#4
+    'grasping retractor',#5
+    'monopolar curved scissors',#6
+    'needle driver', #7
+    'permanent cautery hook/spatula', # 8
+    'prograsp forceps', #9
+    'stapler', #10
+    'suction irrigator', #11
+    'tip-up fenestrated grasper', #12
+    'vessel sealer' #13
 ]
 Obj_num = len(categories)
 class myDataloader(object):
@@ -55,7 +57,7 @@ class myDataloader(object):
         self.input_images= np.zeros((self.batch_size, 1, img_size, img_size))
         self.input_videos = np.zeros((self.batch_size,3,self.video_buff_size,img_size,img_size )) # RGB together
         # the number of the contour has been increased, and another vector has beeen added
-        self.labels_LR= np.zeros((self.batch_size,2, self.obj_num))  # predifine the path number is 2 to seperate Left and right
+        self.labels_LR= np.zeros((self.batch_size,2*self.obj_num))  # predifine the path number is 2 to seperate Left and right
         self.labels= np.zeros((self.batch_size, self.obj_num))  # left right merge
 
         self.all_read_flag =0
@@ -258,10 +260,19 @@ class myDataloader(object):
 
                     # fill the batch
                     # if Valid_video_flag == True:
-                    self.input_videos[i,:, :, :, :] = self.video_buff
-                    self.labels[i, :] = binary_vector
-                    self.labels_LR[i, 0, :] = binary_vector_l
-                    self.labels_LR[i, 1, :] = binary_vector_r
+                    flip_flag = random.choice([True, False])
+                    # flip_flag = True
+                    if flip_flag == False:
+                        self.input_videos[i,:, :, :, :] = self.video_buff
+                        self.labels[i, :] = binary_vector
+                        self.labels_LR[i, :] = np.concatenate([binary_vector_l, binary_vector_r])
+                    # self.labels_LR[i, 1, :] = binary_vector_r
+                    else:
+                        self.input_videos[i, :, :, :, :] = np.flip(self.video_buff, axis=3)
+                        self.labels[i, :] = binary_vector
+                        self.labels_LR[i, :] = np.concatenate([binary_vector_r, binary_vector_l])
+
+
                 else:
                     print("Key does not exist in the dictionary.")
 
@@ -284,5 +295,7 @@ class myDataloader(object):
         # this_folder_list = self.folder_list[self.folder_pointer]
         # # read_end  = self.read_record+ self.batch_size
         # this_signal = self.signal[self.folder_pointer]
-
-        return self.input_videos, self.labels
+        if Seperate_LR == False:
+            return self.input_videos, self.labels
+        else:
+            return self.input_videos, self.labels_LR

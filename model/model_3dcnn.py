@@ -3,8 +3,8 @@ import torch.nn as nn
 import numpy as np
 from dataset.dataset import myDataloader, img_size
 import model.base_models as block_buider
-from dataset.dataset import Obj_num
-Seperate_LR = False # seperate left and right
+from dataset.dataset import Obj_num, Seperate_LR
+# Seperate_LR = True # seperate left and right
 
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
@@ -59,17 +59,19 @@ class _VideoCNN(nn.Module):
         Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         slice_valid = Maxpool_keepD(input)
         final = Maxpool_keepC(slice_valid)
-        activation = nn.Sigmoid()
-        final = activation(final)
-        slice_valid = activation(slice_valid)
+        # activation = nn.Sigmoid()
+        # final = activation(final)
+        # slice_valid = activation(slice_valid)
 
         return final, slice_valid
     def forward(self, x):
         out = x
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
+        activation = nn.Sigmoid()
+        out = activation(out)
         # Check the size of the final feature map
         bz, ch, D, H, W = out.size()
         final, slice_valid = self.maxpooling(out)
 
-        return final, slice_valid
+        return final, slice_valid, out
