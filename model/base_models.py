@@ -11,11 +11,24 @@ def build_3dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
             nn.BatchNorm3d(outdepth),
             # nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
 
-            nn.LeakyReLU(0.1, inplace=True),
+            # nn.LeakyReLU(0.1, inplace=True),
+            nn.ReLU(),
             # nn.Dropout(0.1)
         )
         if Drop_out == True:
-            module= torch.nn.Sequential(module,nn.Dropout(0.5))
+            module = nn.Sequential(
+                # nn.ReflectionPad2d((p[1],p[1],p[0],p[0])),
+                # nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),
+                nn.Conv3d(indepth, outdepth, k, s, p, bias=False),
+
+                nn.BatchNorm3d(outdepth),
+                # nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
+
+                # nn.LeakyReLU(0.1, inplace=True),
+                nn.ReLU(),
+                 nn.Dropout(0.5)
+            )
+
     else:
         module = nn.Sequential(
             # nn.ReflectionPad2d((p[1],p[1],p[0],p[0])),
@@ -44,9 +57,9 @@ class conv_devide_H(nn.Module): # devide the H by half and keep the D and W
 
 
 class conv_keep_all(nn.Module):
-    def __init__(self, indepth, outdepth, k=(1,3, 3), s=(1,1, 1), p=(0,1, 1), resnet=False, final=False):
+    def __init__(self, indepth, outdepth, k=(1,3, 3), s=(1,1, 1), p=(0,1, 1), resnet=False, final=False,dropout=False):
         super(conv_keep_all, self).__init__()
-        self.conv_block = build_3dconv_block(indepth, outdepth, k, s, p, final)
+        self.conv_block = build_3dconv_block(indepth, outdepth, k, s, p, dropout,final)
         self.resnet = resnet
 
     def forward(self, x):

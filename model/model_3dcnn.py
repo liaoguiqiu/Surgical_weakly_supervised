@@ -47,18 +47,24 @@ class _VideoCNN(nn.Module):
 
         # final equal to class
         if Seperate_LR == True:
-            self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num * 2))  # 4*256
+            self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num * 2,final=True))  # 4*256
         else:
-            self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num))  # 4*256
+            self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num,final=True))  # 4*256
 
 
     def maxpooling(self,input):
         bz, ch, D, H, W = input.size()
+        activation = nn.Sigmoid()
 
+        # input = Drop( input)
+        # Drop = nn.Dropout(0.1)
+        # input = Drop(input)
+        input = activation(input)
         Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         slice_valid = Maxpool_keepD(input)
         final = Maxpool_keepC(slice_valid)
+        #Note: how about add a number of object loss here ??
         # activation = nn.Sigmoid()
         # final = activation(final)
         # slice_valid = activation(slice_valid)
@@ -69,9 +75,9 @@ class _VideoCNN(nn.Module):
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
         activation = nn.Sigmoid()
-        out = activation(out)
+
         # Check the size of the final feature map
         bz, ch, D, H, W = out.size()
         final, slice_valid = self.maxpooling(out)
-
+        out = activation(out)
         return final, slice_valid, out

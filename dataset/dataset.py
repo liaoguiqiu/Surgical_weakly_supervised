@@ -26,20 +26,20 @@ Display_loading_video = False
 Read_from_pkl= True
 Save_pkl = False
 categories = [
-    'bipolar dissector', #0
-    'bipolar forceps', #1
-    'cadiere forceps', #2
-    'clip applier', #3
-    'force bipolar',#4
-    'grasping retractor',#5
-    'monopolar curved scissors',#6
-    'needle driver', #7
-    'permanent cautery hook/spatula', # 8
-    'prograsp forceps', #9
-    'stapler', #10
-    'suction irrigator', #11
-    'tip-up fenestrated grasper', #12
-    'vessel sealer' #13
+    'bipolar dissector', #0   - 17
+    'bipolar forceps', #1     -13163
+    'cadiere forceps', #2     -17440
+    'clip applier', #3        -576
+    'force bipolar',#4         - 1698
+    'grasping retractor',#5     -4413
+    'monopolar curved scissors',#6     -11924
+    'needle driver', #7                 -10142
+    'permanent cautery hook/spatula', # 8     -866
+    'prograsp forceps', #9                -2992
+    'stapler', #10                      -131
+    'suction irrigator', #11             -17
+    'tip-up fenestrated grasper', #12       -181
+    'vessel sealer' #13                  -1026
 ]
 Obj_num = len(categories)
 class myDataloader(object):
@@ -81,7 +81,7 @@ class myDataloader(object):
 
         # Initialize an empty list to store the data from the CSV file
         data = []
-
+        sum = np.zeros(self.obj_num)
         # Open the CSV file and read its contents
         try:
             with open(csv_file_path, 'r', newline='') as csvfile:
@@ -93,6 +93,8 @@ class myDataloader(object):
                 # Read the remaining rows and append them to the 'data' list
                 for row in csvreader:
                     data.append(row)
+                    binary_vector = np.array([1 if category in row[2] else 0 for category in categories], dtype=int)
+                    sum = sum+ binary_vector
         except FileNotFoundError:
             print(f"File not found at path: {csv_file_path}")
             exit()

@@ -32,6 +32,7 @@ class Display(object):
 
     def train_display(self,MODEL_infer,mydata_loader, read_id):
         # copy all the input videos and labels
+        cv2.destroyAllWindows()
         self.Model_infer.output= MODEL_infer.output
         self.Model_infer.slice_valid = MODEL_infer.slice_valid
         self.Model_infer.cam3D = MODEL_infer.cam3D
@@ -52,7 +53,10 @@ class Display(object):
         # Combine the rows vertically to create the final 3x3 arrangement
         Cam3D= self.Model_infer.cam3D[0,:,:,:,:]
         ch, D, H, W = Cam3D.size()
-        for j in range(ch):
+        average_tensor = Cam3D.mean(dim=[1,2,3], keepdim=True)
+        _, sorted_indices = average_tensor.sort(dim=0)
+        for index in range(6):
+            j=sorted_indices[27-index,0,0,0].cpu().detach().numpy()
             this_grayVideo = Cam3D[j].cpu().detach().numpy()
             for i in range(0, 27, 3):
                 if i == 0:
@@ -60,11 +64,13 @@ class Display(object):
                 else:
                     stack = np.hstack((stack, this_grayVideo[i]))
             # stack =  stack - np.min(stack)
-            stack = stack *254
+            stack = stack -np.min(stack)
+            stack = stack /(np.max(stack)+0.001)*200
+            # stack =  stack*800
             stack = np.clip(stack,0,254)
             # Display the final image
             cv2.imshow('Stitched Image' + str(j), stack.astype((np.uint8)))
-            cv2.waitKey(1)
+            cv2.waitKey(20)
         # Cam3D = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear')
 
 

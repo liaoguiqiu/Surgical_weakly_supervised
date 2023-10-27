@@ -17,10 +17,10 @@ from model import  model_experiement, model_infer
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
-Continue_flag = False
-Visdom_flag = False
-Display_flag = True
-loadmodel_index = '3.pth'
+Continue_flag = True
+Visdom_flag = True
+Display_flag = False
+loadmodel_index = '5.pth'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(torch.cuda.current_device())
 print(torch.cuda.device(0))
