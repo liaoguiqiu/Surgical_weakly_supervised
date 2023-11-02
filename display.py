@@ -56,7 +56,7 @@ class Display(object):
         average_tensor = Cam3D.mean(dim=[1,2,3], keepdim=True)
         _, sorted_indices = average_tensor.sort(dim=0)
         for index in range(6):
-            j=sorted_indices[27-index,0,0,0].cpu().detach().numpy()
+            j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
             this_grayVideo = Cam3D[j].cpu().detach().numpy()
             for i in range(0, 27, 3):
                 if i == 0:
@@ -65,12 +65,12 @@ class Display(object):
                     stack = np.hstack((stack, this_grayVideo[i]))
             # stack =  stack - np.min(stack)
             stack = stack -np.min(stack)
-            stack = stack /(np.max(stack)+0.001)*200
-            # stack =  stack*800
+            stack = stack /(np.max(stack)+0.001)*400
+            # stack =  stack*254
             stack = np.clip(stack,0,254)
             # Display the final image
             cv2.imshow('Stitched Image' + str(j), stack.astype((np.uint8)))
-            cv2.waitKey(20)
+            cv2.waitKey(1)
         # Cam3D = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear')
 
 

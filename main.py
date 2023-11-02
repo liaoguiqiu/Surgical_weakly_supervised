@@ -18,7 +18,7 @@ from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
 Continue_flag = True
-Visdom_flag = True
+Visdom_flag = False
 Display_flag = False
 loadmodel_index = '5.pth'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

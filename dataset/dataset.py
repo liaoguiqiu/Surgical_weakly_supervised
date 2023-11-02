@@ -19,7 +19,7 @@ import imageio_ffmpeg as ffmpeg
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
-Seperate_LR = True
+Seperate_LR = False
 img_size = 64
 input_ch = 3 # input channel of each image/video
 Display_loading_video = False
