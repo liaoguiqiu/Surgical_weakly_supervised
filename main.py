@@ -17,7 +17,7 @@ from model import  model_experiement, model_infer
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
-Continue_flag = True
+Continue_flag = False
 Visdom_flag = False
 Display_flag = False
 loadmodel_index = '5.pth'
