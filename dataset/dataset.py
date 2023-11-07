@@ -144,10 +144,10 @@ class myDataloader(object):
         while True:
             # cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             if (frame_count % self.video_down_sample) ==0:
-                start_time = time()
+                # start_time = time()
 
                 ret, frame = cap.read()
-                end_time = time()
+                # end_time = time()
                 # print("inner time" + str(end_time - start_time))
 
 
@@ -282,7 +282,7 @@ class myDataloader(object):
 
 
             print(self.read_record)
-            print("time is :" + str(end_time - start_time))
+            # print("time is :" + str(end_time - start_time))
             self.read_record +=1
             if self.read_record>= self.video_num:
                 print("all videos have been readed")

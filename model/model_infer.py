@@ -4,9 +4,10 @@ import torch.nn.functional as F
 from model.model_3dcnn import _VideoCNN
 learningR = 0.00001
 class _Model_infer(object):
-    def __init__(self):
+    def __init__(self,GPU_mode =True):
         self.VideoNets = _VideoCNN()
-        self.VideoNets.cuda()
+        if GPU_mode ==True:
+            self.VideoNets.cuda()
         self.customeBCE = torch.nn.BCELoss()
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},

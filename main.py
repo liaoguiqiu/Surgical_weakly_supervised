@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 # from model import CE_build3  # the mmodel
+from time import time
 import os
 import shutil
 # from train_display import *
@@ -17,16 +18,24 @@ from model import  model_experiement, model_infer
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
+GPU_mode= False
 Continue_flag = False
 Visdom_flag = False
 Display_flag = False
 loadmodel_index = '5.pth'
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(torch.cuda.current_device())
-print(torch.cuda.device(0))
-print(torch.cuda.device_count())
-print(torch.cuda.get_device_name(0))
-print(torch.cuda.is_available())
+
+if torch.cuda.is_available():
+    print(torch.cuda.current_device())
+    print(torch.cuda.device(0))
+    print(torch.cuda.device_count())
+    print(torch.cuda.get_device_name(0))
+    print(torch.cuda.is_available())
+if GPU_mode ==True:
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+else:
+    device = torch.device("cpu")
+
 # dataroot = "../dataset/CostMatrix/"
 torch.set_num_threads(2)
  # create the model
@@ -70,7 +79,7 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model_infer = model_infer._Model_infer()
+Model_infer = model_infer._Model_infer(GPU_mode)
 # Model.cuda()
 dataLoader = myDataloader()
 
@@ -98,7 +107,7 @@ iteration_num = 0
 saver_id =0
 displayer = Display()
 while (1):
-
+    start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
     input_videos_GPU = torch.from_numpy(np.float32(input_videos))
     labels_GPU = torch.from_numpy(np.float32(labels))
@@ -121,6 +130,11 @@ while (1):
         saver_id +=1
         if saver_id >5:
             saver_id =0
+
+    end_time = time()
+
+    print("time is :" + str(end_time - start_time))
+
     read_id+=1
     # print(labels)
 
