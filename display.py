@@ -25,8 +25,8 @@ def save_img_to_folder(this_save_dir,ID,img):
                 str(ID) + ".jpg", img)
 
 class Display(object):
-    def __init__(self):
-        self.Model_infer = model_infer._Model_infer()
+    def __init__(self,GPU=False):
+        self.Model_infer = model_infer._Model_infer(GPU)
         self.dataLoader = myDataloader()
 
 

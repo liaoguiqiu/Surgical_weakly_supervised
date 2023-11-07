@@ -106,7 +106,7 @@ iteration_num = 0
 #################
 #############training
 saver_id =0
-displayer = Display()
+displayer = Display(GPU_mode)
 while (1):
     start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
