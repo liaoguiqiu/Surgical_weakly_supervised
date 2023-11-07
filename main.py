@@ -5,6 +5,7 @@ from torch.autograd import Variable
 # from model import CE_build3  # the mmodel
 from time import time
 import os
+print("Current working directory:", os.getcwd())
 import shutil
 # from train_display import *
 # the model

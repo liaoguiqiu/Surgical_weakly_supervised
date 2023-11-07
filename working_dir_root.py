@@ -11,7 +11,7 @@
 
 # Remote
 
-working_root = "~/cloudfiles/code/Users/LiaoG/"
+working_root = "././"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"

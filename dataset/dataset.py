@@ -4,6 +4,7 @@ import numpy as np
 import csv
 import re
 import os
+print("Current working directory:", os.getcwd())
 from time import  time
 import dataset.io as io
 import random
