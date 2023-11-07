@@ -7,10 +7,10 @@ import os
 from time import  time
 import dataset.io as io
 import random
-import imageio
-import imageio_ffmpeg as ffmpeg
-# from decord import VideoReader
-# from decord import cpu
+# import imageio
+# import imageio_ffmpeg as ffmpeg
+# # from decord import VideoReader
+# # from decord import cpu
 # import imageio
 # from analy import MY_ANALYSIS
 # from dataTool import generator_contour
