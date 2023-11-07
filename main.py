@@ -21,7 +21,7 @@ from dataset.dataset import myDataloader
 from display import Display
 GPU_mode= False
 Continue_flag = False
-Visdom_flag = False
+Visdom_flag = True
 Display_flag = False
 loadmodel_index = '5.pth'
 
