@@ -12,6 +12,7 @@
 # Remote
 
 working_root = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/liaog1/code/Users/LiaoG/"
+working_root = "C:/2data/"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"

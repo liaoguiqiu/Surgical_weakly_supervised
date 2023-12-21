@@ -19,10 +19,10 @@ from model import  model_experiement, model_infer
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
-GPU_mode= False
+GPU_mode= True
 Continue_flag = False
 Visdom_flag = True
-Display_flag = False
+Display_flag = True
 loadmodel_index = '5.pth'
 
 if torch.cuda.is_available():
