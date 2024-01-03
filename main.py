@@ -21,8 +21,8 @@ from dataset.dataset import myDataloader
 from display import Display
 GPU_mode= True
 Continue_flag = False
-Visdom_flag = True
-Display_flag = True
+Visdom_flag = False
+Display_flag = False
 loadmodel_index = '5.pth'
 
 if torch.cuda.is_available():
