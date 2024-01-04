@@ -23,7 +23,7 @@ import torch.nn.parallel
 import torch.distributed as dist
 GPU_mode= True
 Continue_flag = True
-Visdom_flag = False
+Visdom_flag = True
 Display_flag = False
 loadmodel_index = '3.pth'
 
