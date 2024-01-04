@@ -9,7 +9,7 @@ from dataset.dataset import Obj_num, Seperate_LR
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=3,base_f=64):
+    def __init__(self, inputC=3,base_f=16):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
