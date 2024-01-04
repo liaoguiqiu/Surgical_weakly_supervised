@@ -22,9 +22,9 @@ from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
 GPU_mode= True
-Continue_flag = False
+Continue_flag = True
 Visdom_flag = False
-Display_flag = False
+Display_flag = True
 loadmodel_index = '3.pth'
 
 if torch.cuda.is_available():
