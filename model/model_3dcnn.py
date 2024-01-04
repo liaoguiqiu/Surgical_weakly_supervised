@@ -57,8 +57,8 @@ class _VideoCNN(nn.Module):
         # Avg_pool = nn.AvgPool3d((3,4,4),stride=(3,4,4))
         # input = Avg_pool(input)
         bz, ch, D, H, W = input.size()
-        # activation = nn.Sigmoid()
-        activation = nn.ReLU()
+        activation = nn.Sigmoid()
+        # activation = nn.ReLU()
 
         # input = Drop( input)
         # Drop = nn.Dropout(0.1)
