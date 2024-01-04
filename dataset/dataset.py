@@ -46,7 +46,7 @@ Obj_num = len(categories)
 class myDataloader(object):
     def __init__(self, OLG=False):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
-        self.batch_size = 12
+        self.batch_size = 6
         self.obj_num = Obj_num
         self.video_down_sample = 60  # 60 FPS
         self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s
