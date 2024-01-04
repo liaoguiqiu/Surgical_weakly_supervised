@@ -23,7 +23,7 @@ GPU_mode= True
 Continue_flag = False
 Visdom_flag = False
 Display_flag = False
-loadmodel_index = '5.pth'
+loadmodel_index = '3.pth'
 
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
@@ -107,6 +107,7 @@ iteration_num = 0
 #############training
 saver_id =0
 displayer = Display(GPU_mode)
+epoch =0
 while (1):
     start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
@@ -122,19 +123,22 @@ while (1):
 
     if dataLoader.all_read_flag ==1:
         #remove this for none converting mode
-        print("finished")
+        epoch +=1
+
+        print("finished epoch" + str (epoch) )
+        dataLoader.all_read_flag = 0
         # break
     if read_id % 1 == 0 and Visdom_flag == True  :
         plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
-    if read_id % 10 == 0  :
+    if read_id % 1000 == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
         saver_id +=1
         if saver_id >5:
             saver_id =0
 
-    end_time = time()
+        end_time = time()
 
-    print("time is :" + str(end_time - start_time))
+        print("time is :" + str(end_time - start_time))
 
     read_id+=1
     # print(labels)

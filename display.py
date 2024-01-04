@@ -65,7 +65,7 @@ class Display(object):
                     stack = np.hstack((stack, this_grayVideo[i]))
             # stack =  stack - np.min(stack)
             stack = stack -np.min(stack)
-            stack = stack /(np.max(stack)+0.001)*400
+            stack = stack /(np.max(stack)+0.001)*200
             # stack =  stack*254
             stack = np.clip(stack,0,254)
             # Display the final image
