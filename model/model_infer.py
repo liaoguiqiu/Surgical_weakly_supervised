@@ -15,7 +15,7 @@ class _Model_infer(object):
         ], lr=learningR, betas=(0.5, 0.999))
         if GPU_mode ==True:
             if num_gpus > 1:
-                optimizer = torch.nn.DataParallel(optimizer)
+                self.optimizer = torch.nn.DataParallel(self.optimizer)
 
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
