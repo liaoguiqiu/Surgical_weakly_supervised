@@ -8,10 +8,15 @@ class _Model_infer(object):
         self.VideoNets = _VideoCNN()
         # if GPU_mode ==True:
         #     self.VideoNets.cuda()
+        if GPU_mode ==True:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        else:
+            device = torch.device("cpu")
         if GPU_mode == True:
             if num_gpus > 1:
                 self.VideoNets = torch.nn.DataParallel(self.VideoNets)
-            self.VideoNets.cuda()
+        self.VideoNets.to(device)
         self.customeBCE = torch.nn.BCELoss()
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},
