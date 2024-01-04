@@ -8,14 +8,18 @@ class _Model_infer(object):
         self.VideoNets = _VideoCNN()
         # if GPU_mode ==True:
         #     self.VideoNets.cuda()
+        if GPU_mode == True:
+            if num_gpus > 1:
+                self.VideoNets = torch.nn.DataParallel(self.VideoNets)
+            self.VideoNets.cuda()
         self.customeBCE = torch.nn.BCELoss()
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},
             {'params': self.VideoNets .parameters()}
         ], lr=learningR, betas=(0.5, 0.999))
-        if GPU_mode ==True:
-            if num_gpus > 1:
-                self.optimizer = torch.nn.DataParallel(self.optimizer)
+        # if GPU_mode ==True:
+        #     if num_gpus > 1:
+        #         self.optimizer = torch.nn.DataParallel(optself.optimizerimizer)
 
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
@@ -32,15 +36,11 @@ class _Model_infer(object):
     def forward(self,input):
         self.output, self.slice_valid, self. cam3D= self.VideoNets(input)
     def optimization(self, label):
-        optimizer = self.optimizer
-        if isinstance(self.VideoNets, torch.nn.DataParallel):
-            optimizer = self.VideoNets.module.optimizer  # Access the optimizer inside the DataParallel wrapper
-            
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         self.loss=  self.customeBCE(self.output[:,:,0,0,0], label)
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 
-        optimizer.step()
+        self.optimizer.step()
         self.lossDisplay = self.loss. data.mean()
