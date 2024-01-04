@@ -32,11 +32,15 @@ class _Model_infer(object):
     def forward(self,input):
         self.output, self.slice_valid, self. cam3D= self.VideoNets(input)
     def optimization(self, label):
+        optimizer = self.optimizer
+        if isinstance(self.VideoNets, torch.nn.DataParallel):
+            optimizer = self.VideoNets.module.optimizer  # Access the optimizer inside the DataParallel wrapper
+            
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         self.loss=  self.customeBCE(self.output[:,:,0,0,0], label)
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 
-        self.optimizer.step()
+        optimizer.step()
         self.lossDisplay = self.loss. data.mean()
