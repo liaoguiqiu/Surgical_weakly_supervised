@@ -127,10 +127,12 @@ while (1):
 
         print("finished epoch" + str (epoch) )
         dataLoader.all_read_flag = 0
+        read_id=0
+
         # break
     if read_id % 1 == 0 and Visdom_flag == True  :
         plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
-    if read_id % 1000 == 0  :
+    if (read_id % 1000) == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
         saver_id +=1
         if saver_id >5:
