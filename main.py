@@ -19,6 +19,8 @@ from model import  model_experiement, model_infer
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
+import torch.nn.parallel
+import torch.distributed as dist
 GPU_mode= True
 Continue_flag = False
 Visdom_flag = False
@@ -28,11 +30,13 @@ loadmodel_index = '3.pth'
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
     print(torch.cuda.device(0))
-    print(torch.cuda.device_count())
+   
     print(torch.cuda.get_device_name(0))
     print(torch.cuda.is_available())
+    num_gpus = torch.cuda.device_count()
+    print("Number of GPUs available:", num_gpus)
 if GPU_mode ==True:
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 else:
     device = torch.device("cpu")
