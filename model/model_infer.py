@@ -4,15 +4,18 @@ import torch.nn.functional as F
 from model.model_3dcnn import _VideoCNN
 learningR = 0.00001
 class _Model_infer(object):
-    def __init__(self,GPU_mode =True):
+    def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN()
-        if GPU_mode ==True:
-            self.VideoNets.cuda()
+        # if GPU_mode ==True:
+        #     self.VideoNets.cuda()
         self.customeBCE = torch.nn.BCELoss()
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},
             {'params': self.VideoNets .parameters()}
         ], lr=learningR, betas=(0.5, 0.999))
+        if GPU_mode ==True:
+            if num_gpus > 1:
+                optimizer = torch.nn.DataParallel(optimizer)
 
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
