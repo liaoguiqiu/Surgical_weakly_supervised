@@ -50,11 +50,14 @@ class _VideoCNN(nn.Module):
         #     self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num * 2,final=True))  # 4*256
         # else:
         #     self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num,final=True))  # 4*256
+        # if Seperate_LR == True:
+        #     self.classifier = nn.Linear(base_f, Obj_num * 2) # 4*256
+        # else:
+        #     self.classifier = nn.Linear(base_f, Obj_num )  # 4*256
         if Seperate_LR == True:
-            self.classifier = nn.Linear(base_f, Obj_num * 2) # 4*256
+            self.classifier = nn.Conv3d(base_f, Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
         else:
-            self.classifier = nn.Linear(base_f, Obj_num )  # 4*256
-
+            self.classifier = nn.Conv3d(base_f, Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
 
     def maxpooling(self,input):
 
@@ -87,10 +90,11 @@ class _VideoCNN(nn.Module):
             out = self.blocks[j](out)
         activation = nn.Sigmoid()
         pooled, slice_valid = self.maxpooling(out)
-        pooled = pooled.view(out.size(0), -1)
+        # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         final = self.classifier(pooled)
+        cam = self.classifier(out)
         # bz, ch, D, H, W = out.size()
         # final, slice_valid = self.maxpooling(out)
         # final = activation(final)
-        return final, slice_valid, out
+        return final, slice_valid, cam

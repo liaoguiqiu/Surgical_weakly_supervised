@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 
 from model.model_3dcnn_linear import _VideoCNN
-learningR = 0.00001
+learningR = 0.00007
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN()
@@ -43,7 +43,7 @@ class _Model_infer(object):
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
-        self.loss=  self.customeBCE(self.output, label)
+        self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 
