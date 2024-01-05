@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from model.model_3dcnn import _VideoCNN
+from model.model_3dcnn_linear import _VideoCNN
 learningR = 0.00001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
@@ -17,7 +17,7 @@ class _Model_infer(object):
             if num_gpus > 1:
                 self.VideoNets = torch.nn.DataParallel(self.VideoNets)
         self.VideoNets.to(device)
-        self.customeBCE = torch.nn.BCELoss().to(device)
+        self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},
             {'params': self.VideoNets .parameters()}
@@ -43,7 +43,7 @@ class _Model_infer(object):
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
-        self.loss=  self.customeBCE(self.output[:,:,0,0,0], label)
+        self.loss=  self.customeBCE(self.output, label)
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 

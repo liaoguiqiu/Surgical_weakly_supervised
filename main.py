@@ -22,7 +22,7 @@ from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
 GPU_mode= True
-Continue_flag = True
+Continue_flag = False
 Visdom_flag = True
 Display_flag = False
 loadmodel_index = '3.pth'
@@ -124,7 +124,7 @@ while (1):
     labels_GPU = torch.from_numpy(np.float32(labels))
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
-    Model_infer.forward(input_videos_GPU)
+    Model_infer.forward((input_videos_GPU-128.0)/225.0)
     Model_infer.optimization(labels_GPU)
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
@@ -139,7 +139,10 @@ while (1):
         read_id=0
 
         # break
-    if read_id % 1 == 0 and Visdom_flag == True  :
+    if read_id % 1== 0   :
+        print(" epoch" + str (epoch) )
+    if read_id % 100== 0 and Visdom_flag == True  :
+        
         plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
     if (read_id % 100) == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")

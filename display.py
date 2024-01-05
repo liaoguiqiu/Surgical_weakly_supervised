@@ -32,7 +32,7 @@ class Display(object):
 
     def train_display(self,MODEL_infer,mydata_loader, read_id):
         # copy all the input videos and labels
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
         self.Model_infer.output= MODEL_infer.output
         self.Model_infer.slice_valid = MODEL_infer.slice_valid
         self.Model_infer.cam3D = MODEL_infer.cam3D
