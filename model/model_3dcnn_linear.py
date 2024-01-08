@@ -71,10 +71,10 @@ class _VideoCNN(nn.Module):
         # Drop = nn.Dropout(0.1)
         # input = Drop(input)
         # input = activation(input)
-        # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
-        # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
-        Maxpool_keepD = nn.AvgPool3d((1,H,W),stride=(1,1,1))
-        Maxpool_keepC = nn.AvgPool3d((D,1,1),stride=(1,1,1))
+        Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
+        Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
+        # Maxpool_keepD = nn.AvgPool3d((1,H,W),stride=(1,1,1))
+        # Maxpool_keepC = nn.AvgPool3d((D,1,1),stride=(1,1,1))
         
         slice_valid = Maxpool_keepD(input)
         final = Maxpool_keepC(slice_valid)
@@ -96,5 +96,5 @@ class _VideoCNN(nn.Module):
         cam = self.classifier(out)
         # bz, ch, D, H, W = out.size()
         # final, slice_valid = self.maxpooling(out)
-        # final = activation(final)
+        final = activation(final)
         return final, slice_valid, cam
