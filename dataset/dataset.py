@@ -8,6 +8,7 @@ print("Current working directory:", os.getcwd())
 from time import  time
 import dataset.io as io
 import random
+import image_operator.basic_operator as basic_operator
 # import imageio
 # import imageio_ffmpeg as ffmpeg
 # # from decord import VideoReader
@@ -263,7 +264,9 @@ class myDataloader(object):
 
                     # fill the batch
                     # if Valid_video_flag == True:
+                    self.video_buff = basic_operator.random_verse_the_video(self.video_buff)
                     flip_flag = random.choice([True, False])
+
                     # flip_flag = True
                     if flip_flag == False:
                         self.input_videos[i,:, :, :, :] = self.video_buff
