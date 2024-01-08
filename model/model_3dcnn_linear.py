@@ -25,23 +25,26 @@ class _VideoCNN(nn.Module):
         # 16*256  - 8*256
         # self.side_branch1.append(  conv_keep_all(base_f, base_f))
         # self.side_branch1.append(  conv_keep_all(base_f, base_f))
-
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))
         base_f = base_f * 2
         # 8*256  - 4*256
-
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))  # 4*256
         base_f = base_f * 2
 
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_dv_WH(base_f, base_f*2))  # 2*256
         base_f = base_f*2
 
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
 
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
+        self.blocks.append(block_buider.conv_dv_WH(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
 
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
         self.depth = base_f
