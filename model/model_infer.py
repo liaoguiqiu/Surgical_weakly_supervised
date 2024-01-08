@@ -17,7 +17,9 @@ class _Model_infer(object):
             if num_gpus > 1:
                 self.VideoNets = torch.nn.DataParallel(self.VideoNets)
         self.VideoNets.to(device)
-        self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        # self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        self.customeBCE = torch.nn.BCELoss().to(device)
+
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},
             {'params': self.VideoNets .parameters()}
