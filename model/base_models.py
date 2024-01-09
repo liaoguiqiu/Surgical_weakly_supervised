@@ -11,8 +11,8 @@ def build_3dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
             nn.BatchNorm3d(outdepth),
             # nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
 
-            nn.LeakyReLU(0.1, inplace=True),
-            # nn.ReLU(),
+            # nn.LeakyReLU(0.1, inplace=True),
+            nn.ReLU(),
             # nn.Dropout(0.1)
         )
         if Drop_out == True:
@@ -24,8 +24,8 @@ def build_3dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
                 nn.BatchNorm3d(outdepth),
                 # nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
 
-                nn.LeakyReLU(0.1, inplace=True),
-                # nn.ReLU(),
+                # nn.LeakyReLU(0.1, inplace=True),
+                nn.ReLU(),
                  nn.Dropout(0.5)
             )
 
