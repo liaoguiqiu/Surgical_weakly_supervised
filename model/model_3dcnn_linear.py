@@ -9,7 +9,7 @@ from dataset.dataset import Obj_num, Seperate_LR
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=3,base_f=8):
+    def __init__(self, inputC=128,base_f=128):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -27,26 +27,26 @@ class _VideoCNN(nn.Module):
         # self.side_branch1.append(  conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))
-        base_f = base_f * 2
+        base_f = base_f  *2
         # 8*256  - 4*256
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))  # 4*256
-        base_f = base_f * 2
+        base_f = base_f  *2
 
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_dv_WH(base_f, base_f*2))  # 2*256
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2 ))  # 2*256
         base_f = base_f*2
 
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
-        base_f = base_f * 2
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f  ))  # 4*256
+        base_f = base_f  
 
-        self.blocks.append(block_buider.conv_dv_WH(base_f, base_f * 2))  # 4*256
-        base_f = base_f * 2
+        # self.blocks.append(block_buider.conv_dv_WH(base_f, base_f  ))  # 4*256
+        # base_f = base_f  
 
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
-        base_f = base_f * 2
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f  ))  # 4*256
+        # base_f = base_f  
         self.depth = base_f
         # final equal to class
         # if Seperate_LR == True:
