@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
-learningR = 0.0001
+learningR = 0.00001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN2d()

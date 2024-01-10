@@ -68,7 +68,7 @@ class _VideoCNN2d(nn.Module):
         # input = activation(input)
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
-        Avgpool = nn.AvgPool2d((7,7),stride=(1,1))
+        Avgpool = nn.AvgPool2d(2,2)
         input = Avgpool(input)
         bz, ch, H, W = input.size()
 
