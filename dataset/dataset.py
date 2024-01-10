@@ -264,7 +264,7 @@ class myDataloader(object):
 
                     # fill the batch
                     # if Valid_video_flag == True:
-                    self.video_buff = basic_operator.random_verse_the_video(self.video_buff)
+                    # self.video_buff = basic_operator.random_verse_the_video(self.video_buff)
                     flip_flag = random.choice([True, False])
 
                     # flip_flag = True
