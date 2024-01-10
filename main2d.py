@@ -15,16 +15,19 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import  model_experiement, model_infer
+from model import  model_experiement, model_infer, model_infer2d
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
+from dataset import io
+Output_root = Output_root + "2dcnn/"
+io.self_check_path_create(Output_root)
 GPU_mode= True
-Continue_flag = True
+Continue_flag = False
 Visdom_flag = False
-Display_flag = True
+Display_flag = False
 loadmodel_index = '3.pth'
 
 if torch.cuda.is_available():
@@ -84,7 +87,7 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model_infer = model_infer._Model_infer(GPU_mode,num_gpus)
+Model_infer = model_infer2d ._Model_infer(GPU_mode,num_gpus)
 # if GPU_mode == True:
 #     if num_gpus > 1:
 #         Model_infer.VideoNets = torch.nn.DataParallel(Model_infer.VideoNets)

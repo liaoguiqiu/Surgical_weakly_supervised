@@ -40,7 +40,8 @@ class Display(object):
         self.dataLoader.labels = mydata_loader.labels
         Gray_video = self.dataLoader.input_videos[0,0,:,:,:] # RGB together
         Ori_D,Ori_H,Ori_W = Gray_video.shape
-        for i in range(0,27,3):
+        step_l = int(Ori_D/6)
+        for i in range(0,Ori_D-1,step_l):
             if i ==0:
                 stack = Gray_video[i]
             else:
@@ -57,11 +58,12 @@ class Display(object):
         # average_tensor = Cam3D.mean(dim=[1,2,3], keepdim=True)
         # _, sorted_indices = average_tensor.sort(dim=0)
         output_0 = self.Model_infer.output[0,:,0,0,0].cpu().detach().numpy()
+        step_l = int(D/6)
         for j in range(13):
             # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
             this_grayVideo = Cam3D[j].cpu().detach().numpy()
             if (output_0[j]>0.5 or label_0[j]>0.5):
-                for i in range(0, 27, 3):
+                for i in range(0, D-1, step_l):
                     this_image = this_grayVideo[i]
                     this_image =  cv2.resize(this_image, (Ori_H, Ori_W), interpolation = cv2.INTER_LINEAR)
             
