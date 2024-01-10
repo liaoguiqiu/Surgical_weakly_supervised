@@ -54,8 +54,8 @@ class _Model_infer(object):
                 for param in net.parameters():
                     param.requires_grad = requires_grad
     def forward(self,input):
-        self.res_f = self.resnet(input)
-        self.output, self.slice_valid, self. cam3D= self.VideoNets(self.res_f)
+        # self.res_f = self.resnet(input)
+        self.output, self.slice_valid, self. cam3D= self.VideoNets(input)
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)

@@ -27,7 +27,7 @@ io.self_check_path_create(Output_root)
 GPU_mode= True
 Continue_flag = False
 Visdom_flag = False
-Display_flag = False
+Display_flag = True
 loadmodel_index = '3.pth'
 
 if torch.cuda.is_available():

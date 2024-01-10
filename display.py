@@ -34,7 +34,7 @@ class Display(object):
         # copy all the input videos and labels
         cv2.destroyAllWindows()
         self.Model_infer.output= MODEL_infer.output
-        self.Model_infer.slice_valid = MODEL_infer.slice_valid
+        # self.Model_infer.slice_valid = MODEL_infer.slice_valid
         self.Model_infer.cam3D = MODEL_infer.cam3D
         self.dataLoader.input_videos = mydata_loader.input_videos
         self.dataLoader.labels = mydata_loader.labels
@@ -52,18 +52,23 @@ class Display(object):
         cv2.waitKey(1)
 
         # Combine the rows vertically to create the final 3x3 arrangement
-        Cam3D= self.Model_infer.cam3D[0,:,:,:,:]
+        Cam3D= self.Model_infer.cam3D[0]
         label_0 = self.dataLoader.labels[0]
+        if len (Cam3D.shape) == 3:
+            Cam3D = Cam3D.unsqueeze(1)
         ch, D, H, W = Cam3D.size()
         # average_tensor = Cam3D.mean(dim=[1,2,3], keepdim=True)
         # _, sorted_indices = average_tensor.sort(dim=0)
-        output_0 = self.Model_infer.output[0,:,0,0,0].cpu().detach().numpy()
-        step_l = int(D/6)
+        if len (self.Model_infer.output.shape) == 5:
+            output_0 = self.Model_infer.output[0,:,0,0,0].cpu().detach().numpy()
+        else:
+            output_0 = self.Model_infer.output[0,:,0,0].cpu().detach().numpy()
+        step_l = int(D/6)+1
         for j in range(13):
             # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
             this_grayVideo = Cam3D[j].cpu().detach().numpy()
             if (output_0[j]>0.5 or label_0[j]>0.5):
-                for i in range(0, D-1, step_l):
+                for i in range(0, D, step_l):
                     this_image = this_grayVideo[i]
                     this_image =  cv2.resize(this_image, (Ori_H, Ori_W), interpolation = cv2.INTER_LINEAR)
             
