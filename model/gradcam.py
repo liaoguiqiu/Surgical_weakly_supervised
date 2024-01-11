@@ -11,10 +11,20 @@ import numpy as np
 class GradCam:
     def __init__(self, model, target_layer):
         self.model = model
-        self.model.eval()
+        # self.model.eval()
         self.target_layer = target_layer
-        self.gradients = None
+        self.gradients = dict()
+        self.activations = dict()
+        def backward_hook(module, grad_input, grad_output):
+            self.gradients['value'] = grad_output[0]
+            return None
 
+        def forward_hook(module, input, output):
+            self.activations['value'] = output
+            return None
+        target_layer.register_forward_hook(forward_hook)
+        target_layer.register_backward_hook(backward_hook)
+        # target_layer.register_backward_hook(backward_hook)
     def save_gradient(self, grad):
         self.gradients = grad
 
@@ -29,10 +39,12 @@ class GradCam:
 
     def generate(self, x, target_class):
         output = self.forward(x)
-        self.backward(output, target_class)
+        score = output.max()
+        score.backward(retain_graph=True)
+        # self.backward(output, target_class)
 
-        target = self.target_layer
-        gradient = self.gradients
+        target = self.activations['value']
+        gradient = self.gradients['value']
 
         alpha = gradient.mean(dim=(2, 3), keepdim=True)
         weights = F.relu(alpha * target).mean(dim=(0, 1), keepdim=True)
@@ -41,6 +53,6 @@ class GradCam:
         gcam = F.relu(gcam)
         gcam = F.interpolate(gcam, x.shape[2:], mode="bilinear", align_corners=False)
         gcam = gcam - gcam.min()
-        gcam = gcam / gcam.max()
+        gcam = gcam / (gcam.max()+0.000001)
 
         return gcam

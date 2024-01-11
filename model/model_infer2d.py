@@ -5,31 +5,23 @@ import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
 from model. gradcam import GradCam
 
-learningR = 0.02
+learningR = 0.001
 Call_gradcam = False 
-def register_hooks(model):
-    activations = []
 
-    def hook_fn(module, input, output):
-        activations.append(output)
-
-    for layer in model.blocks:
-        layer.register_forward_hook(hook_fn)
-
-    return activations
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN2d()
         resnet18 = models.resnet18(pretrained=True)
         
         # Remove the fully connected layers at the end
-        partial = nn.Sequential(*list(resnet18.children())[0:-6])
-        
+        partial = nn.Sequential(*list(resnet18.children())[0:-4])
+        self.gradcam = None
+        self.resnet = partial
         # Modify the last layer to produce the desired feature map size
-        self.resnet = nn.Sequential(
-            partial,
-            nn.ReLU()
-        )
+        # self.resnet = nn.Sequential(
+        #     partial,
+        #     nn.ReLU()
+        # )
         # if GPU_mode ==True:
         #     self.VideoNets.cuda()
         if GPU_mode ==True:
@@ -77,11 +69,11 @@ class _Model_infer(object):
             target_layer =self.VideoNets.blocks[-1].conv_block[0]
 
     # Create a Grad-CAM instance
-            gradcam = GradCam(self.VideoNets, target_layer)  
-            activations = register_hooks(self.VideoNets)
+            Gradcam = GradCam(self.VideoNets, target_layer)  
+            # activations = register_hooks(self.VideoNets)
             # Get the model prediction
             target_class = 0  # Replace with the target class index
-            self.gradcam  = gradcam.generate(self.res_f, target_class)
+            self.gradcam  = Gradcam.generate(self.res_f, target_class)
 
             # with torch.no_grad():
             #     output,_ = self.VideoNets(self.res_f)

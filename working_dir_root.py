@@ -15,7 +15,7 @@ working_root = "/home/guiqiu/GQ_project/weakly_supervised/Data/"
 # working_root = "C:/2data/"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
-Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"
+Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl128/"
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
 Output_root =   working_root+"output/"

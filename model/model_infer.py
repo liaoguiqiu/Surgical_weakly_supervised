@@ -8,6 +8,7 @@ class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN()
         resnet18 = models.r3d_18(pretrained=True)
+        self.gradcam = None
         
         # Remove the fully connected layers at the end
         partial = nn.Sequential(*list(resnet18.children())[0:-4])

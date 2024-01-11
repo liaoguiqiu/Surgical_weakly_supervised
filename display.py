@@ -118,22 +118,23 @@ class Display(object):
         cv2.waitKey(1)
         io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_im.astype((np.uint8)) )
 
-        # heatmap = self.Model_infer.gradcam
+        if MODEL_infer.gradcam is not None:
+            heatmap = MODEL_infer.gradcam[0,0,:,:].cpu().detach().numpy()
 
-        # heatmap = (heatmap - np.min(heatmap)) / (np.max(heatmap) - np.min(heatmap) + 1e-5)
+            # heatmap = (heatmap - np.min(heatmap)) / (np.max(heatmap) - np.min(heatmap) + 1e-5)
 
-        #     # Resize the heatmap to the original image size
-        # # heatmap = cv2.resize(heatmap, (img.size[0], img.size[1]))
+                # Resize the heatmap to the original image size
+            # heatmap = cv2.resize(heatmap, (img.size[0], img.size[1]))
 
-        # # Apply colormap to the heatmap
-        # heatmap_colormap = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
+            # Apply colormap to the heatmap
+            heatmap_colormap = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
 
-        # # Superimpose the heatmap on the original image
-        # # result = cv2.addWeighted(cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR), 0.7, heatmap_colormap, 0.3, 0)
+            # Superimpose the heatmap on the original image
+            # result = cv2.addWeighted(cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR), 0.7, heatmap_colormap, 0.3, 0)
 
-        # # Display the result
-        # cv2.imshow('Grad-CAM', heatmap_colormap)
-        # cv2.waitKey(0)
+            # Display the result
+            cv2.imshow('Grad-CAM', heatmap_colormap)
+            cv2.waitKey(1)
         # Cam3D = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear')
 
 
