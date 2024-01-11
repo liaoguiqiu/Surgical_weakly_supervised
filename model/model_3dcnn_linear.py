@@ -9,7 +9,7 @@ from dataset.dataset import Obj_num, Seperate_LR
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=3,base_f=8):
+    def __init__(self, inputC=3,base_f=64):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -65,10 +65,10 @@ class _VideoCNN(nn.Module):
 
     def maxpooling(self,input):
 
-        Avg_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
-        # input = Avg_pool(input)
+        # Avg_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
+        # # input = Avg_pool(input)
 
-        input = Avg_pool (input)
+        # input = Avg_pool (input)
         bz, ch, D, H, W = input.size()
         # activation = nn.Sigmoid()
         # activation = nn.ReLU()

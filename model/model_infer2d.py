@@ -57,8 +57,8 @@ class _Model_infer(object):
         bz, ch, D, H, W = input3d.size()
 
         input = input3d[:,:,1,:,:] # first images
-        self.res_f = self.resnet(input)
-        self.output,  self. cam3D= self.VideoNets(self.res_f)
+        # self.res_f = self.resnet(input)
+        self.output,  self. cam3D= self.VideoNets(input)
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
