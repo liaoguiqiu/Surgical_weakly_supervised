@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
-learningR = 0.0001
+learningR = 0.00001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN2d()
@@ -36,7 +36,7 @@ class _Model_infer(object):
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},
             {'params': self.VideoNets .parameters()}
-        ], lr=learningR, betas=(0.5, 0.999))
+        ], lr=learningR )
         # if GPU_mode ==True:
         #     if num_gpus > 1:
         #         self.optimizer = torch.nn.DataParallel(optself.optimizerimizer)

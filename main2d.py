@@ -25,10 +25,10 @@ from dataset import io
 Output_root = Output_root + "2dcnn/"
 io.self_check_path_create(Output_root)
 GPU_mode= True
-Continue_flag = False
+Continue_flag = True
 Visdom_flag = False
 Display_flag = False
-loadmodel_index = '4.pth'
+loadmodel_index = '3.pth'
 
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
