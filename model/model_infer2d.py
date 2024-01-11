@@ -5,7 +5,7 @@ import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
 from model. gradcam import GradCam
 
-learningR = 0.001
+learningR = 0.02
 Call_gradcam = False 
 def register_hooks(model):
     activations = []
