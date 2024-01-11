@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
-learningR = 0.00001
+learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN2d()
@@ -34,7 +34,7 @@ class _Model_infer(object):
         self.customeBCE = torch.nn.BCELoss().to(device)
 
         self.optimizer = torch.optim.Adam([
-            # {'params': self.netG.Unet_back.parameters()},
+          {'params': self.resnet.parameters()},
             {'params': self.VideoNets .parameters()}
         ], lr=learningR )
         # if GPU_mode ==True:
@@ -57,12 +57,12 @@ class _Model_infer(object):
         bz, ch, D, H, W = input3d.size()
 
         input = input3d[:,:,1,:,:] # first images
-        # self.res_f = self.resnet(input)
-        self.output,  self. cam3D= self.VideoNets(input)
+        self.res_f = self.resnet(input)
+        self.output,  self. cam3D= self.VideoNets(self.res_f)
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
-        self.set_requires_grad(self.resnet, False)
+        self.set_requires_grad(self.resnet, True)
 
         self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
         # self.lossEa.backward(retain_graph=True)

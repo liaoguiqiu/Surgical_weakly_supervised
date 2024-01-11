@@ -9,7 +9,7 @@ from dataset.dataset import Obj_num, Seperate_LR
 class _VideoCNN2d(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=3,base_f=64):
+    def __init__(self, inputC=64,base_f=64):
         super(_VideoCNN2d, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -36,13 +36,13 @@ class _VideoCNN2d(nn.Module):
         self.blocks.append(block_buider.conv_keep_all2d(base_f, base_f))  # 2*256
         base_f = base_f
         self.blocks.append(block_buider.conv_keep_all2d(base_f, base_f))  # 2*256
-        self.blocks.append(block_buider.conv_dv_WH2d(base_f, base_f * 2))  # 4*256
+        self.blocks.append(block_buider.conv_keep_all2d(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
 
         self.blocks.append(block_buider.conv_keep_all2d(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
 
-        self.blocks.append(block_buider.conv_dv_WH2d(base_f, base_f * 2))  # 4*256
+        self.blocks.append(block_buider.conv_keep_all2d(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
 
         if Seperate_LR == True:
@@ -63,8 +63,8 @@ class _VideoCNN2d(nn.Module):
         # activation = nn.ReLU()
 
         # input = Drop( input)
-        Drop = nn.Dropout(0.1)
-        input = Drop(input)
+        # Drop = nn.Dropout(0.1)
+        # input = Drop(input)
         # input = activation(input)
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
@@ -95,7 +95,7 @@ class _VideoCNN2d(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         final = self.classifier(pooled)
-        cam = activationLU(self.classifier(out))
+        cam =  (self.classifier(out))
         # cam = activation
         # bz, ch, D, H, W = out.size()
         # final, slice_valid = self.maxpooling(out)

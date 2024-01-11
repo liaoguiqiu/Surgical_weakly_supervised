@@ -25,7 +25,7 @@ from dataset import io
 Output_root = Output_root + "2dcnn/"
 io.self_check_path_create(Output_root)
 GPU_mode= True
-Continue_flag = True
+Continue_flag = False
 Visdom_flag = False
 Display_flag = False
 loadmodel_index = '3.pth'
@@ -109,6 +109,17 @@ else:
     # 3. load the new state dict
     Model_infer.VideoNets.load_state_dict(model_dict)
 
+
+    pretrained_dict = torch.load(Output_root + 'outResNets' + loadmodel_index)
+    model_dict = Model_infer.resnet.state_dict()
+
+    # 1. filter out unnecessary keys
+    pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+    # 2. overwrite entries in the existing state dict
+    model_dict.update(pretrained_dict_trim)
+    # 3. load the new state dict
+    Model_infer.resnet.load_state_dict(model_dict)
+
 read_id = 0
 
 epoch = 0
@@ -127,7 +138,7 @@ while (1):
     labels_GPU = torch.from_numpy(np.float32(labels))
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
-    Model_infer.forward((input_videos_GPU)/225.0)
+    Model_infer.forward((input_videos_GPU-128.0)/60.0)
     Model_infer.optimization(labels_GPU)
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
@@ -149,6 +160,8 @@ while (1):
         plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
     if (read_id % 1000) == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
+        torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outResNets" + str(saver_id) + ".pth")
+        
         saver_id +=1
         if saver_id >5:
             saver_id =0

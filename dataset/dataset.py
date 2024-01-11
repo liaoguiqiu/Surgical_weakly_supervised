@@ -51,7 +51,7 @@ class myDataloader(object):
         self.Display_loading_video =Display_loading_video
         self.Read_from_pkl= Read_from_pkl 
         self.Save_pkl=Save_pkl
-        self.batch_size = 1
+        self.batch_size = 32
         self.obj_num = Obj_num
         self.video_down_sample = 60  # 60 FPS
         self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s

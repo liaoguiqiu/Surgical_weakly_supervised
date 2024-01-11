@@ -99,6 +99,8 @@ class Display(object):
                 text_position = (5, 40)
                 # Use cv2.putText() to write the text on the image
                 cv2.putText(infor_image, text3, text_position, font, font_scale, font_color, font_thickness)
+                # stack = stack -np.min(stack)
+                # stack = stack /(np.max(stack)+0.0000001)*254
                 stack = stack -np.min(stack)
                 stack = stack /(np.max(stack)+0.0000001)*254
                 # stack =  stack*254
