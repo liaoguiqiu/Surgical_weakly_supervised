@@ -89,11 +89,14 @@ class _VideoCNN2d(nn.Module):
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
         activation = nn.Sigmoid()
+        activationLU = nn.ReLU()
+
         pooled  = self.maxpooling(out)
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         final = self.classifier(pooled)
-        cam = self.classifier(out)
+        cam = activationLU(self.classifier(out))
+
         # bz, ch, D, H, W = out.size()
         # final, slice_valid = self.maxpooling(out)
         final = activation(final)
