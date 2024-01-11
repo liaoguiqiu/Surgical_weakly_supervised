@@ -17,7 +17,7 @@ from model import  model_experiement, model_infer
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader,categories
 from dataset import io
-
+Save_flag =False
 def save_img_to_folder(this_save_dir,ID,img):
     # this_save_dir = Output_root + "1out_img/" + Model_key + "/ground_circ/"
     if not os.path.exists(this_save_dir):
@@ -51,7 +51,8 @@ class Display(object):
         # Display the final image
         cv2.imshow('Stitched in put Image', stack.astype((np.uint8)))
         cv2.waitKey(1)
-        io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack.astype((np.uint8)) )
+        if Save_flag == True:
+            io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack.astype((np.uint8)) )
         # Combine the rows vertically to create the final 3x3 arrangement
         Cam3D= self.Model_infer.cam3D[0]
         label_0 = self.dataLoader.labels[0]
@@ -116,7 +117,9 @@ class Display(object):
                 stitch_i+=1
         cv2.imshow( 'all', stitch_im.astype((np.uint8)))
         cv2.waitKey(1)
-        io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_im.astype((np.uint8)) )
+        if Save_flag == True:
+
+            io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_im.astype((np.uint8)) )
 
         if MODEL_infer.gradcam is not None:
             heatmap = MODEL_infer.gradcam[0,0,:,:].cpu().detach().numpy()

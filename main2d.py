@@ -28,7 +28,7 @@ GPU_mode= True
 Continue_flag = False
 Visdom_flag = False
 Display_flag = True
-loadmodel_index = '4.pth'
+loadmodel_index = '0.pth'
 
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
@@ -160,7 +160,7 @@ while (1):
         plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
     if (read_id % 1000) == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
-        torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outResNets" + str(saver_id) + ".pth")
+        torch.save(Model_infer.resnet.state_dict(), Output_root + "outResNets" + str(saver_id) + ".pth")
         
         saver_id +=1
         if saver_id >5:
