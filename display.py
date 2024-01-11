@@ -15,7 +15,7 @@ import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer
 from working_dir_root import Output_root
-from dataset.dataset import myDataloader,img_size,categories
+from dataset.dataset import myDataloader,categories
 from dataset import io
 
 def save_img_to_folder(this_save_dir,ID,img):

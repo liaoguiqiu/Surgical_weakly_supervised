@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from dataset.dataset import myDataloader, img_size
+from dataset.dataset import myDataloader
 import model.base_models as block_buider
 from dataset.dataset import Obj_num, Seperate_LR
 # Seperate_LR = True # seperate left and right

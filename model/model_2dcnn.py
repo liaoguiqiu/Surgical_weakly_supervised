@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from dataset.dataset import myDataloader, img_size
+from dataset.dataset import myDataloader
 import model.base_models as block_buider
 from dataset.dataset import Obj_num, Seperate_LR
 # Seperate_LR = True # seperate left and right
@@ -68,11 +68,11 @@ class _VideoCNN2d(nn.Module):
         # input = activation(input)
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
-        Avgpool = nn.AvgPool2d(2,2)
-        input = Avgpool(input)
+        # Avgpool = nn.AvgPool2d(2,2)
+        # input = Avgpool(input)
         bz, ch, H, W = input.size()
 
-        Maxpool = nn.MaxPool2d ((H,W),stride=(1,1))
+        Maxpool = nn.AvgPool2d ((H,W),stride=(1,1))
         final = Maxpool(input)
         
         # slice_valid = Maxpool_keepD(input)
@@ -95,8 +95,8 @@ class _VideoCNN2d(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         final = self.classifier(pooled)
-        cam = activationLU(self.classifier(out))
-
+        cam = activation(self.classifier(out))
+        # cam = activation
         # bz, ch, D, H, W = out.size()
         # final, slice_valid = self.maxpooling(out)
         final = activation(final)

@@ -22,11 +22,11 @@ import image_operator.basic_operator as basic_operator
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
 Seperate_LR = False
-img_size = 64
+
 input_ch = 3 # input channel of each image/video
-Display_loading_video = False
-Read_from_pkl= True
-Save_pkl = False
+
+
+
 categories = [
     'bipolar dissector', #0   - 17
     'bipolar forceps', #1     -13163
@@ -45,9 +45,13 @@ categories = [
 ]
 Obj_num = len(categories)
 class myDataloader(object):
-    def __init__(self, OLG=False):
+    def __init__(self, OLG=False,img_size = 64,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
-        self.batch_size = 12
+        self.image_size = img_size
+        self.Display_loading_video =Display_loading_video
+        self.Read_from_pkl= Read_from_pkl 
+        self.Save_pkl=Save_pkl
+        self.batch_size = 4
         self.obj_num = Obj_num
         self.video_down_sample = 60  # 60 FPS
         self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s
@@ -140,7 +144,7 @@ class myDataloader(object):
         frame_count = 0
         buffer_count = 0
         # Read frames from the video clip
-        video_buffer = np.zeros((3,self.video_buff_size,  img_size, img_size))
+        video_buffer = np.zeros((3,self.video_buff_size,  self.image_size, self.image_size))
         frame_number =0
         Valid_video=False
         while True:
@@ -162,12 +166,12 @@ class myDataloader(object):
                 if ret == True:
                     H, W, _ = frame.shape
                     crop = frame[0:H, 192:1088]
-                    if Display_loading_video == True:
+                    if self.Display_loading_video == True:
 
                         cv2.imshow("crop", crop.astype((np.uint8)))
                         cv2.waitKey(1)
 
-                    this_resize = cv2.resize(crop, (img_size, img_size), interpolation=cv2.INTER_AREA)
+                    this_resize = cv2.resize(crop, (self.image_size, self.image_size), interpolation=cv2.INTER_AREA)
                     reshaped = np.transpose(this_resize, (2, 0, 1))
                     video_buffer[:, buffer_count, :, :] = reshaped
                     # video_buffer[frame_count,:,:] = this_resize
@@ -189,8 +193,8 @@ class myDataloader(object):
 
         cap.release()
         # Squeeze the RGB channel
-        squeezed = np.reshape(video_buffer, (self.video_buff_size * 3, img_size, img_size))
-        if Display_loading_video == True:
+        squeezed = np.reshape(video_buffer, (self.video_buff_size * 3, self.image_size, self.image_size))
+        if self.Display_loading_video == True:
             # x, y = 0, 10  # Position of the text
             # # Font settings
             # font = cv2.FONT_HERSHEY_SIMPLEX
@@ -210,7 +214,7 @@ class myDataloader(object):
             cv2.waitKey(1)
         return video_buffer, squeezed,Valid_video
     def read_a_batch(self):
-        if Read_from_pkl == False:
+        if self.Read_from_pkl == False:
             folder_path = Dataset_video_root
             file_name_extention = ".mp4"
         else:
@@ -235,10 +239,10 @@ class myDataloader(object):
                 # if clip_id <= num_clips_to_read:
                 # Construct the full path to the video clip
                 video_path = os.path.join(folder_path, filename)
-                if Read_from_pkl == False:
+                if self.Read_from_pkl == False:
                     self.video_buff, self.video_buff_s, Valid_video_flag = self.load_this_video_buffer(video_path)
 
-                    if Save_pkl == True and Valid_video_flag == True:
+                    if self.Save_pkl == True and Valid_video_flag == True:
                         this_video_buff = self.video_buff.astype((np.uint8))
                         io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff)
                 else:
@@ -256,7 +260,7 @@ class myDataloader(object):
                     binary_vector_l, binary_vector_r = self.convert_left_right_v(this_label)
                     # load the squess and unsquess
 
-                    if Display_loading_video == True:
+                    if self.Display_loading_video == True:
                         cv2.imshow("SS First Frame R", this_video_buff[0,15, :, :].astype((np.uint8)))
                         cv2.imshow("SS First Frame G", this_video_buff[1,15, :, :].astype((np.uint8)))
                         cv2.imshow("SS First Frame B", this_video_buff[2, 15,:, :].astype((np.uint8)))
