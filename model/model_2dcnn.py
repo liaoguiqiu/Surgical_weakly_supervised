@@ -95,7 +95,7 @@ class _VideoCNN2d(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         final = self.classifier(pooled)
-        cam =  (self.classifier(out))
+        cam = activationLU (self.classifier(out))
         # cam = activation
         # bz, ch, D, H, W = out.size()
         # final, slice_valid = self.maxpooling(out)

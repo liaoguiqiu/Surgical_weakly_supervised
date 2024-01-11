@@ -3,7 +3,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
-learningR = 0.0001
+from model. gradcam import GradCam
+
+learningR = 0.001
+Call_gradcam = False 
+def register_hooks(model):
+    activations = []
+
+    def hook_fn(module, input, output):
+        activations.append(output)
+
+    for layer in model.blocks:
+        layer.register_forward_hook(hook_fn)
+
+    return activations
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
         self.VideoNets = _VideoCNN2d()
@@ -59,10 +72,51 @@ class _Model_infer(object):
         input = input3d[:,:,1,:,:] # first images
         self.res_f = self.resnet(input)
         self.output,  self. cam3D= self.VideoNets(self.res_f)
+
+        if Call_gradcam == True:
+            target_layer =self.VideoNets.blocks[-1].conv_block[0]
+
+    # Create a Grad-CAM instance
+            gradcam = GradCam(self.VideoNets, target_layer)  
+            activations = register_hooks(self.VideoNets)
+            # Get the model prediction
+            target_class = 0  # Replace with the target class index
+            self.gradcam  = gradcam.generate(self.res_f, target_class)
+
+            # with torch.no_grad():
+            #     output,_ = self.VideoNets(self.res_f)
+
+            # # Get the predicted class index
+            # # pred_idx = torch.argmax(output).item()
+
+            # # Get the Grad-CAM heatmap for the predicted class
+            # # heatmap = gradcam.get_gradcam(pred_idx)
+            # self.gradcam = heatmap
+            # Normalize the heatmap
+            # heatmap = (heatmap - np.min(heatmap)) / (np.max(heatmap) - np.min(heatmap) + 1e-5)
+
+            # # Resize the heatmap to the original image size
+            # heatmap = cv2.resize(heatmap, (img.size[0], img.size[1]))
+
+            # # Apply colormap to the heatmap
+            # heatmap_colormap = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
+
+            # # Superimpose the heatmap on the original image
+            # result = cv2.addWeighted(cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR), 0.7, heatmap_colormap, 0.3, 0)
+
+            # # Display the result
+            # cv2.imshow('Grad-CAM', result)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()    
+
+
+
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         self.set_requires_grad(self.resnet, True)
+
+
 
         self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
         # self.lossEa.backward(retain_graph=True)
