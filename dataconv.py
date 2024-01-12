@@ -91,7 +91,7 @@ Model_infer = model_infer._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = 128,Display_loading_video = False,Read_from_pkl= False,Save_pkl = True)
+dataLoader = myDataloader(img_size = 192,Display_loading_video = False,Read_from_pkl= False,Save_pkl = True)
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
@@ -105,6 +105,10 @@ else:
     model_dict.update(pretrained_dict_trim)
     # 3. load the new state dict
     Model_infer.VideoNets.load_state_dict(model_dict)
+    Model_infer.VideoNets.load_state_dict(pretrained_dict, strict=False)
+
+
+    pretrained_dict2 = torch.load(Output_root + 'outResNets' + loadmodel_index,map_location=torch.device('cpu'))
 
 read_id = 0
 

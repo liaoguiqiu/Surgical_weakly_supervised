@@ -20,7 +20,7 @@ import image_operator.basic_operator as basic_operator
 
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
-from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root
+from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root,Batch_size
 Seperate_LR = False
 
 input_ch = 3 # input channel of each image/video
@@ -51,7 +51,7 @@ class myDataloader(object):
         self.Display_loading_video =Display_loading_video
         self.Read_from_pkl= Read_from_pkl 
         self.Save_pkl=Save_pkl
-        self.batch_size = 2
+        self.batch_size = Batch_size
         self.obj_num = Obj_num
         self.video_down_sample = 60  # 60 FPS
         self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s

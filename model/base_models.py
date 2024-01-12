@@ -26,7 +26,7 @@ def build_3dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
 
                 # nn.LeakyReLU(0.1, inplace=True),
                 nn.ReLU(),
-                 nn.Dropout(0.5)
+                 nn.Dropout(0.1)
             )
 
     else:
@@ -65,7 +65,7 @@ def build_2dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
 
                 # nn.LeakyReLU(0.1, inplace=True),
                 nn.ReLU(),
-                 nn.Dropout(0.5)
+                 nn.Dropout(0.1)
             )
 
     else:
@@ -114,9 +114,9 @@ class conv_keep_all(nn.Module):
 
 
 class conv_dv_WH(nn.Module): # devide H and W keep the D
-    def __init__(self, indepth, outdepth, k=(1,4, 4), s=(1,2, 2), p=(0,1, 1)):
+    def __init__(self, indepth, outdepth, k=(1,4, 4), s=(1,2, 2), p=(0,1, 1),dropout=False):
         super(conv_dv_WH, self).__init__()
-        self.conv_block = build_3dconv_block(indepth, outdepth, k, s, p)
+        self.conv_block = build_3dconv_block(indepth, outdepth, k, s, p,dropout)
 
     def forward(self, x):
         # """Forward function (with skip connections)"""

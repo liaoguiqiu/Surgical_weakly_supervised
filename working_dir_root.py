@@ -19,3 +19,20 @@ Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl128/"
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
 Output_root =   working_root+"output/"
+
+GPU_mode= True
+Continue_flag = False
+Visdom_flag = False
+Display_flag = True
+loadmodel_index = '3.pth'
+
+Batch_size =20
+
+
+learningR = 0.001
+Call_gradcam = False 
+
+class Para(object):
+    def __init__(self):
+        
+        self.x=0

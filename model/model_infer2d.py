@@ -4,9 +4,9 @@ import torch.nn.functional as F
 import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
 from model. gradcam import GradCam
-
-learningR = 0.0001
-Call_gradcam = False 
+from working_dir_root import learningR, Call_gradcam
+# learningR = 0.0001
+# Call_gradcam = False 
 
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
