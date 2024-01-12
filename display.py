@@ -52,7 +52,7 @@ class Display(object):
         cv2.imshow('Stitched in put Image', stack1.astype((np.uint8)))
         cv2.waitKey(1)
         if Save_flag == True:
-            io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack.astype((np.uint8)) )
+            io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack1.astype((np.uint8)) )
         # Combine the rows vertically to create the final 3x3 arrangement
         Cam3D= self.Model_infer.cam3D[0]
         label_0 = self.dataLoader.labels[0]
