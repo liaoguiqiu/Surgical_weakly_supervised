@@ -44,12 +44,12 @@ class Display(object):
         step_l = int(Ori_D/6)
         for i in range(0,Ori_D-1,step_l):
             if i ==0:
-                stack = Gray_video[i]
+                stack1 = Gray_video[i]
             else:
-                stack = np.hstack((stack,Gray_video[i]))
+                stack1 = np.hstack((stack1,Gray_video[i]))
 
         # Display the final image
-        cv2.imshow('Stitched in put Image', stack.astype((np.uint8)))
+        cv2.imshow('Stitched in put Image', stack1.astype((np.uint8)))
         cv2.waitKey(1)
         if Save_flag == True:
             io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack.astype((np.uint8)) )
@@ -107,19 +107,28 @@ class Display(object):
                 # stack =  stack*254
                 stack = np.clip(stack,0,254)
                 stack = np.hstack((infor_image, stack))
+                alpha= 0.5
+                overlay = cv2.addWeighted(stack1, 1 - alpha, stack, alpha, 0)
                 # Display the final image
                 # cv2.imshow( str(j) + "score"+ "{:.2f}".format(output_0[j]) + "GT"+ str(label_0[j])+categories[j], stack.astype((np.uint8)))
                 # cv2.waitKey(1)
                 if stitch_i ==0:
                     stitch_im = stack
+                    stitch_over = overlay
                 else:
                     stitch_im = np.vstack((stitch_im, stack))
+                    stitch_over = np.vstack((stitch_over, overlay))
+
                 stitch_i+=1
         cv2.imshow( 'all', stitch_im.astype((np.uint8)))
+        cv2.imshow( 'overlay', stitch_over.astype((np.uint8)))
+
         cv2.waitKey(1)
         if Save_flag == True:
 
             io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_im.astype((np.uint8)) )
+            io.save_img_to_folder(Output_root + "image/predict_overlay/" ,  read_id, stitch_over.astype((np.uint8)) )
+
 
         if MODEL_infer.gradcam is not None:
             heatmap = MODEL_infer.gradcam[0,0,:,:].cpu().detach().numpy()

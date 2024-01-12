@@ -55,9 +55,11 @@ def random_augment(video):
 
 
 
-def hide_patch(video, patch_num=32, hide_prob=0.5, mean=128):
+def hide_patch(video, patch_num=32, hide_prob=0.3, mean=128):
     # assume patch_num is int**2
     if patch_num == 1: return video
+    flag = choice([True, False])
+    
 
     ch, D, H, W = video.shape
     pn = int(patch_num ** (1/2))
