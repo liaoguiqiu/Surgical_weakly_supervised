@@ -125,7 +125,7 @@ while (1):
     labels_GPU = torch.from_numpy(np.float32(labels))
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
-    Model_infer.forward((input_videos_GPU)/225.0)
+    Model_infer.forward((input_videos_GPU-128.0)/60.0)
     Model_infer.optimization(labels_GPU)
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)

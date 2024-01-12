@@ -20,7 +20,7 @@ import image_operator.basic_operator as basic_operator
 
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
-from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root,Batch_size
+from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root,Batch_size,Random_mask
 Seperate_LR = False
 
 input_ch = 3 # input channel of each image/video
@@ -269,8 +269,10 @@ class myDataloader(object):
                     # fill the batch
                     # if Valid_video_flag == True:
                     # self.video_buff = basic_operator.random_verse_the_video(self.video_buff)
-                    self.video_buff=basic_operator.random_augment(self.video_buff)
                         
+                    self.video_buff=basic_operator.random_augment(self.video_buff)
+                    if Random_mask==True:
+                        self.video_buff=basic_operator.hide_patch(self.video_buff)
                     flip_flag = random.choice([True, False])
 
                     # flip_flag = True

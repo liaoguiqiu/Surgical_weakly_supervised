@@ -53,3 +53,24 @@ def random_augment(video):
 
     return augmented_images
 
+
+
+def hide_patch(video, patch_num=16, hide_prob=0.5, mean=128):
+    # assume patch_num is int**2
+    if patch_num == 1: return video
+
+    ch, D, H, W = video.shape
+    pn = int(patch_num ** (1/2))
+    patch_size = int(W // pn)
+    patch_offsets = [(x * patch_size, y * patch_size) for x in range(pn) for y in range(pn)]
+
+    # if np.random.uniform() < hide_prob:
+    #     for d in range(D):
+    #         for (px, py) in patch_offsets:
+    #             video[:, d, px:px + patch_size, py:py + patch_size] = mean
+    if np.random.uniform() < hide_prob:
+      
+            for (px, py) in patch_offsets:
+                video[:, :, px:px + patch_size, py:py + patch_size] = mean
+    return video
+
