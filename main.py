@@ -21,7 +21,7 @@ from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
-from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  
+from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
@@ -92,7 +92,7 @@ Model_infer = model_infer._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader()
+dataLoader = myDataloader(img_size = img_size)
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
