@@ -41,8 +41,8 @@ class Display(object):
         self.dataLoader.labels = mydata_loader.labels
         Gray_video = self.dataLoader.input_videos[0,0,:,:,:] # RGB together
         Ori_D,Ori_H,Ori_W = Gray_video.shape
-        step_l = int(Ori_D/6)
-        for i in range(0,Ori_D-1,step_l):
+        step_l = int(Ori_D/6)+1
+        for i in range(0,Ori_D,step_l):
             if i ==0:
                 stack1 = Gray_video[i]
             else:
@@ -79,10 +79,16 @@ class Display(object):
                         stack = this_image
                     else:
                         stack = np.hstack((stack, this_image))
+                stack = stack -np.min(stack)
+                stack = stack /(np.max(stack)+0.0000001)*254
+                # stack =  stack*254
+                stack = np.clip(stack,0,254)
+                alpha= 0.5
+                overlay = cv2.addWeighted(stack1.astype((np.uint8)), 1 - alpha, stack.astype((np.uint8)), alpha, 0)
                 # stack =  stack - np.min(stack)
                 infor_image = this_image*0
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 0.3
+                font_scale = 0.5
                 font_thickness = 1
                 font_color = (255, 255, 255)  # White color
 
@@ -102,13 +108,9 @@ class Display(object):
                 cv2.putText(infor_image, text3, text_position, font, font_scale, font_color, font_thickness)
                 # stack = stack -np.min(stack)
                 # stack = stack /(np.max(stack)+0.0000001)*254
-                stack = stack -np.min(stack)
-                stack = stack /(np.max(stack)+0.0000001)*254
-                # stack =  stack*254
-                stack = np.clip(stack,0,254)
                 stack = np.hstack((infor_image, stack))
-                alpha= 0.5
-                overlay = cv2.addWeighted(stack1, 1 - alpha, stack, alpha, 0)
+                
+               
                 # Display the final image
                 # cv2.imshow( str(j) + "score"+ "{:.2f}".format(output_0[j]) + "GT"+ str(label_0[j])+categories[j], stack.astype((np.uint8)))
                 # cv2.waitKey(1)
