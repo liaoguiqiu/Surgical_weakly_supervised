@@ -24,6 +24,7 @@ GPU_mode= True
 Continue_flag = False
 Visdom_flag = False
 Display_flag = True
+Save_flag =False
 loadmodel_index = '3.pth'
 
 Batch_size =20
