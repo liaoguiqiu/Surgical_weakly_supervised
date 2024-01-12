@@ -20,13 +20,13 @@ class _VideoCNN(nn.Module):
 
         #
 
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,dropout=True))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,dropout=False))
 
         # 16*256  - 8*256
         # self.side_branch1.append(  conv_keep_all(base_f, base_f))
         # self.side_branch1.append(  conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,dropout=True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,dropout=False))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         base_f = base_f * 2
         # 8*256  - 4*256
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
@@ -74,8 +74,8 @@ class _VideoCNN(nn.Module):
         # activation = nn.ReLU()
 
         # input = Drop( input)
-        Drop = nn.Dropout(0.1)
-        input = Drop(input)
+        # Drop = nn.Dropout(0.1)
+        # input = Drop(input)
         # input = activation(input)
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
