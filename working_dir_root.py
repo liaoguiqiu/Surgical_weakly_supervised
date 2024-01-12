@@ -29,7 +29,7 @@ Display_flag = True
 Save_flag =False
 loadmodel_index = '0.pth'
 
-Batch_size =20
+Batch_size =1
 Random_mask = True
 
 learningR = 0.001

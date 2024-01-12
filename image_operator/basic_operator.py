@@ -68,9 +68,10 @@ def hide_patch(video, patch_num=16, hide_prob=0.5, mean=128):
     #     for d in range(D):
     #         for (px, py) in patch_offsets:
     #             video[:, d, px:px + patch_size, py:py + patch_size] = mean
-    if np.random.uniform() < hide_prob:
+    
       
-            for (px, py) in patch_offsets:
+    for (px, py) in patch_offsets:
+        if np.random.uniform() < hide_prob:
                 video[:, :, px:px + patch_size, py:py + patch_size] = mean
     return video
 
