@@ -27,7 +27,7 @@ Display_flag = True
 Save_flag =False
 loadmodel_index = '3.pth'
 
-Batch_size =20
+Batch_size =1
 
 
 learningR = 0.001

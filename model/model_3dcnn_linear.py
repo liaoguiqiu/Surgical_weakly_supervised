@@ -9,7 +9,7 @@ from dataset.dataset import Obj_num, Seperate_LR
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=3,base_f=64):
+    def __init__(self, inputC=3,base_f=16):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -25,8 +25,8 @@ class _VideoCNN(nn.Module):
         # 16*256  - 8*256
         # self.side_branch1.append(  conv_keep_all(base_f, base_f))
         # self.side_branch1.append(  conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,dropout=True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=True))
         base_f = base_f * 2
         # 8*256  - 4*256
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f))
