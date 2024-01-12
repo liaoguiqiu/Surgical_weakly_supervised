@@ -72,7 +72,7 @@ class _VideoCNN2d(nn.Module):
         # input = Avgpool(input)
         bz, ch, H, W = input.size()
 
-        Maxpool = nn.AvgPool2d ((H,W),stride=(1,1))
+        Maxpool = nn.MaxPool2d ((H,W),stride=(1,1))
         final = Maxpool(input)
         
         # slice_valid = Maxpool_keepD(input)

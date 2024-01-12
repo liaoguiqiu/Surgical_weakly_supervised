@@ -21,6 +21,7 @@ from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
+
 from dataset import io
 Output_root = Output_root + "2dcnn/"
 io.self_check_path_create(Output_root)
@@ -28,7 +29,7 @@ GPU_mode= True
 Continue_flag = True
 Visdom_flag = False
 Display_flag = True
-loadmodel_index = '3.pth'
+loadmodel_index = '0.pth'
 
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
@@ -99,7 +100,7 @@ dataLoader = myDataloader()
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
 else:
-    pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index)
+    pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index,map_location=torch.device('cpu'))
     # model_dict = Model_infer.VideoNets.state_dict()
 
     # # 1. filter out unnecessary keys
@@ -107,10 +108,10 @@ else:
     # # 2. overwrite entries in the existing state dict
     # model_dict.update(pretrained_dict_trim)
     # 3. load the new state dict
-    Model_infer.VideoNets.load_state_dict(pretrained_dict)
+    Model_infer.VideoNets.load_state_dict(pretrained_dict, strict=False)
 
 
-    pretrained_dict2 = torch.load(Output_root + 'outResNets' + loadmodel_index)
+    pretrained_dict2 = torch.load(Output_root + 'outResNets' + loadmodel_index,map_location=torch.device('cpu'))
     # model_dict = Model_infer.resnet.state_dict()
 
     # # 1. filter out unnecessary keys
@@ -118,7 +119,7 @@ else:
     # # 2. overwrite entries in the existing state dict
     # model_dict.update(pretrained_dict_trim)
     # 3. load the new state dict
-    Model_infer.resnet.load_state_dict(pretrained_dict2)
+    Model_infer.resnet.load_state_dict(pretrained_dict2, strict=False)
 
 read_id = 0
 
