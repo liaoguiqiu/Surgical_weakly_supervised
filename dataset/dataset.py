@@ -51,7 +51,7 @@ class myDataloader(object):
         self.Display_loading_video =Display_loading_video
         self.Read_from_pkl= Read_from_pkl 
         self.Save_pkl=Save_pkl
-        self.batch_size = 12
+        self.batch_size = 20
         self.obj_num = Obj_num
         self.video_down_sample = 60  # 60 FPS
         self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s
@@ -269,6 +269,8 @@ class myDataloader(object):
                     # fill the batch
                     # if Valid_video_flag == True:
                     # self.video_buff = basic_operator.random_verse_the_video(self.video_buff)
+                    self.video_buff=basic_operator.random_augment(self.video_buff)
+                        
                     flip_flag = random.choice([True, False])
 
                     # flip_flag = True
@@ -281,7 +283,6 @@ class myDataloader(object):
                         self.input_videos[i, :, :, :, :] = np.flip(self.video_buff, axis=3)
                         self.labels[i, :] = binary_vector
                         self.labels_LR[i, :] = np.concatenate([binary_vector_r, binary_vector_l])
-
 
                 else:
                     print("Key does not exist in the dictionary.")
