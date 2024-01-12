@@ -55,7 +55,7 @@ def random_augment(video):
 
 
 
-def hide_patch(video, patch_num=16, hide_prob=0.5, mean=128):
+def hide_patch(video, patch_num=32, hide_prob=0.5, mean=128):
     # assume patch_num is int**2
     if patch_num == 1: return video
 
