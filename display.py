@@ -17,7 +17,7 @@ from model import  model_experiement, model_infer
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader,categories
 from dataset import io
-Save_flag =False
+Save_flag =True
 def save_img_to_folder(this_save_dir,ID,img):
     # this_save_dir = Output_root + "1out_img/" + Model_key + "/ground_circ/"
     if not os.path.exists(this_save_dir):

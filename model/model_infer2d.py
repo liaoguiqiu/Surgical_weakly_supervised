@@ -5,7 +5,7 @@ import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
 from model. gradcam import GradCam
 
-learningR = 0.001
+learningR = 0.0000000001
 Call_gradcam = False 
 
 class _Model_infer(object):

@@ -12,7 +12,7 @@
 # Remote
 
 working_root = "/home/guiqiu/GQ_project/weakly_supervised/Data/"
-# working_root = "C:/2data/"
+working_root = "C:/2data/"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl128/"
