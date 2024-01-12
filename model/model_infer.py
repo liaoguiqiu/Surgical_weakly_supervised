@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torchvision.models.video as models
 from model.model_3dcnn_linear import _VideoCNN
 from working_dir_root import learningR
+from dataset.dataset import class_weights
 # learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
@@ -32,8 +33,10 @@ class _Model_infer(object):
                 self.resnet  = torch.nn.DataParallel(self.resnet )
         self.VideoNets.to(device)
         self.resnet .to(device)
+        
+        weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         # self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
-        self.customeBCE = torch.nn.BCELoss().to(device)
+        self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
 
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},

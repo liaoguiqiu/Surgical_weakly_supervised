@@ -5,6 +5,7 @@ import torchvision.models as models
 from model.model_2dcnn import _VideoCNN2d
 from model. gradcam import GradCam
 from working_dir_root import learningR, Call_gradcam
+from dataset.dataset import class_weights
 # learningR = 0.0001
 # Call_gradcam = False 
 
@@ -36,7 +37,11 @@ class _Model_infer(object):
         self.VideoNets.to(device)
         self.resnet .to(device)
         # self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
-        self.customeBCE = torch.nn.BCELoss().to(device)
+        weight_tensor = torch.tensor(class_weights, dtype=torch.float)
+
+        self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
+
+        # self.customeBCE = torch.nn.BCELoss().to(device)
 
         self.optimizer = torch.optim.Adam([
           {'params': self.resnet.parameters()},

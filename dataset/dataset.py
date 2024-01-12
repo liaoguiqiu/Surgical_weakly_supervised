@@ -26,6 +26,12 @@ Seperate_LR = False
 input_ch = 3 # input channel of each image/video
 
 
+categories_count = [17, 13163, 17440, 576, 1698, 4413, 11924, 10142, 866, 2992,131, 17, 181, 1026]
+
+total_samples = sum(categories_count)
+class_weights = [total_samples / (abs(count) * len(categories_count)) for count in categories_count]
+
+# weight_tensor = torch.tensor(class_weights, dtype=torch.float)
 
 categories = [
     'bipolar dissector', #0   - 17
