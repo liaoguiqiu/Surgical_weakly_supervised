@@ -78,3 +78,38 @@ def hide_patch(video, patch_num=32, hide_prob=0.3, mean=128):
                 video[:, :, px:px + patch_size, py:py + patch_size] = mean
     return video
 
+def motion_map(video):
+    ch, D, H, W = video.shape
+    shifted = np.roll(video, 1, axis=1)
+    motion = np.abs(video - shifted)
+    motion = (motion - np.min(motion)) / np.max(motion) * 255
+    return motion
+
+
+def compute_optical_flow(video):
+    ch, D, H, W = video.shape
+    motion_map = np.zeros((D, H, W), dtype=np.float32)
+
+    prev_frame = video[0, 0, :, :]  # Use the first frame as the initial frame
+
+    for i in range(1, D):
+        current_frame = video[0, i, :, :]
+        
+        # Compute optical flow
+        flow = cv2.calcOpticalFlowFarneback(
+            prev_frame, current_frame, flow=None, pyr_scale=0.5, levels=5, winsize=7, iterations=10, poly_n=5, poly_sigma=1.1, flags=0
+        )
+
+        # Calculate magnitude of the flow vectors
+        magnitude = np.sqrt(flow[..., 0]**2 + flow[..., 1]**2)
+
+        # Normalize and scale the magnitude to the range [0, 255]
+        magnitude = (magnitude - np.min(magnitude)) / np.max(magnitude) * 255
+
+        # Store the computed motion map
+        motion_map[i, :, :] = magnitude
+
+        # Update the previous frame
+        prev_frame = current_frame
+    motion_map[0, :, :] = motion_map[1, :, :] 
+    return motion_map

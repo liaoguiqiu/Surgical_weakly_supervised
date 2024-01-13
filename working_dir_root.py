@@ -12,7 +12,7 @@
 # Remote
 
 working_root = "/home/guiqiu/GQ_project/weakly_supervised/Data/"
-# working_root = "C:/2data/"
+working_root = "C:/2data/"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl128/"
@@ -29,8 +29,8 @@ Display_flag = True
 Save_flag =False
 loadmodel_index = '1.pth'
 
-Batch_size =4
-Random_mask = True
+Batch_size =1
+Random_mask = False
 
 learningR = 0.001
 Call_gradcam = False 
