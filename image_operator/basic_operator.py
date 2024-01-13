@@ -60,7 +60,8 @@ def hide_patch(video, patch_num=32, hide_prob=0.3, mean=128):
     if patch_num == 1: return video
     flag = choice([True, False])
     
-
+    if flag == True:
+       return video
     ch, D, H, W = video.shape
     pn = int(patch_num ** (1/2))
     patch_size = int(W // pn)

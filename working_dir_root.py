@@ -27,7 +27,7 @@ Continue_flag = True
 Visdom_flag = False
 Display_flag = True
 Save_flag =False
-loadmodel_index = '0.pth'
+loadmodel_index = '3.pth'
 
 Batch_size =10
 Random_mask = True
