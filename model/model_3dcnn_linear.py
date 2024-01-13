@@ -80,7 +80,7 @@ class _VideoCNN(nn.Module):
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         Maxpool_keepD = nn.AvgPool3d((1,H,W),stride=(1,1,1))
-        Maxpool_keepC = nn.AvgPool3d((D,1,1),stride=(1,1,1))
+        Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         
         slice_valid = Maxpool_keepD(input)
         final = Maxpool_keepC(slice_valid)
