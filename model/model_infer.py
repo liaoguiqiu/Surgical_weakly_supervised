@@ -35,8 +35,8 @@ class _Model_infer(object):
         self.resnet .to(device)
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
-        # self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
-        self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
+        self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
 
         self.optimizer = torch.optim.Adam([
             # {'params': self.netG.Unet_back.parameters()},

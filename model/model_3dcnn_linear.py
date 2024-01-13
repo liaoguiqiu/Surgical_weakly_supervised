@@ -96,12 +96,12 @@ class _VideoCNN(nn.Module):
             out = self.blocks[j](out)
         activation = nn.Sigmoid()
         activationLU = nn.ReLU()
-        pooled, slice_valid = self.maxpooling(out)
+        # pooled, slice_valid = self.maxpooling(out)
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
-        final = self.classifier(pooled)
+        # final = self.classifier(pooled)
         cam = activationLU(self.classifier(out))
         # bz, ch, D, H, W = out.size()
-        # final, slice_valid = self.maxpooling(out)
-        final = activation(final)
+        final, slice_valid = self.maxpooling(cam)
+        # final = activation(final)
         return final, slice_valid, cam
