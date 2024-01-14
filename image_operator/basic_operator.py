@@ -55,7 +55,7 @@ def random_augment(video):
 
 
 
-def hide_patch(video, patch_num=32, hide_prob=0.3, mean=128):
+def hide_patch(video, patch_num=32, hide_prob=0.3, mean=128,image_level= True):
     # assume patch_num is int**2
     if patch_num == 1: return video
     flag = choice([True, False])
@@ -72,10 +72,15 @@ def hide_patch(video, patch_num=32, hide_prob=0.3, mean=128):
     #         for (px, py) in patch_offsets:
     #             video[:, d, px:px + patch_size, py:py + patch_size] = mean
     
-      
-    for (px, py) in patch_offsets:
-        if np.random.uniform() < hide_prob:
-                video[:, :, px:px + patch_size, py:py + patch_size] = mean
+    if image_level == False:  
+        for (px, py) in patch_offsets:
+            if np.random.uniform() < hide_prob:
+                    video[:, :, px:px + patch_size, py:py + patch_size] = mean
+    else:
+      for i in range(D):
+        for (px, py) in patch_offsets:
+            if np.random.uniform() < hide_prob:
+                    video[:, i, px:px + patch_size, py:py + patch_size] = mean
     return video
 
 def motion_map(video):
