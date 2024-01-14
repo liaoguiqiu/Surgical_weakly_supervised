@@ -41,7 +41,7 @@ class Display(object):
         self.dataLoader.labels = mydata_loader.labels
         Gray_video = self.dataLoader.input_videos[0,0,:,:,:] # RGB together
         Ori_D,Ori_H,Ori_W = Gray_video.shape
-        step_l = int(Ori_D/6)+1
+        step_l = int(Ori_D/15)+1
         for i in range(0,Ori_D,step_l):
             if i ==0:
                 stack1 = Gray_video[i]
@@ -65,7 +65,7 @@ class Display(object):
             output_0 = self.Model_infer.output[0,:,0,0,0].cpu().detach().numpy()
         else:
             output_0 = self.Model_infer.output[0,:,0,0].cpu().detach().numpy()
-        step_l = int(D/6)+1
+        step_l = int(D/15)+1
         stitch_i =0
         for j in range(13):
             # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()

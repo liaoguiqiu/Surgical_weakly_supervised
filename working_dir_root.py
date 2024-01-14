@@ -15,21 +15,21 @@ working_root = "/home/guiqiu/GQ_project/weakly_supervised/Data/"
 working_root = "C:/2data/"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
-Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl128/"
+Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
 Output_root =   working_root+"output/"
 
 
-img_size = 128
+img_size = 64
 GPU_mode= True
 Continue_flag = True
 Visdom_flag = False
 Display_flag = True
 Save_flag =False
-loadmodel_index = '1.pth'
+loadmodel_index = '5.pth'
 
-Batch_size =1
+Batch_size =2
 Random_mask = False
 
 learningR = 0.001
