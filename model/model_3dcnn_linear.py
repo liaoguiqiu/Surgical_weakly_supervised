@@ -57,10 +57,10 @@ class _VideoCNN(nn.Module):
         #     self.classifier = nn.Linear(base_f, Obj_num * 2) # 4*256
         # else:
         #     self.classifier = nn.Linear(base_f, Obj_num )  # 4*256
-        if Seperate_LR == True:
-            self.classifier = nn.Conv3d(base_f, Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
+        if Seperate_LR == True: # douvle the channel as the cat of flow masked tensor
+            self.classifier = nn.Conv3d(base_f*2, Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
         else:
-            self.classifier = nn.Conv3d(base_f, Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+            self.classifier = nn.Conv3d(base_f*2, Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
 
 
     def maxpooling(self,input):
@@ -90,10 +90,14 @@ class _VideoCNN(nn.Module):
         # slice_valid = activation(slice_valid)
 
         return final, slice_valid
-    def forward(self, x):
+    def forward(self, x,input_flows):
         out = x
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
+        bz, ch, D, H, W = out.size()
+        expanded_mask = input_flows.unsqueeze(1)
+        masked_feature = out * expanded_mask
+        cat_feature = torch.cat([out, masked_feature], dim=1)
         activation = nn.Sigmoid()
         activationLU = nn.ReLU()
         # pooled, slice_valid = self.maxpooling(out)

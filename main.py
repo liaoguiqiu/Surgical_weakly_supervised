@@ -21,7 +21,7 @@ from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
-from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size
+from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
@@ -92,7 +92,7 @@ Model_infer = model_infer._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False)
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow)
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
@@ -125,7 +125,9 @@ while (1):
     labels_GPU = torch.from_numpy(np.float32(labels))
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
-    Model_infer.forward((input_videos_GPU-128.0)/60.0)
+    input_flows = dataLoader.input_flows*1.0/ 255.0
+    input_flows_GPU = input_flows.to (device)
+    Model_infer.forward((input_videos_GPU-128.0)/60.0,input_flows_GPU)
     Model_infer.optimization(labels_GPU)
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)

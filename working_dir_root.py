@@ -25,15 +25,15 @@ Output_root =   working_root+"output/"
 
 img_size = 64
 GPU_mode= True
-Continue_flag = True
+Continue_flag = False
 Visdom_flag = False
 Display_flag = True
 Save_flag =False
 loadmodel_index = '5.pth'
 
-Batch_size =1
+Batch_size =2
 Random_mask = False
-
+Load_flow = True
 learningR = 0.001
 Call_gradcam = False 
 

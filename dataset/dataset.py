@@ -308,17 +308,23 @@ class myDataloader(object):
                     if self.Display_loading_video == True:
                         cv2.imshow("SS First Frame R", this_video_buff[0,15, :, :].astype((np.uint8)))
                         cv2.imshow("SS First Frame G", this_video_buff[1,15, :, :].astype((np.uint8)))
-                        cv2.imshow("SS First Frame flow", this_flow_buff[15,:, :].astype((np.uint8)))
+                        if self.Load_flow == True:
+                            cv2.imshow("SS First Frame flow", this_flow_buff[15,:, :].astype((np.uint8)))
                         cv2.waitKey(1)
 
                     # fill the batch
                     # if Valid_video_flag == True:
                     # self.video_buff = basic_operator.random_verse_the_video(self.video_buff)
                     # self.motion = basic_operator.compute_optical_flow(self.video_buff)
-                    
-                    self.video_buff=basic_operator.random_augment(self.video_buff)
+                    flag =  random.choice([True, False])
+                    if flag ==True:
+                        
+                        self.video_buff,used_angle=basic_operator.random_augment(self.video_buff)
+                        if self.Load_flow==True:
+                            self.flow_buffer = basic_operator.rotate_buff(self.flow_buffer,angle=used_angle )
                     if Random_mask==True:
                         self.video_buff=basic_operator.hide_patch(self.video_buff)
+
                     flip_flag = random.choice([True, False])
                     # self.video_buff[0,:,:,:]= self.motion 
                     # self.video_buff[1,:,:,:]= self.motion 
@@ -327,11 +333,14 @@ class myDataloader(object):
                     # flip_flag = True
                     if flip_flag == False:
                         self.input_videos[i,:, :, :, :] = self.video_buff
+                        self.input_flows[i, :, :, :] = self.flow_buffer
                         self.labels[i, :] = binary_vector
                         self.labels_LR[i, :] = np.concatenate([binary_vector_l, binary_vector_r])
                     # self.labels_LR[i, 1, :] = binary_vector_r
                     else:
                         self.input_videos[i, :, :, :, :] = np.flip(self.video_buff, axis=3)
+                        self.input_flows[i, :, :, :] =  np.flip(self.flow_buffer,axis=2)
+
                         self.labels[i, :] = binary_vector
                         self.labels_LR[i, :] = np.concatenate([binary_vector_r, binary_vector_l])
 
