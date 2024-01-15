@@ -16,6 +16,8 @@ working_root = "C:/2data/"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"
+Dataset_video_pkl_flow_root = working_root + "training_data/video_clips_pkl_flow/"
+
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
 Output_root =   working_root+"output/"
@@ -29,7 +31,7 @@ Display_flag = True
 Save_flag =False
 loadmodel_index = '5.pth'
 
-Batch_size =2
+Batch_size =1
 Random_mask = False
 
 learningR = 0.001

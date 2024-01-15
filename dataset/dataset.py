@@ -20,7 +20,7 @@ import image_operator.basic_operator as basic_operator
 
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
-from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Output_root,Batch_size,Random_mask
+from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
 Seperate_LR = False
 
 input_ch = 3 # input channel of each image/video
@@ -51,7 +51,8 @@ categories = [
 ]
 Obj_num = len(categories)
 class myDataloader(object):
-    def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False):
+    def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,
+                 Read_from_pkl= True,Save_pkl = False,Load_flow =False):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
         self.image_size = img_size
         self.Display_loading_video =Display_loading_video
@@ -59,8 +60,9 @@ class myDataloader(object):
         self.Save_pkl=Save_pkl
         self.batch_size = Batch_size
         self.obj_num = Obj_num
+        self.Load_flow=Load_flow
         self.video_down_sample = 60  # 60 FPS
-        self.video_buff_size = int(60/self.video_down_sample) * 30 # each video has 30s
+        self.video_buff_size = int(60/self.video_down_sample) * 29 # each video has 30s discard last one for flow
         self.OLG_flag = OLG
         self.GT = True
         self.noisyflag = False
@@ -68,6 +70,8 @@ class myDataloader(object):
         self.Random_vertical_shift = True
         self.input_images= np.zeros((self.batch_size, 1, img_size, img_size))
         self.input_videos = np.zeros((self.batch_size,3,self.video_buff_size,img_size,img_size )) # RGB together
+        self.input_flows = np.zeros((self.batch_size,self.video_buff_size,img_size,img_size )) # RGB together
+
         # the number of the contour has been increased, and another vector has beeen added
         self.labels_LR= np.zeros((self.batch_size,2*self.obj_num))  # predifine the path number is 2 to seperate Left and right
         self.labels= np.zeros((self.batch_size, self.obj_num))  # left right merge
@@ -147,44 +151,62 @@ class myDataloader(object):
         cap = cv2.VideoCapture(video_path)
 
         # Read frames from the video clip
+        flow_f_gap = 5
         frame_count = 0
         buffer_count = 0
         # Read frames from the video clip
         video_buffer = np.zeros((3,self.video_buff_size,  self.image_size, self.image_size))
+        video_buffer2= np.zeros((3,self.video_buff_size,  self.image_size, self.image_size)) # neiboring buffer for flow
+        flow_buffer= np.zeros((self.video_buff_size,  self.image_size, self.image_size)) # neiboring buffer for flow
         frame_number =0
         Valid_video=False
+        this_frame = 0
+        previous_frame = 0
+        previous_count =0
         while True:
             # cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-            if (frame_count % self.video_down_sample) ==0:
+            if ((frame_count % self.video_down_sample==0) or (frame_count == (previous_count+flow_f_gap))):
                 # start_time = time()
 
                 ret, frame = cap.read()
-                # end_time = time()
-                # print("inner time" + str(end_time - start_time))
-
-
-            # Sample one frame per second (assuming original frame rate is 60 fps)
-
-            # if (frame_count % self.video_down_sample) == 0:
-
-                # cv2.imwrite(Output_root +
-                #             str(frame_count) + ".jpg", frame)
+      
                 if ret == True:
                     H, W, _ = frame.shape
                     crop = frame[0:H, 192:1088]
-                    if self.Display_loading_video == True:
-
-                        cv2.imshow("crop", crop.astype((np.uint8)))
-                        cv2.waitKey(1)
+                    
 
                     this_resize = cv2.resize(crop, (self.image_size, self.image_size), interpolation=cv2.INTER_AREA)
                     reshaped = np.transpose(this_resize, (2, 0, 1))
-                    video_buffer[:, buffer_count, :, :] = reshaped
-                    # video_buffer[frame_count,:,:] = this_resize
-                    # frames_array.append(frame)
-                    # video_buffer
 
-                    buffer_count += 1
+
+                    if frame_count % self.video_down_sample==0:
+                        video_buffer[:, buffer_count, :, :] = reshaped
+                        previous_count=frame_count
+                    if frame_count == (previous_count+flow_f_gap):
+                        video_buffer2[:, buffer_count, :, :] = reshaped
+
+
+                        this_frame = video_buffer2[0, buffer_count, :, :]
+                        previous_frame = video_buffer[0, buffer_count, :, :]
+                        flow = cv2.calcOpticalFlowFarneback(
+                                previous_frame, this_frame, flow=None, pyr_scale=0.5, levels=3, winsize=5, iterations=8, poly_n=5, poly_sigma=1.1, flags=0
+                            )
+
+                        # Calculate magnitude of the flow vectors
+                        magnitude = np.sqrt(flow[..., 0]**2 + flow[..., 1]**2)
+
+                        # Normalize and scale the magnitude to the range [0, 255]
+                        magnitude = (magnitude - np.min(magnitude)) / np.max(magnitude) * 255
+                        # magnitude = (magnitude - np.min(magnitude)) / np.max(magnitude) * 255
+
+                        magnitude = np.clip(magnitude,0,254)
+                        flow_buffer[ buffer_count, :, :] = magnitude
+                        buffer_count += 1
+                        if self.Display_loading_video == True:
+
+                            cv2.imshow("crop", magnitude.astype((np.uint8)))
+                            cv2.waitKey(1)
+                   
                     if buffer_count >= self.video_buff_size:
                         buffer_count = 0
                         Valid_video =True
@@ -218,7 +240,7 @@ class myDataloader(object):
             cv2.imshow("First Frame G2", squeezed[61, :, :].astype((np.uint8)))
             cv2.imshow("First Frame B2", squeezed[62, :, :].astype((np.uint8)))
             cv2.waitKey(1)
-        return video_buffer, squeezed,Valid_video
+        return video_buffer, squeezed,flow_buffer,Valid_video
     def read_a_batch(self):
         if self.Read_from_pkl == False:
             folder_path = Dataset_video_root
@@ -238,6 +260,9 @@ class myDataloader(object):
                 # Extract clip ID from the filename
                 clip_id = int(filename.split("_")[1].split(".")[0])
                 clip_name = filename.split('.')[0]
+                # if clip_name=="clip_000189":
+                #     a111=0
+                #     a222=a111
                 # clip_name = 'clip_001714'
                 # filename =  'clip_001714.mp4'
                 # label_Index = labels.index("clip_"+str(clip_id))
@@ -246,14 +271,28 @@ class myDataloader(object):
                 # Construct the full path to the video clip
                 video_path = os.path.join(folder_path, filename)
                 if self.Read_from_pkl == False:
-                    self.video_buff, self.video_buff_s, Valid_video_flag = self.load_this_video_buffer(video_path)
+                    self.video_buff, self.video_buff_s,self.flow_buffer, Valid_video_flag = self.load_this_video_buffer(video_path)
 
                     if self.Save_pkl == True and Valid_video_flag == True:
                         this_video_buff = self.video_buff.astype((np.uint8))
+                        this_flow_buff = self.flow_buffer.astype((np.uint8))
+
                         io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff)
+                        io.save_a_pkl(Dataset_video_pkl_flow_root, clip_name, this_flow_buff)
+
                 else:
+                    # if clip_name!="clip_000189":
                     this_video_buff = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
                     self.video_buff = this_video_buff
+                    if self.Load_flow == True:
+                        # if clip_name=="clip_000189":
+                        #     pass
+                        # else:
+
+                            this_flow_buff = io.read_a_pkl(Dataset_video_pkl_flow_root, clip_name)
+                            self.flow_buffer = this_flow_buff
+
+
                     Valid_video_flag = True
                 # clip_name= 'test'
 
@@ -269,7 +308,7 @@ class myDataloader(object):
                     if self.Display_loading_video == True:
                         cv2.imshow("SS First Frame R", this_video_buff[0,15, :, :].astype((np.uint8)))
                         cv2.imshow("SS First Frame G", this_video_buff[1,15, :, :].astype((np.uint8)))
-                        cv2.imshow("SS First Frame B", this_video_buff[2, 15,:, :].astype((np.uint8)))
+                        cv2.imshow("SS First Frame flow", this_flow_buff[15,:, :].astype((np.uint8)))
                         cv2.waitKey(1)
 
                     # fill the batch
