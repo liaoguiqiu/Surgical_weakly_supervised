@@ -126,7 +126,7 @@ while (1):
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
     input_flows = dataLoader.input_flows*1.0/ 255.0
-    input_flows_GPU = input_flows.to (device)
+    input_flows_GPU = input_flows.to (device)  
     Model_infer.forward((input_videos_GPU-128.0)/60.0,input_flows_GPU)
     Model_infer.optimization(labels_GPU) 
     if Display_flag == True:
