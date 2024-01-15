@@ -128,7 +128,7 @@ while (1):
     input_flows = dataLoader.input_flows*1.0/ 255.0
     input_flows_GPU = input_flows.to (device)
     Model_infer.forward((input_videos_GPU-128.0)/60.0,input_flows_GPU)
-    Model_infer.optimization(labels_GPU)
+    Model_infer.optimization(labels_GPU) 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
         pass
