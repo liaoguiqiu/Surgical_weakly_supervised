@@ -62,7 +62,8 @@ class myDataloader(object):
         self.obj_num = Obj_num
         self.Load_flow=Load_flow
         self.video_down_sample = 60  # 60 FPS
-        self.video_buff_size = int(60/self.video_down_sample) * 29 # each video has 30s discard last one for flow
+        self.video_len = 29
+        self.video_buff_size = int(60/self.video_down_sample) * self.video_len  # each video has 30s discard last one for flow
         self.OLG_flag = OLG
         self.GT = True
         self.noisyflag = False
@@ -283,7 +284,7 @@ class myDataloader(object):
                 else:
                     # if clip_name!="clip_000189":
                     this_video_buff = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
-                    self.video_buff = this_video_buff
+                    self.video_buff = this_video_buff[:,0:self.video_len,:,:]
                     if self.Load_flow == True:
                         # if clip_name=="clip_000189":
                         #     pass

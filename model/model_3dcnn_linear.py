@@ -1,9 +1,12 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import torch.nn.functional as F
 from dataset.dataset import myDataloader
 import model.base_models as block_buider
 from dataset.dataset import Obj_num, Seperate_LR
+import random
+
 # Seperate_LR = True # seperate left and right
 
 class _VideoCNN(nn.Module):
@@ -95,7 +98,8 @@ class _VideoCNN(nn.Module):
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
         bz, ch, D, H, W = out.size()
-        expanded_mask = input_flows.unsqueeze(1)
+        downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
+        expanded_mask = downsampled_mask.unsqueeze(1)
         masked_feature = out * expanded_mask
         cat_feature = torch.cat([out, masked_feature], dim=1)
         activation = nn.Sigmoid()
@@ -104,8 +108,15 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        cam = activationLU(self.classifier(out))
-        # bz, ch, D, H, W = out.size()
-        final, slice_valid = self.maxpooling(cam)
+        flag =random. choice([True, False])
+        if flag== True:
+            cam = activationLU(self.classifier(cat_feature))
+            # bz, ch, D, H, W = out.size()
+            final, slice_valid = self.maxpooling(cam)
+        else:
+            pooled, slice_valid = self.maxpooling(cat_feature)
+            final = self.classifier(pooled)
+            cam = activationLU(self.classifier(cat_feature))
+
         # final = activation(final)
         return final, slice_valid, cam

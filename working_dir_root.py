@@ -27,7 +27,7 @@ img_size = 64
 GPU_mode= True
 Continue_flag = False
 Visdom_flag = False
-Display_flag = True
+Display_flag = False
 Save_flag =False
 loadmodel_index = '5.pth'
 

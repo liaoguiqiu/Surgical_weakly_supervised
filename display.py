@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer
-from working_dir_root import Output_root,Save_flag
+from working_dir_root import Output_root,Save_flag,Load_flow
 from dataset.dataset import myDataloader,categories
 from dataset import io
 # Save_flag =False
@@ -29,7 +29,7 @@ class Display(object):
     def __init__(self,GPU=False):
         self.Model_infer = model_infer._Model_infer(GPU)
         self.dataLoader = myDataloader()
-
+        self.show_num=6
 
     def train_display(self,MODEL_infer,mydata_loader, read_id):
         # copy all the input videos and labels
@@ -39,9 +39,27 @@ class Display(object):
         self.Model_infer.cam3D = MODEL_infer.cam3D
         self.dataLoader.input_videos = mydata_loader.input_videos
         self.dataLoader.labels = mydata_loader.labels
+        self.dataLoader.input_flows = mydata_loader.input_flows
+
+
+        if Load_flow == True:
+            Gray_video = self.dataLoader.input_flows[0,:,:,:] # RGB together
+            Ori_D,Ori_H,Ori_W = Gray_video.shape
+            step_l = int(Ori_D/self.show_num)+1
+            for i in range(0,Ori_D,step_l):
+                if i ==0:
+                    stack = Gray_video[i]
+                else:
+                    stack = np.hstack((stack,Gray_video[i]))
+
+            # Display the final image
+            cv2.imshow('Stitched in put flows', stack.astype((np.uint8)))
+            cv2.waitKey(1)
+
+
         Gray_video = self.dataLoader.input_videos[0,0,:,:,:] # RGB together
         Ori_D,Ori_H,Ori_W = Gray_video.shape
-        step_l = int(Ori_D/15)+1
+        step_l = int(Ori_D/self.show_num)+1
         for i in range(0,Ori_D,step_l):
             if i ==0:
                 stack1 = Gray_video[i]
@@ -51,6 +69,7 @@ class Display(object):
         # Display the final image
         cv2.imshow('Stitched in put Image', stack1.astype((np.uint8)))
         cv2.waitKey(1)
+
         if Save_flag == True:
             io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack1.astype((np.uint8)) )
         # Combine the rows vertically to create the final 3x3 arrangement
@@ -65,7 +84,7 @@ class Display(object):
             output_0 = self.Model_infer.output[0,:,0,0,0].cpu().detach().numpy()
         else:
             output_0 = self.Model_infer.output[0,:,0,0].cpu().detach().numpy()
-        step_l = int(D/15)+1
+        step_l = int(D/self.show_num)+1
         stitch_i =0
         for j in range(13):
             # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
