@@ -109,14 +109,15 @@ class _VideoCNN(nn.Module):
         # Check the size of the final feature map
         # final = self.classifier(pooled)
         flag =random. choice([True, False])
+        cam = activationLU(self.classifier(cat_feature))
+
         if flag== True:
-            cam = activationLU(self.classifier(cat_feature))
             # bz, ch, D, H, W = out.size()
             final, slice_valid = self.maxpooling(cam)
         else:
-            pooled, slice_valid = self.maxpooling(cat_feature)
+            pooled, _ = self.maxpooling(cat_feature)
             final = self.classifier(pooled)
-            cam = activationLU(self.classifier(cat_feature))
+            _, slice_valid = self.maxpooling(cam)
 
         # final = activation(final)
         return final, slice_valid, cam
