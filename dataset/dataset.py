@@ -173,9 +173,12 @@ class myDataloader(object):
       
                 if ret == True:
                     H, W, _ = frame.shape
-                    crop = frame[0:H, 192:1088]
+                    crop = frame[0:H-80, 192:1088]
                     
+                    if self.Display_loading_video == True:
 
+                            cv2.imshow("crop", crop.astype((np.uint8)))
+                            cv2.waitKey(1)
                     this_resize = cv2.resize(crop, (self.image_size, self.image_size), interpolation=cv2.INTER_AREA)
                     reshaped = np.transpose(this_resize, (2, 0, 1))
 
