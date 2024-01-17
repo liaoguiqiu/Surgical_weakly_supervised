@@ -128,7 +128,7 @@ class Display(object):
                 # stack = stack -np.min(stack)
                 # stack = stack /(np.max(stack)+0.0000001)*254
                 stack = np.hstack((infor_image, stack))
-                
+                overlay = np.hstack((infor_image, overlay))
                
                 # Display the final image
                 # cv2.imshow( str(j) + "score"+ "{:.2f}".format(output_0[j]) + "GT"+ str(label_0[j])+categories[j], stack.astype((np.uint8)))

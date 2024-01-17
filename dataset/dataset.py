@@ -22,7 +22,7 @@ import image_operator.basic_operator as basic_operator
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
 Seperate_LR = False
-
+Mask_out_partial_label = True
 input_ch = 3 # input channel of each image/video
 
 
@@ -333,6 +333,16 @@ class myDataloader(object):
                     # self.video_buff[0,:,:,:]= self.motion 
                     # self.video_buff[1,:,:,:]= self.motion 
                     # self.video_buff[2,:,:,:]= self.motion 
+                    if Mask_out_partial_label == True:
+                        binary_vector[0] =0
+                        binary_vector[3] = 0
+                        binary_vector[4] = 0
+                        binary_vector[5] = 0
+                        binary_vector[8] =0
+                        binary_vector[10] =0
+                        binary_vector[11] =0
+                        binary_vector[12] =0
+
 
                     # flip_flag = True
                     if flip_flag == False:
