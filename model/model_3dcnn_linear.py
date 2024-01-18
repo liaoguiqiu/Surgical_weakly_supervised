@@ -103,10 +103,12 @@ class _VideoCNN(nn.Module):
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
         bz, ch, D, H, W = out.size()
-        downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
-        expanded_mask = downsampled_mask.unsqueeze(1)
-        masked_feature = out * expanded_mask
-        cat_feature = torch.cat([out, masked_feature], dim=1)
+        # downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
+        # expanded_mask = downsampled_mask.unsqueeze(1)
+        # masked_feature = out * expanded_mask
+        # cat_feature = torch.cat([out, masked_feature], dim=1)
+        cat_feature = torch.cat([out, out], dim=1)
+
         activation = nn.Sigmoid()
         activationLU = nn.ReLU()
         # pooled, slice_valid = self.maxpooling(out)
