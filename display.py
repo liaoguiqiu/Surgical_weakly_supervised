@@ -86,7 +86,7 @@ class Display(object):
             output_0 = self.Model_infer.output[0,:,0,0].cpu().detach().numpy()
         step_l = int(D/self.show_num)+1
         stitch_i =0
-        for j in range(13):
+        for j in range(len(categories)):
             # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
             this_grayVideo = Cam3D[j].cpu().detach().numpy()
             if (output_0[j]>0.5 or label_0[j]>0.5):

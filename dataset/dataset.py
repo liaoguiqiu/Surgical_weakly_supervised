@@ -21,10 +21,11 @@ import image_operator.basic_operator as basic_operator
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
+from working_dir_root import Dataset_video_pkl_cholec
 Seperate_LR = False
-Mask_out_partial_label = True
+Mask_out_partial_label = False
 input_ch = 3 # input channel of each image/video
-
+Cholec_data_flag = True
 
 categories_count = [17, 13163, 17440, 576, 1698, 4413, 11924, 10142, 866, 2992,131, 17, 181, 1026]
 
@@ -49,6 +50,20 @@ categories = [
     'tip-up fenestrated grasper', #12       -181
     'vessel sealer' #13                  -1026
 ]
+
+if Cholec_data_flag == True:
+    categories = [
+        'Grasper', #0   - 17
+        'Bipolar', #1     -13163
+        'Hook', #2     -17440
+        'Scissors', #3        -576
+        'Clipper',#4         - 1698
+        'Irrigator',#5     -4413
+        'SpecimenBag',#6     -11924               
+    ]
+
+
+
 Obj_num = len(categories)
 class myDataloader(object):
     def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,
@@ -84,8 +99,10 @@ class myDataloader(object):
         if Read_from_pkl == False:
             self.all_video_dir_list = os.listdir(Dataset_video_root)
         else:
-            self.all_video_dir_list = os.listdir(Dataset_video_pkl_root)
-
+            if Cholec_data_flag == False:
+                self.all_video_dir_list = os.listdir(Dataset_video_pkl_root)
+            else:
+                self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec)
         self.video_num = len (self.all_video_dir_list)
 
         #Guiqiu modified for my computer
@@ -145,7 +162,8 @@ class myDataloader(object):
 
         # readd
         return binary_vector_l, binary_vector_r
-
+    def merge_labels(self,label_group):
+        return np.max(label_group, axis=0)
     # load one video buffer (self.video_buff_size , 3, img_size, img_size),
     # and its squeesed which RGB are put together (self.video_buff_size * 3, img_size, img_size),
     def load_this_video_buffer(self,video_path ):
@@ -250,7 +268,11 @@ class myDataloader(object):
             folder_path = Dataset_video_root
             file_name_extention = ".mp4"
         else:
-            folder_path = Dataset_video_pkl_root
+            if Cholec_data_flag == False:
+                folder_path = Dataset_video_pkl_root
+            else:
+                folder_path = Dataset_video_pkl_cholec
+
             file_name_extention = ".pkl"
 
         for i in range(self.batch_size): # load a batch of images
@@ -286,8 +308,14 @@ class myDataloader(object):
 
                 else:
                     # if clip_name!="clip_000189":
-                    this_video_buff = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
-                    self.video_buff = this_video_buff[:,0:self.video_len,:,:]
+                    if Cholec_data_flag == False:
+                        this_video_buff = io.read_a_pkl(Dataset_video_pkl_root, clip_name)
+                        self.video_buff = this_video_buff[:,0:self.video_len,:,:]
+                    else:                     
+                        data_dict = io.read_a_pkl(Dataset_video_pkl_cholec, clip_name)
+                        this_video_buff = data_dict['frames']
+                        labels = data_dict['labels']
+                        self.video_buff = this_video_buff[:,0:self.video_len,:,:]
                     if self.Load_flow == True:
                         # if clip_name=="clip_000189":
                         #     pass
@@ -300,13 +328,17 @@ class myDataloader(object):
                     Valid_video_flag = True
                 # clip_name= 'test'
 
-                if clip_name in self.all_labels and Valid_video_flag==True:
+                if (clip_name in self.all_labels and Valid_video_flag==True):
                     this_label = self.all_labels[clip_name]
                     print(this_label)
-
-                    binary_vector = np.array([1 if category in this_label else 0 for category in categories], dtype=int)
-                    # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
-                    binary_vector_l, binary_vector_r = self.convert_left_right_v(this_label)
+                    if Cholec_data_flag == False:
+                        binary_vector = np.array([1 if category in this_label else 0 for category in categories], dtype=int)
+                        # seperate the binary vector as left and right channel, so that when the image is fliped, two vector will exchange
+                        binary_vector_l, binary_vector_r = self.convert_left_right_v(this_label)
+                    else:
+                        binary_vector = self.merge_labels(labels)
+                        binary_vector_l = 0
+                        binary_vector_r = 0
                     # load the squess and unsquess
 
                     if self.Display_loading_video == True:
@@ -347,16 +379,19 @@ class myDataloader(object):
                     # flip_flag = True
                     if flip_flag == False:
                         self.input_videos[i,:, :, :, :] = self.video_buff
-                        self.input_flows[i, :, :, :] = self.flow_buffer
+                        if self.Load_flow == True:
+                            self.input_flows[i, :, :, :] = self.flow_buffer
                         self.labels[i, :] = binary_vector
-                        self.labels_LR[i, :] = np.concatenate([binary_vector_l, binary_vector_r])
+                        if Cholec_data_flag == False:
+                            self.labels_LR[i, :] = np.concatenate([binary_vector_l, binary_vector_r])
                     # self.labels_LR[i, 1, :] = binary_vector_r
                     else:
                         self.input_videos[i, :, :, :, :] = np.flip(self.video_buff, axis=3)
-                        self.input_flows[i, :, :, :] =  np.flip(self.flow_buffer,axis=2)
-
+                        if self.Load_flow == True:
+                            self.input_flows[i, :, :, :] =  np.flip(self.flow_buffer,axis=2)
                         self.labels[i, :] = binary_vector
-                        self.labels_LR[i, :] = np.concatenate([binary_vector_r, binary_vector_l])
+                        if Cholec_data_flag == False:
+                            self.labels_LR[i, :] = np.concatenate([binary_vector_r, binary_vector_l])
 
                 else:
                     print("Key does not exist in the dictionary.")

@@ -2,13 +2,16 @@ import os
 import numpy as np
 import h5py
 import cv2
+import pickle
 
 # Folder paths
 dataset_label_root = "C:/2data/cholec80/tool_annotations/"
 dataset_video_root = "C:/2data/cholec80/frames/"
-output_folder = "C:/2data/cholec80/output_hdf5/"
+output_folder_hdf5 = "C:/2data/cholec80/output_hdf5/"
+output_folder_pkl = "C:/2data/cholec80/output_pkl/"
 img_size = (64, 64)  # Specify the desired size
 video_buffer_len = 29
+
 # Function to read labels from a text file
 def read_labels(file_path):
     labels = np.genfromtxt(file_path, skip_header=1, usecols=(1, 2, 3, 4, 5, 6, 7), dtype=int)
@@ -24,18 +27,11 @@ def read_frames(video_folder, img_size):
 def merge_labels(label_group):
     return np.max(label_group, axis=0)
 
-# Counter for naming HDF5 files
+# Counter for naming files
 file_counter = 0
-
-# Initialize empty arrays
-all_labels = []
-all_frames = []
 
 # Iterate through text files
 for file_name in sorted(os.listdir(dataset_label_root)):
-    
-    label_stacks = []
-    frame_stacks = []
     if file_name.endswith("-tool.txt"):
         file_path = os.path.join(dataset_label_root, file_name)
         video_name = file_name.split("-")[0]
@@ -47,62 +43,46 @@ for file_name in sorted(os.listdir(dataset_label_root)):
         video_folder = os.path.join(dataset_video_root, video_name)
         frames = read_frames(video_folder, img_size)
 
-        for this_frame in frames:
-            # Store in arrays
-            label_stacks.append(labels)
-            label_stacks.append(frames)
-            # Check if buffer is not empty and has reached 30 groups
-            if len(all_labels) > 0 and len(all_labels) == 30:
-                # Convert lists to numpy arrays
-                labels_array = np.array(all_labels)
-                frames_array = np.array(all_frames)
+        all_data = []
+
+        for this_frame, this_label in zip(frames, labels):
+            # Organize as a dictionary or structure
+            data_pair = {'frame': this_frame, 'label': this_label}
+            all_data.append(data_pair)
+
+            # Check if buffer is not empty and has reached the desired length
+            if len(all_data) > 0 and len(all_data) == video_buffer_len:
+                # Convert list of dictionaries to a dictionary of arrays
+                data_dict = {'frames': np.array([pair['frame'] for pair in all_data]),
+                             'labels': np.array([pair['label'] for pair in all_data])}
 
                 # Perform "or" operation to merge labels
-                merged_labels = merge_labels(labels_array)
+                merged_labels = merge_labels(data_dict['labels'])
+
+                # Reshape arrays
+                data_dict['frames'] = np.transpose(data_dict['frames'], (3, 0, 1, 2))  # Reshape to (3, 29, 64, 64)
+                merged_labels = np.transpose(merged_labels)  # Reshape to (3, 29)
 
                 # Save frames and labels to HDF5 file
                 hdf5_file_name = f"clip_{file_counter:06d}.h5"
-                hdf5_file_path = os.path.join(output_folder, hdf5_file_name)
+                hdf5_file_path = os.path.join(output_folder_hdf5, hdf5_file_name)
 
                 with h5py.File(hdf5_file_path, 'w') as file:
-                    file.create_dataset('frames', data=frames_array)
-                    file.create_dataset('labels', data=merged_labels)
+                    for key, value in data_dict.items():
+                        file.create_dataset(key, data=value)
+
+                # Save frames and labels to PKL file
+                pkl_file_name = f"clip_{file_counter:06d}.pkl"
+                pkl_file_path = os.path.join(output_folder_pkl, pkl_file_name)
+
+                with open(pkl_file_path, 'wb') as file:
+                    pickle.dump(data_dict, file)
 
                 # Increment the file counter
                 file_counter += 1
 
-                # Clear arrays for the next batch
-                label_stacks = []
-                frame_stacks = []
+                # Clear data for the next batch
+                all_data = []
 
-            # # If video changes, start with an empty buffer
-            # if not video_name == current_video_name:
-            #     label_stacks = []
-            #     frame_stacks = []
-
-        
-
-        # Update the current video name
-        # current_video_name = video_name
-
-# # If there are remaining groups less than 30
-# if len(all_labels) > 0 and len(all_labels) == 30:
-#     labels_array = np.array(all_labels)
-#     frames_array = np.array(all_frames)
-
-#     # Perform "or" operation to merge labels
-#     merged_labels = merge_labels(labels_array)
-
-#     # Save frames and labels to HDF5 file
-#     hdf5_file_name = f"clip_{file_counter:06d}.h5"
-#     hdf5_file_path = os.path.join(output_folder, hdf5_file_name)
-
-#     with h5py.File(hdf5_file_path, 'w') as file:
-#         file.create_dataset('frames', data=frames_array)
-#         file.create_dataset('labels', data=merged_labels)
-
-#     # Increment the file counter
-#     file_counter += 1
-
-# Example: Print the total number of HDF5 files created
-print("Total HDF5 files created:", file_counter)
+# Example: Print the total number of files created
+print("Total files created:", file_counter)
