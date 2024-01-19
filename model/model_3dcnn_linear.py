@@ -66,7 +66,22 @@ class _VideoCNN(nn.Module):
             self.classifier = nn.Conv3d(base_f*2, Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
         else:
             self.classifier = nn.Conv3d(base_f*2, Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+    def Top_rank_pooling (self,T,num_selected):
+        B, C, D, H, W = T.size()
 
+        T_flattened = T.view(B, C, -1, H, W)
+
+# Step 2: Get the indices of the top k values along the flattened dimension
+        _, indices = torch.topk(T_flattened, k=num_selected, dim=2)
+
+        # Step 3: Use the indices to select the corresponding values along the D dimension
+        selected_values = torch.gather(T, dim=2, index=indices)
+
+        # Step 4: Reshape the resulting tensor to the desired shape (B, C, k, H, W)
+        result_tensor = selected_values.view(B, C, num_selected, H, W)
+        Avgpool = nn.AvgPool3d((num_selected,1,1),stride=(1,1,1))
+        pooled = Avgpool(result_tensor)
+        return pooled
 
     def maxpooling(self,input):
 
@@ -93,7 +108,8 @@ class _VideoCNN(nn.Module):
             Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         
         slice_valid = Maxpool_keepD(input)
-        final = Maxpool_keepC(slice_valid)
+        # final = Maxpool_keepC(slice_valid)
+        final = self.Top_rank_pooling(slice_valid,5)
         #Note: how about add a number of object loss here ??
         # activation = nn.Sigmoid()
         # final = activation(final)
