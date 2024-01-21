@@ -41,16 +41,16 @@ class _VideoCNN(nn.Module):
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
         self.blocks.append(block_buider.conv_dv_WH(base_f, base_f*2))  # 2*256
         base_f = base_f*2
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
+        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
 
         self.blocks.append(block_buider.conv_dv_WH(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f * 2))  # 4*256
+        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f * 2))  # 4*256
         base_f = base_f * 2
         self.depth = base_f
         # final equal to class

@@ -112,6 +112,21 @@ class conv_keep_all(nn.Module):
             out = x + self.conv_block(x)
         return out
 
+class conv_keep_all_true3D(nn.Module):
+    def __init__(self, indepth, outdepth, k=(3,3, 3), s=(1,1, 1), p=(1,1, 1), resnet=False, final=False,dropout=False):
+        super(conv_keep_all_true3D, self).__init__()
+        self.conv_block = build_3dconv_block(indepth, outdepth, k, s, p, dropout,final)
+        self.resnet = resnet
+
+    def forward(self, x):
+        # """Forward function (with skip connections)"""
+        # out = x+ self.conv_block(x)  # add skip connections
+        if self.resnet == False:
+            out = self.conv_block(x)  # add skip connections
+        else:
+            out = x + self.conv_block(x)
+        return out
+
 
 class conv_dv_WH(nn.Module): # devide H and W keep the D
     def __init__(self, indepth, outdepth, k=(1,4, 4), s=(1,2, 2), p=(0,1, 1),dropout=False):
