@@ -99,7 +99,7 @@ class _VideoCNN(nn.Module):
         # input = activation(input)
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
-        flag =random. choice([False, False])
+        flag =random. choice([True, False])
         if flag == True: 
             Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
             Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
@@ -133,7 +133,7 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([False, False])
+        flag =random. choice([True, False])
         cam = activationLU(self.classifier(cat_feature))
 
         if flag== True:
