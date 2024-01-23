@@ -86,6 +86,7 @@ class Display(object):
             output_0 = self.Model_infer.output[0,:,0,0].cpu().detach().numpy()
         step_l = int(D/self.show_num)+1
         stitch_i =0
+        stitch_im  = np.zeros((H,W))
         for j in range(len(categories)):
             # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
             this_grayVideo = Cam3D[j].cpu().detach().numpy()
