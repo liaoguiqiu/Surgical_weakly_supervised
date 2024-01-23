@@ -69,19 +69,61 @@ class _VideoCNN(nn.Module):
     def Top_rank_pooling (self,T,num_selected):
         B, C, D, H, W = T.size()
 
-        T_flattened = T.view(B, C, -1, H, W)
+        # T_flattened = T.view(B, C, -1, H, W) # this is wrong as if some object is selected other object will not
 
 # Step 2: Get the indices of the top k values along the flattened dimension
-        _, indices = torch.topk(T_flattened, k=num_selected, dim=2)
+        result_tensor, indices = torch.topk(T, k=num_selected, dim=2)
 
         # Step 3: Use the indices to select the corresponding values along the D dimension
-        selected_values = torch.gather(T, dim=2, index=indices)
+        # selected_values = torch.gather(T, dim=2, index=indices)
 
-        # Step 4: Reshape the resulting tensor to the desired shape (B, C, k, H, W)
-        result_tensor = selected_values.view(B, C, num_selected, H, W)
+        # # Step 4: Reshape the resulting tensor to the desired shape (B, C, k, H, W)
+        # result_tensor = selected_values.view(B, C, num_selected, H, W)
         Avgpool = nn.AvgPool3d((num_selected,1,1),stride=(1,1,1))
         pooled = Avgpool(result_tensor)
+ 
+# Step 2: Get the indices of the top k values along the flattened dimension
+        result_tensor, indices = torch.topk(T, k=num_selected, dim=2)
+
+        # Step 3: Use the indices to select the corresponding values along the D dimension
+        # selected_values = torch.gather(T, dim=2, index=indices)
+
+        # # Step 4: Reshape the resulting tensor to the desired shape (B, C, k, H, W)
+        # result_tensor = selected_values.view(B, C, num_selected, H, W)
+        Avgpool = nn.AvgPool3d((num_selected,1,1),stride=(1,1,1))
+        pooled = Avgpool(result_tensor)
+
+
+         
         return pooled
+    def Threshold_pooling(self,T, threshold_range=(0.2, 0.6)):
+        B, C, D, H, W = T.size()
+
+        activation = nn.Sigmoid()
+
+        T_norm = activation(T)
+        # Reshape the input tensor to (B, C, D, H*W)
+         
+
+        # Create a boolean mask based on the threshold range
+        threshold_mask = (T_norm >= threshold_range[0]) & (T_norm <= threshold_range[1])
+        if not torch.any(threshold_mask):
+            threshold_mask= torch.ones((B, C, D, H, W), device=T.device)
+        T = T*threshold_mask
+        T_avg = T.sum(dim=2, keepdim=True)
+        Mask_sum = threshold_mask.sum(dim=2, keepdim=True)
+        # Sum along H*W to count the number of selected tensors for each (B, C, D)
+        
+        # Reshape the resulting tensor to the desired shape (B, C, -1)
+        result_tensor =  torch.div(T_avg, Mask_sum)
+
+        # Apply average pooling along the third dimension based on the number of selected tensors
+       
+
+        return result_tensor
+    def Least_potential_pooling(self,T,num_selected):# the is the contrary of the top Rank pooling and focus on the weeker part
+        pass
+
 
     def maxpooling(self,input):
 
@@ -99,7 +141,7 @@ class _VideoCNN(nn.Module):
         # input = activation(input)
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
-        flag =random. choice([True, False])
+        flag =random. choice([False, False])
         if flag == True: 
             Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
             Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
@@ -110,6 +152,8 @@ class _VideoCNN(nn.Module):
         slice_valid = Maxpool_keepD(input)
         # final = Maxpool_keepC(slice_valid)
         final = self.Top_rank_pooling(slice_valid,5)
+        # final = self.Threshold_pooling(slice_valid)
+
         #Note: how about add a number of object loss here ??
         # activation = nn.Sigmoid()
         # final = activation(final)
@@ -133,7 +177,7 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([True, False])
+        flag =random. choice([True, True])
         cam = activationLU(self.classifier(cat_feature))
 
         if flag== True:
