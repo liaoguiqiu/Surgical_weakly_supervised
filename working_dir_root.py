@@ -25,7 +25,7 @@ Output_root =   working_root+"output/"
 
 img_size = 64
 GPU_mode= True
-Continue_flag = True
+Continue_flag = False
 Visdom_flag = False
 Display_flag = True
 Save_flag =False

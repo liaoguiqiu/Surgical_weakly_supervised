@@ -151,8 +151,8 @@ class _VideoCNN(nn.Module):
         
         slice_valid = Maxpool_keepD(input)
         # final = Maxpool_keepC(slice_valid)
-        # final = self.Top_rank_pooling(slice_valid,5)
-        final = self.Threshold_pooling(slice_valid)
+        final = self.Top_rank_pooling(slice_valid,15)
+        # final = self.Threshold_pooling(slice_valid)
 
         #Note: how about add a number of object loss here ??
         # activation = nn.Sigmoid()
