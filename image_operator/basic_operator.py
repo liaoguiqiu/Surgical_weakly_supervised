@@ -108,6 +108,21 @@ def hide_patch(video, patch_num=32, hide_prob=0.5, mean=128,image_level= True):
                     video[:, i, px:px + patch_size, py:py + patch_size] = mean
     return video
 
+
+def hide_full_image(video,  hide_prob=0.5, mean=128 ):
+    # assume patch_num is int**2
+   
+    flag = choice([True, False])
+    
+    if flag == True:
+       return video
+    ch, D, H, W = video.shape
+    
+    for i in range(D):
+        if np.random.uniform() < hide_prob:
+                video[:, i, :, :] = mean
+    return video
+
 def motion_map(video):
     ch, D, H, W = video.shape
     shifted = np.roll(video, 1, axis=1)

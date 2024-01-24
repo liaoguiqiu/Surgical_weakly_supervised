@@ -33,6 +33,8 @@ loadmodel_index = '5.pth'
 
 Batch_size =2
 Random_mask = False
+Random_Full_mask = True
+
 Load_flow = False
 learningR = 0.001
 Call_gradcam = False 

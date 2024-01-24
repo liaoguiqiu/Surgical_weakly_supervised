@@ -21,7 +21,7 @@ import image_operator.basic_operator as basic_operator
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
-from working_dir_root import Dataset_video_pkl_cholec
+from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask
 Seperate_LR = False
 Mask_out_partial_label = False
 input_ch = 3 # input channel of each image/video
@@ -360,6 +360,9 @@ class myDataloader(object):
                             self.flow_buffer = basic_operator.rotate_buff(self.flow_buffer,angle=used_angle )
                     if Random_mask==True:
                         self.video_buff=basic_operator.hide_patch(self.video_buff)
+                    if Random_Full_mask == True:
+                        self.video_buff=basic_operator.hide_full_image(self.video_buff)
+
 
                     flip_flag = random.choice([True, False])
                     # self.video_buff[0,:,:,:]= self.motion 
