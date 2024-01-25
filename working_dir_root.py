@@ -25,18 +25,19 @@ Output_root =   working_root+"output/"
 
 img_size = 64
 GPU_mode= True
-Continue_flag = False
+Continue_flag = True
 Visdom_flag = False
 Display_flag = True
 Save_flag =False
-loadmodel_index = '5.pth'
+loadmodel_index = '0.pth'
 
 Batch_size =2
 Random_mask = False
-Random_Full_mask = True
+Random_Full_mask = False
 
 Load_flow = False
 learningR = 0.001
+learningR_res = 0.0000001
 Call_gradcam = False 
 
 class Para(object):

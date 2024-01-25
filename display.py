@@ -40,7 +40,7 @@ class Display(object):
         self.dataLoader.input_videos = mydata_loader.input_videos
         self.dataLoader.labels = mydata_loader.labels
         self.dataLoader.input_flows = mydata_loader.input_flows
-
+        self.Model_infer.input_resample = MODEL_infer.input_resample
 
         if Load_flow == True:
             Gray_video = self.dataLoader.input_flows[0,:,:,:] # RGB together
@@ -57,7 +57,7 @@ class Display(object):
             cv2.waitKey(1)
 
 
-        Gray_video = self.dataLoader.input_videos[0,0,:,:,:] # RGB together
+        Gray_video = self.Model_infer.input_resample[0,2,:,:,:].cpu().detach().numpy()# RGB together
         Ori_D,Ori_H,Ori_W = Gray_video.shape
         step_l = int(Ori_D/self.show_num)+1
         for i in range(0,Ori_D,step_l):

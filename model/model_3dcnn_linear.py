@@ -12,7 +12,7 @@ import random
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=3,base_f=16):
+    def __init__(self, inputC=512,base_f=512):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -23,36 +23,36 @@ class _VideoCNN(nn.Module):
 
         #
 
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,dropout=False))
+        # self.blocks.append(block_buider.conv_keep_all(inputC, base_f,dropout=False))
 
-        # 16*256  - 8*256
-        # self.side_branch1.append(  conv_keep_all(base_f, base_f))
-        # self.side_branch1.append(  conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
-        base_f = base_f * 2
-        # 8*256  - 4*256\
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))  # 4*256
-        base_f = base_f * 2
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_dv_WH(base_f, base_f*2))  # 2*256
-        base_f = base_f*2
-        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f * 2))  # 4*256
-        base_f = base_f * 2
+        # # 16*256  - 8*256
+        # # self.side_branch1.append(  conv_keep_all(base_f, base_f))
+        # # self.side_branch1.append(  conv_keep_all(base_f, base_f))
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
+        # base_f = base_f * 2
+        # # 8*256  - 4*256\
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))  # 4*256
+        # base_f = base_f * 2
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_dv_WH(base_f, base_f*2))  # 2*256
+        # base_f = base_f*2
+        # self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f * 2))  # 4*256
+        # base_f = base_f * 2
 
-        self.blocks.append(block_buider.conv_dv_WH(base_f, base_f * 2))  # 4*256
-        base_f = base_f * 2
-        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
-        self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f * 2))  # 4*256
-        base_f = base_f * 2
-        self.depth = base_f
+        # self.blocks.append(block_buider.conv_dv_WH(base_f, base_f * 2))  # 4*256
+        # base_f = base_f * 2
+        # self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f,resnet = True))
+        # self.blocks.append(block_buider.conv_keep_all_true3D(base_f, base_f * 2))  # 4*256
+        # base_f = base_f * 2
+        # self.depth = base_f
         # final equal to class
         # if Seperate_LR == True:
         #     self.blocks.append(block_buider.conv_keep_all(base_f, Obj_num * 2,final=True))  # 4*256
@@ -63,9 +63,9 @@ class _VideoCNN(nn.Module):
         # else:
         #     self.classifier = nn.Linear(base_f, Obj_num )  # 4*256
         if Seperate_LR == True: # douvle the channel as the cat of flow masked tensor
-            self.classifier = nn.Conv3d(base_f*2, Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
+            self.classifier = nn.Conv3d(base_f, Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
         else:
-            self.classifier = nn.Conv3d(base_f*2, Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+            self.classifier = nn.Conv3d(base_f, Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
     def Top_rank_pooling (self,T,num_selected):
         B, C, D, H, W = T.size()
 
@@ -162,14 +162,16 @@ class _VideoCNN(nn.Module):
         return final, slice_valid
     def forward(self, x,input_flows):
         out = x
-        for j, name in enumerate(self.blocks):
-            out = self.blocks[j](out)
+        # for j, name in enumerate(self.blocks):
+        #     out = self.blocks[j](out)
         bz, ch, D, H, W = out.size()
         # downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
         # expanded_mask = downsampled_mask.unsqueeze(1)
         # masked_feature = out * expanded_mask
         # cat_feature = torch.cat([out, masked_feature], dim=1)
-        cat_feature = torch.cat([out, out], dim=1)
+        # cat_feature = torch.cat([out, out], dim=1)
+        # cat_feature = torch.cat([out, out], dim=1)
+        cat_feature = out
 
         activation = nn.Sigmoid()
         activationLU = nn.ReLU()
