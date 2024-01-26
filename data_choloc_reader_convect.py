@@ -9,7 +9,7 @@ dataset_label_root = "C:/2data/cholec80/tool_annotations/"
 dataset_video_root = "C:/2data/cholec80/frames/"
 output_folder_hdf5 = "C:/2data/cholec80/output_hdf5/"
 output_folder_pkl = "C:/2data/cholec80/output_pkl/"
-img_size = (64, 64)  # Specify the desired size
+img_size = (256, 256)  # Specify the desired size
 video_buffer_len = 29
 
 # Function to read labels from a text file
@@ -77,6 +77,8 @@ for file_name in sorted(os.listdir(dataset_label_root)):
 
                 with open(pkl_file_path, 'wb') as file:
                     pickle.dump(data_dict, file)
+                    print("Pkl file created:" +pkl_file_name)
+
 
                 # Increment the file counter
                 file_counter += 1

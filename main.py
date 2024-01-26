@@ -117,6 +117,8 @@ else:
     # 3. load the new state dict
     Model_infer.resnet.load_state_dict(pretrained_dict2 )
 read_id = 0
+print(Model_infer.resnet)
+print(Model_infer.VideoNets)
 
 epoch = 0
 # transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
