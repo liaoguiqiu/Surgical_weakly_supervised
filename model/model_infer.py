@@ -73,7 +73,7 @@ class _Model_infer(object):
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
-        self.set_requires_grad(self.resnet, False)
+        self.set_requires_grad(self.resnet, True)
 
         self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
         # self.lossEa.backward(retain_graph=True)
