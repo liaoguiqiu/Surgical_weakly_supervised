@@ -65,10 +65,12 @@ class _Model_infer(object):
         bz, ch, D, H, W = input.size()
 
         self.input_resample =   F.interpolate(input,  size=(D, self.input_size, self.input_size), mode='trilinear', align_corners=False)
-        flattened_tensor = self.input_resample.view(bz * D, ch, self.input_size, self.input_size)
+        # self.
+        flattened_tensor = self.input_resample.permute(0,2,1,3,4)
+        flattened_tensor = flattened_tensor.reshape(bz * D, ch, self.input_size, self.input_size)
         flattened_tensor = self.resnet((flattened_tensor-128.0)/60.0)
         new_bz, new_ch, new_H, new_W = flattened_tensor.size()
-        self.f = flattened_tensor.view (bz,new_ch,D,new_H, new_W)
+        self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,input_flows)
     def optimization(self, label):
         self.optimizer.zero_grad()
