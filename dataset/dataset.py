@@ -77,7 +77,7 @@ class myDataloader(object):
         self.obj_num = Obj_num
         self.Load_flow=Load_flow
         self.video_down_sample = 60  # 60 FPS
-        self.video_len = 1
+        self.video_len = 29
         self.video_buff_size = int(60/self.video_down_sample) * self.video_len  # each video has 30s discard last one for flow
         self.OLG_flag = OLG
         self.GT = True

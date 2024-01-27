@@ -23,8 +23,9 @@ class _Model_infer(object):
         model_type = "vit_l"
         model_type = "vit_b"
         
-        self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-        self.predictor = SamPredictor(self.sam) 
+        sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+        # self.predictor = SamPredictor(self.sam) 
+        self.Vit_encoder = sam.image_encoder
         self.VideoNets = _VideoCNN()
         self.input_size = 1024
         resnet18 = models.resnet18(pretrained=True)
@@ -45,10 +46,10 @@ class _Model_infer(object):
             if num_gpus > 1:
                 self.VideoNets = torch.nn.DataParallel(self.VideoNets)
                 self.resnet  = torch.nn.DataParallel(self.resnet )
-                self.sam  = torch.nn.DataParallel(self.sam )
+                self.Vit_encoder   = torch.nn.DataParallel(self.Vit_encoder  )
         self.VideoNets.to(device)
         self.resnet .to(device)
-        self.sam.to(device)
+        self.Vit_encoder.to(device)
 
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
@@ -84,7 +85,7 @@ class _Model_infer(object):
         flattened_tensor = self.input_resample.permute(0,2,1,3,4)
         flattened_tensor = flattened_tensor.reshape(bz * D, ch, self.input_size, self.input_size)
         flattened_tensor = (flattened_tensor-124.0)/60.0
-        flattened_tensor = self.sam.image_encoder(flattened_tensor)
+        flattened_tensor = self.Vit_encoder(flattened_tensor)
         new_bz, new_ch, new_H, new_W = flattened_tensor.size()
         self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,input_flows)
