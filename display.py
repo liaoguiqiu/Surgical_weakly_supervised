@@ -57,7 +57,8 @@ class Display(object):
             cv2.waitKey(1)
 
 
-        Gray_video = self.Model_infer.input_resample[0,2,:,:,:].cpu().detach().numpy()# RGB together
+        # Gray_video = self.Model_infer.input_resample[0,2,:,:,:].cpu().detach().numpy()# RGB together
+        Gray_video = self.dataLoader.input_videos[0,0,:,:,:] # RGB together
         Ori_D,Ori_H,Ori_W = Gray_video.shape
         step_l = int(Ori_D/self.show_num)+1
         for i in range(0,Ori_D,step_l):

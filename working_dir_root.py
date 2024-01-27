@@ -21,17 +21,18 @@ Dataset_video_pkl_cholec = working_root + "training_data/video_clips_pkl_cholec/
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
 Output_root =   working_root+"output/"
+SAM_pretrain_root = working_root+"output/SAM/"
 
 
 img_size = 64
 GPU_mode= True
-Continue_flag = True
+Continue_flag = False
 Visdom_flag = False
 Display_flag = True
 Save_flag =False
 loadmodel_index = '0.pth'
 
-Batch_size =5
+Batch_size =1
 Random_mask = False
 Random_Full_mask = False
 
