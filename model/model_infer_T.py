@@ -24,7 +24,6 @@ class _Model_infer(object):
         model_type = "vit_b"
         
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-        self.sam.to(device=device)
         self.predictor = SamPredictor(self.sam) 
         self.VideoNets = _VideoCNN()
         self.input_size = 1024
@@ -49,6 +48,8 @@ class _Model_infer(object):
                 self.sam  = torch.nn.DataParallel(self.sam )
         self.VideoNets.to(device)
         self.resnet .to(device)
+        self.sam.to(device)
+
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
