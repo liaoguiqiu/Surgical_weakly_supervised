@@ -18,7 +18,7 @@ class _Model_infer(object):
         sam_checkpoint = SAM_pretrain_root+"sam_vit_h_4b8939.pth"
         sam_checkpoint = SAM_pretrain_root+"sam_vit_l_0b3195.pth"
         sam_checkpoint =SAM_pretrain_root+ "sam_vit_b_01ec64.pth"
-
+        self.inter_bz =1
         model_type = "vit_h"
         model_type = "vit_l"
         model_type = "vit_b"
@@ -85,7 +85,26 @@ class _Model_infer(object):
         flattened_tensor = self.input_resample.permute(0,2,1,3,4)
         flattened_tensor = flattened_tensor.reshape(bz * D, ch, self.input_size, self.input_size)
         flattened_tensor = (flattened_tensor-124.0)/60.0
-        flattened_tensor = self.Vit_encoder(flattened_tensor)
+
+        num_chunks = (bz*D + self.inter_bz - 1) // self.inter_bz
+    
+        # List to store predicted tensors
+        predicted_tensors = []
+        
+        # Chunk input tensor and predict
+        with torch.no_grad():
+            for i in range(num_chunks):
+                start_idx = i * self.inter_bz
+                end_idx = min((i + 1) * self.inter_bz, bz*D)
+                input_chunk = flattened_tensor[start_idx:end_idx]
+                output_chunk = self.Vit_encoder(input_chunk)
+                predicted_tensors.append(output_chunk)
+                torch.cuda.empty_cache()  # Release memory
+        
+        # Concatenate predicted tensors along batch dimension
+        concatenated_tensor = torch.cat(predicted_tensors, dim=0)
+
+        flattened_tensor = concatenated_tensor
         new_bz, new_ch, new_H, new_W = flattened_tensor.size()
         self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,input_flows)
