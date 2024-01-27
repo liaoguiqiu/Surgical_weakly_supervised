@@ -46,7 +46,7 @@ class _Model_infer(object):
             if num_gpus > 1:
                 self.VideoNets = torch.nn.DataParallel(self.VideoNets)
                 self.resnet  = torch.nn.DataParallel(self.resnet )
-                self.sam  = torch.nn.DataParallel(self.resnet )
+                self.sam  = torch.nn.DataParallel(self.sam )
         self.VideoNets.to(device)
         self.resnet .to(device)
         
