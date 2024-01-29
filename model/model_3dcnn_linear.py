@@ -23,17 +23,17 @@ class _VideoCNN(nn.Module):
 
         #
 
-        # self.blocks.append(block_buider.conv_keep_all(inputC, base_f,dropout=False))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,dropout=True))
 
         # # 16*256  - 8*256
         # # self.side_branch1.append(  conv_keep_all(base_f, base_f))
         # # self.side_branch1.append(  conv_keep_all(base_f, base_f))
-        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,resnet = False))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
-        # base_f = base_f * 2
+        base_f = base_f * 2
         # # 8*256  - 4*256\
-        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))  # 4*256
         # base_f = base_f * 2
@@ -162,8 +162,8 @@ class _VideoCNN(nn.Module):
         return final, slice_valid
     def forward(self, x,input_flows):
         out = x
-        # for j, name in enumerate(self.blocks):
-        #     out = self.blocks[j](out)
+        for j, name in enumerate(self.blocks):
+            out = self.blocks[j](out)
         bz, ch, D, H, W = out.size()
         # downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
         # expanded_mask = downsampled_mask.unsqueeze(1)

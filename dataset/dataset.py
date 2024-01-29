@@ -9,6 +9,7 @@ from time import  time
 import dataset.io as io
 import random
 import image_operator.basic_operator as basic_operator
+import torch
 # import imageio
 # import imageio_ffmpeg as ffmpeg
 # # from decord import VideoReader
@@ -21,7 +22,7 @@ import image_operator.basic_operator as basic_operator
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
-from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask
+from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask,output_folder_sam_feature,Data_aug
 Seperate_LR = False
 Mask_out_partial_label = False
 input_ch = 3 # input channel of each image/video
@@ -67,7 +68,7 @@ if Cholec_data_flag == True:
 Obj_num = len(categories)
 class myDataloader(object):
     def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,
-                 Read_from_pkl= True,Save_pkl = False,Load_flow =False):
+                 Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
         self.image_size = img_size
         self.Display_loading_video =Display_loading_video
@@ -76,6 +77,7 @@ class myDataloader(object):
         self.batch_size = Batch_size
         self.obj_num = Obj_num
         self.Load_flow=Load_flow
+        self.Load_feature = Load_feature
         self.video_down_sample = 60  # 60 FPS
         self.video_len = 29
         self.video_buff_size = int(60/self.video_down_sample) * self.video_len  # each video has 30s discard last one for flow
@@ -87,7 +89,7 @@ class myDataloader(object):
         self.input_images= np.zeros((self.batch_size, 1, img_size, img_size))
         self.input_videos = np.zeros((self.batch_size,3,self.video_buff_size,img_size,img_size )) # RGB together
         self.input_flows = np.zeros((self.batch_size,self.video_buff_size,img_size,img_size )) # RGB together
-
+        self.features =[]
         # the number of the contour has been increased, and another vector has beeen added
         self.labels_LR= np.zeros((self.batch_size,2*self.obj_num))  # predifine the path number is 2 to seperate Left and right
         self.labels= np.zeros((self.batch_size, self.obj_num))  # left right merge
@@ -274,7 +276,7 @@ class myDataloader(object):
                 folder_path = Dataset_video_pkl_cholec
 
             file_name_extention = ".pkl"
-
+        self.features=[]
         for i in range(self.batch_size): # load a batch of images
             start_time = time()
 
@@ -323,6 +325,10 @@ class myDataloader(object):
 
                             this_flow_buff = io.read_a_pkl(Dataset_video_pkl_flow_root, clip_name)
                             self.flow_buffer = this_flow_buff
+                    if self.Load_feature == True:
+                            this_features = io.read_a_pkl(output_folder_sam_feature, clip_name)
+                            this_features = this_features.permute(1,0,2,3).float()
+                            self.features.append(this_features)
 
 
                     Valid_video_flag = True
@@ -352,7 +358,15 @@ class myDataloader(object):
                     # if Valid_video_flag == True:
                     # self.video_buff = basic_operator.random_verse_the_video(self.video_buff)
                     # self.motion = basic_operator.compute_optical_flow(self.video_buff)
-                    flag =  random.choice([True, False])
+                    if Data_aug == True:
+                        flag =  random.choice([True, False])
+                        flip_flag = random.choice([True, False])
+
+                    else:
+                        flag = False
+                        flip_flag = False
+                        
+
                     if flag ==True:
                         
                         self.video_buff,used_angle=basic_operator.random_augment(self.video_buff)
@@ -364,7 +378,6 @@ class myDataloader(object):
                         self.video_buff=basic_operator.hide_full_image(self.video_buff)
 
 
-                    flip_flag = random.choice([True, False])
                     # self.video_buff[0,:,:,:]= self.motion 
                     # self.video_buff[1,:,:,:]= self.motion 
                     # self.video_buff[2,:,:,:]= self.motion 
@@ -411,7 +424,8 @@ class myDataloader(object):
                 self.read_record =0
 
             pass
-
+        self.features = torch.stack(self.features, dim=0)
+        
         # return self.input_image,self.input_path# if out this folder boundary, just returen
         this_pointer = 0
         # i = self.read_record

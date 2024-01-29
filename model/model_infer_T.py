@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 from model.model_3dcnn_linear import _VideoCNN
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature
 from dataset.dataset import class_weights
 from SAM.segment_anything import  SamPredictor, sam_model_registry
 # learningR = 0.0001
@@ -76,37 +76,40 @@ class _Model_infer(object):
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
-    def forward(self,input,input_flows):
+    def forward(self,input,input_flows, features):
         # self.res_f = self.resnet(input)
         bz, ch, D, H, W = input.size()
 
         self.input_resample =   F.interpolate(input,  size=(D, self.input_size, self.input_size), mode='trilinear', align_corners=False)
         # self.
-        flattened_tensor = self.input_resample.permute(0,2,1,3,4)
-        flattened_tensor = flattened_tensor.reshape(bz * D, ch, self.input_size, self.input_size)
-        flattened_tensor = (flattened_tensor-124.0)/60.0
+        if Load_feature == False:
+            flattened_tensor = self.input_resample.permute(0,2,1,3,4)
+            flattened_tensor = flattened_tensor.reshape(bz * D, ch, self.input_size, self.input_size)
+            flattened_tensor = (flattened_tensor-124.0)/60.0
 
-        num_chunks = (bz*D + self.inter_bz - 1) // self.inter_bz
-    
-        # List to store predicted tensors
-        predicted_tensors = []
+            num_chunks = (bz*D + self.inter_bz - 1) // self.inter_bz
         
-        # Chunk input tensor and predict
-        with torch.no_grad():
-            for i in range(num_chunks):
-                start_idx = i * self.inter_bz
-                end_idx = min((i + 1) * self.inter_bz, bz*D)
-                input_chunk = flattened_tensor[start_idx:end_idx]
-                output_chunk = self.Vit_encoder(input_chunk)
-                predicted_tensors.append(output_chunk)
-                torch.cuda.empty_cache()  # Release memory
-        
-        # Concatenate predicted tensors along batch dimension
-        concatenated_tensor = torch.cat(predicted_tensors, dim=0)
+            # List to store predicted tensors
+            predicted_tensors = []
+            
+            # Chunk input tensor and predict
+            with torch.no_grad():
+                for i in range(num_chunks):
+                    start_idx = i * self.inter_bz
+                    end_idx = min((i + 1) * self.inter_bz, bz*D)
+                    input_chunk = flattened_tensor[start_idx:end_idx]
+                    output_chunk = self.Vit_encoder(input_chunk)
+                    predicted_tensors.append(output_chunk)
+                    torch.cuda.empty_cache()  # Release memory
+            
+            # Concatenate predicted tensors along batch dimension
+            concatenated_tensor = torch.cat(predicted_tensors, dim=0)
 
-        flattened_tensor = concatenated_tensor
-        new_bz, new_ch, new_H, new_W = flattened_tensor.size()
-        self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
+            flattened_tensor = concatenated_tensor
+            new_bz, new_ch, new_H, new_W = flattened_tensor.size()
+            self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
+        else:
+            self.f = features
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,input_flows)
     def optimization(self, label):
         self.optimizer.zero_grad()
