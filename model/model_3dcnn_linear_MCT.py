@@ -160,10 +160,10 @@ class _VideoCNN(nn.Module):
         # slice_valid = activation(slice_valid)
 
         return final, slice_valid
-    def forward(self, x,input_flows):
+    def forward(self, x,c_logits,p_logits):
         out = x
-        for j, name in enumerate(self.blocks):
-            out = self.blocks[j](out)
+        # for j, name in enumerate(self.blocks):
+        #     out = self.blocks[j](out)
         bz, ch, D, H, W = out.size()
         # downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
         # expanded_mask = downsampled_mask.unsqueeze(1)
@@ -179,8 +179,8 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([False, False])
-        cam = activationLU(self.classifier(cat_feature))
+        flag =random. choice([True, True])
+        cam = activationLU(cat_feature)
 
         if flag== True:
             # bz, ch, D, H, W = out.size()

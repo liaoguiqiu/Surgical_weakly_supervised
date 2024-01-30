@@ -424,7 +424,8 @@ class myDataloader(object):
                 self.read_record =0
 
             pass
-        self.features = torch.stack(self.features, dim=0)
+        if self.Load_feature == True:
+            self.features = torch.stack(self.features, dim=0)
         
         # return self.input_image,self.input_path# if out this folder boundary, just returen
         this_pointer = 0
