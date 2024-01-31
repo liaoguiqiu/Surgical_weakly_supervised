@@ -35,6 +35,8 @@ class _Model_infer(object):
         
         # self.predictor = SamPredictor(self.sam) 
         self.Vit_encoder = model
+        self.set_requires_grad(self.Vit_encoder, True)
+
         self.VideoNets = _VideoCNN()
         self.input_size = 224
         resnet18 = models_torch.resnet18(pretrained=True)
@@ -90,6 +92,7 @@ class _Model_infer(object):
 
         self.input_resample =   F.interpolate(input,  size=(D, self.input_size, self.input_size), mode='trilinear', align_corners=False)
         # self.
+        Load_feature = False#########################33333
         if Load_feature == False:
             flattened_tensor = self.input_resample.permute(0,2,1,3,4)
             flattened_tensor = flattened_tensor.reshape(bz * D, ch, self.input_size, self.input_size)
@@ -137,12 +140,12 @@ class _Model_infer(object):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         self.set_requires_grad(self.Vit_encoder, True)
-        c_out= torch.mean (self.c_logits,dim=2)
+        c_out,_= torch.max (self.c_logits,dim=2)
         p_out,_= torch.max (self.p_logits,dim=2)
         self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
         loss_c = F.multilabel_soft_margin_loss(c_out, label)
-        loss_p = F.multilabel_soft_margin_loss(p_out, label)
-        self.loss = self.loss+loss_c
+        # loss_p = F.multilabel_soft_margin_loss(p_out, label)
+        self.loss = self.loss  + loss_c
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 
