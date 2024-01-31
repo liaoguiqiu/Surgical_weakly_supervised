@@ -104,15 +104,15 @@ class _Model_infer(object):
 
             
             # Chunk input tensor and predict
-            with torch.cuda.amp.autocast():
-                for i in range(num_chunks):
-                    start_idx = i * self.inter_bz
-                    end_idx = min((i + 1) * self.inter_bz, bz*D)
-                    input_chunk = flattened_tensor[start_idx:end_idx]
-                    x_cls_logits, cams, patch_attn,x_patch_logits = self.Vit_encoder(input_chunk,return_att=True)
-                    predicted_tensors.append(cams)
-                    predicted_tensors_x_cls_logits.append(x_cls_logits)
-                    predicted_tensors_x_patch_logits.append(x_patch_logits)
+            # with torch.cuda.amp.autocast():
+            for i in range(num_chunks):
+                start_idx = i * self.inter_bz
+                end_idx = min((i + 1) * self.inter_bz, bz*D)
+                input_chunk = flattened_tensor[start_idx:end_idx]
+                x_cls_logits, cams, patch_attn,x_patch_logits = self.Vit_encoder(input_chunk,return_att=True)
+                predicted_tensors.append(cams)
+                predicted_tensors_x_cls_logits.append(x_cls_logits)
+                predicted_tensors_x_patch_logits.append(x_patch_logits)
 
 
                     # torch.cuda.empty_cache()  # Release memory
@@ -137,12 +137,12 @@ class _Model_infer(object):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         self.set_requires_grad(self.Vit_encoder, True)
-        c_out, _= torch.max (self.c_logits,dim=2)
+        c_out, _= torch.mean (self.c_logits,dim=2)
         p_out,_= torch.max (self.p_logits,dim=2)
         self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
         loss_c = F.multilabel_soft_margin_loss(c_out, label)
         loss_p = F.multilabel_soft_margin_loss(p_out, label)
-        self.loss = self.loss+loss_c+loss_p
+        self.loss = self.loss+loss_c
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 
