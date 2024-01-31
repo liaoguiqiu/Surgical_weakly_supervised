@@ -16,7 +16,7 @@ from MCTformer import models
 # learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
-        self.inter_bz =29
+        self.inter_bz =29*10
 
         if GPU_mode ==True:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -137,7 +137,7 @@ class _Model_infer(object):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         self.set_requires_grad(self.Vit_encoder, True)
-        c_out, _= torch.mean (self.c_logits,dim=2)
+        c_out= torch.mean (self.c_logits,dim=2)
         p_out,_= torch.max (self.p_logits,dim=2)
         self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
         loss_c = F.multilabel_soft_margin_loss(c_out, label)

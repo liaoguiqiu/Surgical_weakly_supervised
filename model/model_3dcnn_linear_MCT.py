@@ -141,7 +141,7 @@ class _VideoCNN(nn.Module):
         # input = activation(input)
         # Maxpool_keepD = nn.MaxPool3d((1,H,W),stride=(1,1,1))
         # Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
-        flag =random. choice([False, False])
+        flag =random. choice([True, True])
         if flag == True: 
             Maxpool_keepD = nn.AvgPool3d((1,H,W),stride=(1,1,1))
             Maxpool_keepC = nn.AvgPool3d((D,1,1),stride=(1,1,1))
