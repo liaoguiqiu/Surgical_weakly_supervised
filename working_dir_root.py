@@ -33,11 +33,11 @@ Display_flag = True
 Save_flag =True
 loadmodel_index = '5.pth'
 
-Batch_size =4
+Batch_size =1
 Data_aug = False
 Random_mask = False
 Random_Full_mask = False
-Load_feature = False
+Load_feature = True
 Load_flow = False
 learningR = 0.0001
 learningR_res = 0.00001

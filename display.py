@@ -103,6 +103,7 @@ class Display(object):
                         stack = np.hstack((stack, this_image))
                 stack = stack -np.min(stack)
                 stack = stack /(np.max(stack)+0.0000001)*254
+                stack = (stack>60)*stack
                 # stack =  stack*254
                 stack = np.clip(stack,0,254)
                 alpha= 0.5

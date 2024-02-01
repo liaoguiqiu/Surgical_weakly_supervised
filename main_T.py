@@ -129,6 +129,7 @@ iteration_num = 0
 saver_id =0
 displayer = Display(GPU_mode)
 epoch =0
+features =None
 while (1):
     start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
@@ -139,7 +140,8 @@ while (1):
     input_flows = dataLoader.input_flows*1.0/ 255.0
     input_flows_GPU = torch.from_numpy(np.float32(input_flows))  
     input_flows_GPU = input_flows_GPU.to (device)
-    features = dataLoader.features.to (device)
+    if Load_feature ==True:
+        features = dataLoader.features.to (device)
     Model_infer.forward(input_videos_GPU,input_flows_GPU,features)
     Model_infer.optimization(labels_GPU) 
     if Display_flag == True:
