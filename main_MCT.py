@@ -96,6 +96,8 @@ dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
+    Model_infer.Vit_encoder.apply(weights_init)
+
 else:
     pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index )
     # model_dict = Model_infer.VideoNets.state_dict()

@@ -7,6 +7,8 @@ from model.model_3dcnn_linear import _VideoCNN
 from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature
 from dataset.dataset import class_weights
 from SAM.segment_anything import  SamPredictor, sam_model_registry
+from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+
 # learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
@@ -18,10 +20,13 @@ class _Model_infer(object):
         sam_checkpoint = SAM_pretrain_root+"sam_vit_h_4b8939.pth"
         sam_checkpoint = SAM_pretrain_root+"sam_vit_l_0b3195.pth"
         sam_checkpoint =SAM_pretrain_root+ "sam_vit_b_01ec64.pth"
-        self.inter_bz =1
+        self.inter_bz =29
         model_type = "vit_h"
         model_type = "vit_l"
         model_type = "vit_b"
+        
+        model_type = "vit_t"
+        sam_checkpoint = "./MobileSAM/weights/mobile_sam.pt"
         
         sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         # self.predictor = SamPredictor(self.sam) 
@@ -100,8 +105,8 @@ class _Model_infer(object):
                     input_chunk = flattened_tensor[start_idx:end_idx]
                     output_chunk = self.Vit_encoder(input_chunk)
                     predicted_tensors.append(output_chunk)
-                    torch.cuda.empty_cache()  # Release memory
-            
+               
+        
             # Concatenate predicted tensors along batch dimension
             concatenated_tensor = torch.cat(predicted_tensors, dim=0)
 

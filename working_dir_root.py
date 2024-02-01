@@ -34,10 +34,10 @@ Save_flag =True
 loadmodel_index = '5.pth'
 
 Batch_size =1
-Data_aug = False
+Data_aug = True
 Random_mask = False
 Random_Full_mask = False
-Load_feature = True
+Load_feature = False
 Load_flow = False
 learningR = 0.0001
 learningR_res = 0.00001

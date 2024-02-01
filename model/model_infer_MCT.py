@@ -143,11 +143,11 @@ class _Model_infer(object):
         c_out,_= torch.max (self.c_logits,dim=2)
         p_out,_= torch.max (self.p_logits,dim=2)
         self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
-        loss_c = F.multilabel_soft_margin_loss(c_out, label)
-        # loss_p = F.multilabel_soft_margin_loss(p_out, label)
+        loss_c = self.customeBCE(c_out, label)
+        loss_p = self.customeBCE(p_out, label)
         self.loss = self.loss  + loss_c
         # self.lossEa.backward(retain_graph=True)
-        self.loss.backward( )
+        self.loss.backward( retain_graph=True)
 
         self.optimizer.step()
         self.lossDisplay = self.loss. data.mean()
