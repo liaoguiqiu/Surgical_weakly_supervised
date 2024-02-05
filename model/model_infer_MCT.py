@@ -63,7 +63,9 @@ class _Model_infer(object):
 
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
-        self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        # self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
+
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
 
         self.optimizer = torch.optim.Adam([

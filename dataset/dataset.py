@@ -22,7 +22,7 @@ import torch
 # from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
-from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask,output_folder_sam_feature,Data_aug
+from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask,output_folder_sam_feature,Data_aug,train_test_list_dir
 Seperate_LR = False
 Mask_out_partial_label = False
 input_ch = 3 # input channel of each image/video
@@ -62,14 +62,18 @@ if Cholec_data_flag == True:
         'Irrigator',#5     -4413
         'SpecimenBag',#6     -11924               
     ]
-
+    categories_count =[5266.0,  592.0, 4252.0,  239.0,  352.0,  624.0,  623.0]
+    total_samples = sum(categories_count)
+    class_weights = [total_samples / (abs(count) * len(categories_count)) for count in categories_count]
 
 
 Obj_num = len(categories)
 class myDataloader(object):
     def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,
-                 Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True):
+                 Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True,Train_list = True):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
+        self.categories = categories
+        self.categories_count = categories_count
         self.image_size = img_size
         self.Display_loading_video =Display_loading_video
         self.Read_from_pkl= Read_from_pkl 
@@ -82,6 +86,7 @@ class myDataloader(object):
         self.video_len = 29
         self.video_buff_size = int(60/self.video_down_sample) * self.video_len  # each video has 30s discard last one for flow
         self.OLG_flag = OLG
+        self.create_train_list= True
         self.GT = True
         self.noisyflag = False
         self.Random_rotate = True
@@ -105,6 +110,8 @@ class myDataloader(object):
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_root)
             else:
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec)
+            if Train_list == True:
+                self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set')
         self.video_num = len (self.all_video_dir_list)
 
         #Guiqiu modified for my computer
@@ -277,6 +284,8 @@ class myDataloader(object):
 
             file_name_extention = ".pkl"
         self.features=[]
+        self.this_file_name = None
+        self.this_label = None
         for i in range(self.batch_size): # load a batch of images
             start_time = time()
 
@@ -286,6 +295,7 @@ class myDataloader(object):
 
             if filename.endswith(file_name_extention):
                 # Extract clip ID from the filename
+                self.this_file_name = filename
                 clip_id = int(filename.split("_")[1].split(".")[0])
                 clip_name = filename.split('.')[0]
                 # if clip_name=="clip_000189":
@@ -345,6 +355,7 @@ class myDataloader(object):
                         binary_vector = self.merge_labels(labels)
                         binary_vector_l = 0
                         binary_vector_r = 0
+                    self.this_label = binary_vector
                     # load the squess and unsquess
 
                     if self.Display_loading_video == True:

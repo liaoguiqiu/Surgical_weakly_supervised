@@ -33,7 +33,11 @@ class _VideoCNN(nn.Module):
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         base_f = base_f * 2
         # # 8*256  - 4*256\
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,k=(3,1,1), s=(1,1,1), p=(1,0, 0),resnet = True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = True))
+
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = False))
+        base_f = base_f * 2
+
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))  # 4*256
         # base_f = base_f * 2
@@ -150,8 +154,8 @@ class _VideoCNN(nn.Module):
             Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         
         slice_valid = Maxpool_keepD(input)
-        # final = Maxpool_keepC(slice_valid)
-        final = self.Top_rank_pooling(slice_valid,10)
+        final = Maxpool_keepC(slice_valid)
+        # final = self.Top_rank_pooling(slice_valid,10)
         # final = self.Threshold_pooling(slice_valid)
 
         #Note: how about add a number of object loss here ??
@@ -179,7 +183,7 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([True, False])
+        flag =random. choice([False, False])
         cam = activationLU(self.classifier(cat_feature))
 
         if flag== True:

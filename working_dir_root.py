@@ -24,14 +24,15 @@ Output_root =   working_root+"output/"
 SAM_pretrain_root = working_root+"output/SAM/"
 output_folder_sam_feature = "C:/2data/cholec80/output_sam_features/"
 
+train_test_list_dir = working_root + "output/train_test_list/"
 
 img_size = 64
 GPU_mode= True
 Continue_flag = True
 Visdom_flag = False
 Display_flag = True
-Save_flag =True
-loadmodel_index = '5.pth'
+Save_flag =False
+loadmodel_index = '3.pth'
 
 Batch_size =1
 Data_aug = False
@@ -39,8 +40,8 @@ Random_mask = False
 Random_Full_mask = False
 Load_feature = True
 Load_flow = False
-learningR = 0.00001
-learningR_res = 0.00001
+learningR = 0.0001
+learningR_res = 0.0001
 Call_gradcam = False 
 
 class Para(object):

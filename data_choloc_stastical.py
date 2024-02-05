@@ -2,6 +2,7 @@
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
+import pickle
 # from model import CE_build3  # the mmodel
 from time import time
 import os
@@ -21,13 +22,13 @@ from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
-from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
+from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature,train_test_list_dir
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
-
+Creat_balance_set = True
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
     print(torch.cuda.device(0))
@@ -92,7 +93,7 @@ Model_infer = model_infer_MCT._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature)
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list=False)
  
 read_id = 0
 print(Model_infer.resnet)
@@ -109,13 +110,33 @@ displayer = Display(GPU_mode)
 epoch =0
 features = None
 label_sum =0
+label_sum_appended = 0
+training_list=[]
+# Initialize counters for each category
+category_counters = {category: 0 for category in dataLoader.categories}
+sorted_all= np.argsort(dataLoader.categories_count) 
 while (1):
     start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
     input_videos_GPU = torch.from_numpy(np.float32(input_videos))
     labels_GPU = torch.from_numpy(np.float32(labels))
     label_sum += labels
+    label_none =0
+    if Creat_balance_set == True:
 
+        if read_id ==0:
+            training_list.append(dataLoader.this_file_name)
+            label_sum_appended += dataLoader.this_label
+        elif (dataLoader.this_label is not None):
+            sorted_indices_asc = np.argsort(label_sum_appended) # find waht is lacking in the set
+            if dataLoader.this_label[sorted_indices_asc[dataLoader.obj_num-1]] == 0 or dataLoader.this_label[sorted_all[0]]==1 or dataLoader.this_label[sorted_indices_asc[0]] == 1: # if not  the most case:
+                training_list.append(dataLoader.this_file_name)
+                label_sum_appended += dataLoader.this_label
+        print(label_sum_appended)
+        if dataLoader.this_label is  None:
+             label_none+=1
+             print('None label' + str(label_none))
+        
     if dataLoader.all_read_flag ==1:
         #remove this for none converting mode
         epoch +=1
@@ -125,6 +146,15 @@ while (1):
         print(label_sum)
         dataLoader.all_read_flag = 0
         read_id=0
+    if Creat_balance_set == True:
+        if np.all(label_sum_appended > 200):
+            
+                    
+                pkl_file_name = "train_set.pkl"
+                pkl_file_path = os.path.join(train_test_list_dir, pkl_file_name)
+                with open(pkl_file_path, 'wb') as file:
+                                pickle.dump(training_list, file)
+                                print("sam Pkl file created:" + pkl_file_name)
 
         # break
     if read_id % 1== 0   :

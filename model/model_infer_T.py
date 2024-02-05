@@ -64,6 +64,7 @@ class _Model_infer(object):
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        # self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
 
         self.optimizer = torch.optim.Adam([
@@ -110,6 +111,7 @@ class _Model_infer(object):
                     input_chunk = flattened_tensor[start_idx:end_idx]
                     output_chunk = self.Vit_encoder(input_chunk)
                     predicted_tensors.append(output_chunk)
+                    # torch.cuda.empty_cache()
                
         
             # Concatenate predicted tensors along batch dimension
@@ -121,8 +123,8 @@ class _Model_infer(object):
         else:
             self.f = features
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,input_flows)
-        self.sam_mask_prompt_decode(self.cam3D,self.f)
-        self.cam3D = self. sam_mask
+        # self.sam_mask_prompt_decode(self.cam3D,self.f)
+        # self.cam3D = self. sam_mask
     def sam_mask_prompt_decode(self,raw_masks,features ,multimask_output: bool = False):
         bz, ch, D, H, W = raw_masks.size()
         bz_f, ch_f, D_f, H_f, W_f = features.size()
