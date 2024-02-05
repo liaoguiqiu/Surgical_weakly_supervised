@@ -22,9 +22,10 @@ Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
 Output_root =   working_root+"output/"
 SAM_pretrain_root = working_root+"output/SAM/"
-output_folder_sam_feature = "C:/2data/cholec80/output_sam_features/"
+output_folder_sam_feature = working_root+ "cholec80/output_sam_features/"
 
 train_test_list_dir = working_root + "output/train_test_list/"
+train_sam_feature_dir = working_root+ "cholec80/train_sam_feature/"
 
 img_size = 64
 GPU_mode= True

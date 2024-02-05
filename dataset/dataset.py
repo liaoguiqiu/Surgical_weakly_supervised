@@ -337,6 +337,7 @@ class myDataloader(object):
                             self.flow_buffer = this_flow_buff
                     if self.Load_feature == True:
                             this_features = io.read_a_pkl(output_folder_sam_feature, clip_name)
+                            self.this_features=this_features
                             this_features = this_features.permute(1,0,2,3).float()
                             self.features.append(this_features)
 

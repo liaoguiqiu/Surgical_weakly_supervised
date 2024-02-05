@@ -23,12 +23,15 @@ from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature,train_test_list_dir
+from working_dir_root import train_sam_feature_dir
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
-Creat_balance_set = True
+Creat_balance_set = False
+Save_sam_feature = True
+
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
     print(torch.cuda.device(0))
@@ -93,7 +96,7 @@ Model_infer = model_infer_MCT._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list=False)
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list=True)
  
 read_id = 0
 print(Model_infer.resnet)
@@ -122,6 +125,16 @@ while (1):
     labels_GPU = torch.from_numpy(np.float32(labels))
     label_sum += labels
     label_none =0
+    if Save_sam_feature == True:
+        this_features= dataLoader.this_features
+        sam_pkl_file_name = dataLoader.this_file_name
+        sam_pkl_file_path = os.path.join(train_sam_feature_dir, sam_pkl_file_name)
+
+        with open(sam_pkl_file_path, 'wb') as file:
+            pickle.dump(this_features, file)
+            print("sam Pkl file created:" +sam_pkl_file_name)
+
+
     if Creat_balance_set == True:
 
         if read_id ==0:
