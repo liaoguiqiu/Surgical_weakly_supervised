@@ -80,7 +80,7 @@ def rotate_buff(images,angle):
     return augmented_images 
 
 
-def hide_patch(video, patch_num=32, hide_prob=0.5, mean=128,image_level= True):
+def hide_patch(video, patch_num=32, hide_prob=0.5, mean=124,image_level= True):
     # assume patch_num is int**2
     if patch_num == 1: return video
     flag = choice([True, False])
@@ -109,7 +109,7 @@ def hide_patch(video, patch_num=32, hide_prob=0.5, mean=128,image_level= True):
     return video
 
 
-def hide_full_image(video,  hide_prob=0.5, mean=128 ):
+def hide_full_image(video,  hide_prob=0.5, mean=124 ):
     # assume patch_num is int**2
    
     flag = choice([True, False])

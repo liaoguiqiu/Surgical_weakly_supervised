@@ -7,8 +7,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
-# from SAM.segment_anything import  SamPredictor, sam_model_registry
-from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+from SAM.segment_anything import  SamPredictor, sam_model_registry
+# from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 
 from working_dir_root import learningR,learningR_res,SAM_pretrain_root
 Create_sam_feature = True
@@ -26,8 +26,8 @@ model_type = "vit_h"
 model_type = "vit_l"
 model_type = "vit_b"
 
-model_type = "vit_t"
-sam_checkpoint = "./MobileSAM/weights/mobile_sam.pt"
+# model_type = "vit_t"
+# sam_checkpoint = "./MobileSAM/weights/mobile_sam.pt"
 
 # mobile SAM
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)

@@ -29,7 +29,7 @@ class Display(object):
     def __init__(self,GPU=False):
         self.Model_infer = model_infer._Model_infer(GPU)
         self.dataLoader = myDataloader()
-        self.show_num=6
+        self.show_num=15
 
     def train_display(self,MODEL_infer,mydata_loader, read_id):
         # copy all the input videos and labels
@@ -63,7 +63,7 @@ class Display(object):
         step_l = int(Ori_D/self.show_num)+1
         for i in range(0,Ori_D,step_l):
             if i ==0:
-                stack1 = Gray_video[i]
+                stack1 =  Gray_video[i] 
             else:
                 stack1 = np.hstack((stack1,Gray_video[i]))
 
@@ -74,11 +74,13 @@ class Display(object):
         if Save_flag == True:
             io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack1.astype((np.uint8)) )
         # Combine the rows vertically to create the final 3x3 arrangement
-        Cam3D= self.Model_infer.cam3D[0]
+        Cam3D=self.Model_infer.cam3D[0]
         label_0 = self.dataLoader.labels[0]
         if len (Cam3D.shape) == 3:
             Cam3D = Cam3D.unsqueeze(1)
         ch, D, H, W = Cam3D.size()
+        activation = nn.Sigmoid()
+        # Cam3D =  activation( Cam3D)
         # average_tensor = Cam3D.mean(dim=[1,2,3], keepdim=True)
         # _, sorted_indices = average_tensor.sort(dim=0)
         if len (self.Model_infer.output.shape) == 5:
@@ -103,8 +105,8 @@ class Display(object):
                         stack = np.hstack((stack, this_image))
                 stack = stack -np.min(stack)
                 stack = stack /(np.max(stack)+0.0000001)*254
-                stack = (stack>60)*stack
-                # stack =  stack*254
+                stack = (stack>20)*stack
+                # stack = (stack>0.5)*128
                 stack = np.clip(stack,0,254)
                 alpha= 0.5
                 overlay = cv2.addWeighted(stack1.astype((np.uint8)), 1 - alpha, stack.astype((np.uint8)), alpha, 0)
@@ -145,14 +147,16 @@ class Display(object):
                     stitch_over = np.vstack((stitch_over, overlay))
 
                 stitch_i+=1
-        cv2.imshow( 'all', stitch_im.astype((np.uint8)))
+
+        image_all = np.vstack((stitch_over,stitch_im))
+        cv2.imshow( 'all', image_all.astype((np.uint8)))
         cv2.imshow( 'overlay', stitch_over.astype((np.uint8)))
 
         cv2.waitKey(1)
         if Save_flag == True:
 
             io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_im.astype((np.uint8)) )
-            io.save_img_to_folder(Output_root + "image/predict_overlay/" ,  read_id, stitch_over.astype((np.uint8)) )
+            io.save_img_to_folder(Output_root + "image/predict_overlay/" ,  read_id, image_all.astype((np.uint8)) )
 
 
         if MODEL_infer.gradcam is not None:

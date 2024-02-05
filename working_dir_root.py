@@ -27,19 +27,19 @@ output_folder_sam_feature = "C:/2data/cholec80/output_sam_features/"
 
 img_size = 64
 GPU_mode= True
-Continue_flag = False
+Continue_flag = True
 Visdom_flag = False
 Display_flag = True
 Save_flag =True
 loadmodel_index = '5.pth'
 
 Batch_size =1
-Data_aug = True
+Data_aug = False
 Random_mask = False
 Random_Full_mask = False
-Load_feature = False
+Load_feature = True
 Load_flow = False
-learningR = 0.0001
+learningR = 0.00001
 learningR_res = 0.00001
 Call_gradcam = False 
 
