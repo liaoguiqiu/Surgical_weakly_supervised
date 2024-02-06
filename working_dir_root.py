@@ -41,8 +41,8 @@ Random_mask = False
 Random_Full_mask = False
 Load_feature = True
 Load_flow = False
-Max_lr = 0.001
-learningR = 0.00001
+Max_lr = 0.0001
+learningR = 0.0001
 learningR_res = 0.0001
 Call_gradcam = False 
 

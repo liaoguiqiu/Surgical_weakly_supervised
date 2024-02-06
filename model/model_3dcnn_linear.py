@@ -35,8 +35,8 @@ class _VideoCNN(nn.Module):
         # # 8*256  - 4*256\
         self.blocks.append(block_buider.conv_keep_all(base_f, base_f,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = True))
 
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = False))
-        base_f = base_f * 2
+        # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = False))
+        # base_f = base_f * 2
 
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2))  # 4*256

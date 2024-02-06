@@ -1,4 +1,4 @@
-def cyclic_learning_rate(current_epoch, max_lr, min_lr, cycle_length=3):
+def cyclic_learning_rate(current_epoch, max_lr, min_lr, cycle_length=10):
     """
     Function to compute the learning rate based on a cyclic schedule.
     

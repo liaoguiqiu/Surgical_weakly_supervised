@@ -74,10 +74,14 @@ class _Model_infer(object):
         # self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
         
+        # self.optimizer = torch.optim.Adam([
+        # {'params': self.VideoNets.parameters(),'lr': learningR}
+        # # {'params': self.VideoNets.blocks.parameters(),'lr': learningR*0.9}
+        # ], weight_decay=0.1)
         self.optimizer = torch.optim.Adam([
         {'params': self.VideoNets.parameters(),'lr': learningR}
         # {'params': self.VideoNets.blocks.parameters(),'lr': learningR*0.9}
-        ], weight_decay=0.1)
+        ])
        
         # if GPU_mode ==True:
         #     if num_gpus > 1:
@@ -252,8 +256,8 @@ class _Model_infer(object):
         # Return centroid coordinates reshaped to [bz, 1, 2]
         return centroid.view(1, 1, 2)
     def optimization(self, label,lr):
-        for param_group in  self.optimizer.param_groups:
-            param_group['lr'] = lr 
+        # for param_group in  self.optimizer.param_groups:
+        #     param_group['lr'] = lr 
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         # self.set_requires_grad(self.resnet, True)
