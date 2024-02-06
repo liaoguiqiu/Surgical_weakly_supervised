@@ -52,7 +52,9 @@ class _Model_infer(object):
         
         if GPU_mode == True:
             if num_gpus > 1:
-                self.VideoNets = torch.nn.DataParallel(self.VideoNets)
+                self.VideoNets.classifier = torch.nn.DataParallel(self.VideoNets.classifier)
+                self.VideoNets.blocks = torch.nn.DataParallel(self.VideoNets.blocks)
+
                 self.resnet  = torch.nn.DataParallel(self.resnet )
                 self.Vit_encoder   = torch.nn.DataParallel(self.Vit_encoder  )
                 self.sam_model  = torch.nn.DataParallel(self.sam_model )
