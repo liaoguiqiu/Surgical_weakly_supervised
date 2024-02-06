@@ -73,11 +73,16 @@ class _Model_infer(object):
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
         # self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
-
-        self.optimizer = torch.optim.Adam([
-    {'params': self.VideoNets.classifier.parameters(),'lr': learningR},
-    {'params': self.VideoNets.blocks.parameters(),'lr': learningR*0.9}
-], weight_decay=0.1)
+        if num_gpus <2:
+            self.optimizer = torch.optim.Adam([
+            {'params': self.VideoNets.classifier.parameters(),'lr': learningR},
+            {'params': self.VideoNets.blocks.parameters(),'lr': learningR*0.9}
+            ], weight_decay=0.1)
+        else:
+            self.optimizer = torch.optim.Adam([
+            {'params': self.VideoNets.module. classifier.parameters(),'lr': learningR},
+            {'params': self.VideoNets.module. blocks.parameters(),'lr': learningR*0.9}
+            ], weight_decay=0.1)
         # if GPU_mode ==True:
         #     if num_gpus > 1:
         #         self.optimizer = torch.nn.DataParallel(optself.optimizerimizer)
