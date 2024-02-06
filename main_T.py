@@ -147,6 +147,7 @@ while (1):
     Model_infer.forward(input_videos_GPU,input_flows_GPU,features)
 
     lr=scheduler.cyclic_learning_rate(current_epoch=epoch,max_lr=Max_lr,min_lr=learningR,cycle_length=4)
+    print("learning rate is :" + str(lr))
     Model_infer.optimization(labels_GPU,lr) 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
