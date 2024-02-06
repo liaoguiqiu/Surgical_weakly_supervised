@@ -54,7 +54,7 @@ class _Model_infer(object):
             if num_gpus > 1:
                 self.VideoNets.classifier = torch.nn.DataParallel(self.VideoNets.classifier)
                 self.VideoNets.blocks = torch.nn.DataParallel(self.VideoNets.blocks)
-                self.VideoNets.blocks = torch.nn.DataParallel(self.VideoNets)
+                self.VideoNets = torch.nn.DataParallel(self.VideoNets)
 
                 self.resnet  = torch.nn.DataParallel(self.resnet )
                 self.Vit_encoder   = torch.nn.DataParallel(self.Vit_encoder  )
