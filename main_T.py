@@ -21,7 +21,9 @@ from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
+import scheduler
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
+from working_dir_root import Max_lr, learningR,learningR_res
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
@@ -143,7 +145,9 @@ while (1):
     if Load_feature ==True:
         features = dataLoader.features.to (device)
     Model_infer.forward(input_videos_GPU,input_flows_GPU,features)
-    Model_infer.optimization(labels_GPU) 
+
+    lr=scheduler.cyclic_learning_rate(current_epoch=epoch,max_lr=Max_lr,min_lr=learningR,cycle_length=4)
+    Model_infer.optimization(labels_GPU,lr) 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
         pass
