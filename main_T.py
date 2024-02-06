@@ -132,6 +132,7 @@ saver_id =0
 displayer = Display(GPU_mode)
 epoch =0
 features =None
+visdom_id=0
 while (1):
     start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
@@ -164,9 +165,9 @@ while (1):
         # break
     if read_id % 1== 0   :
         print(" epoch" + str (epoch) )
-    if read_id % 100== 0 and Visdom_flag == True  :
+    if read_id % 50== 0 and Visdom_flag == True  :
         
-        plotter.plot('l0', 'l0', 'l0', read_id, Model_infer.lossDisplay.cpu().detach().numpy())
+        plotter.plot('l0', 'l0', 'l0', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
     if (read_id % 1000) == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
         torch.save(Model_infer.resnet.state_dict(), Output_root + "outResNets" + str(saver_id) + ".pth")
@@ -180,6 +181,7 @@ while (1):
         print("time is :" + str(end_time - start_time))
 
     read_id+=1
+    visdom_id+=1
     # print(labels)
 
     # pass
