@@ -24,7 +24,7 @@ import torch
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
 from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask,output_folder_sam_feature,Data_aug,train_test_list_dir
 Seperate_LR = False
-Mask_out_partial_label = False
+Mask_out_partial_label = True
 input_ch = 3 # input channel of each image/video
 Cholec_data_flag = True
 
@@ -394,14 +394,14 @@ class myDataloader(object):
                     # self.video_buff[1,:,:,:]= self.motion 
                     # self.video_buff[2,:,:,:]= self.motion 
                     if Mask_out_partial_label == True:
-                        binary_vector[0] =0
+                        binary_vector[1] =0
+                        binary_vector[2] = 0
                         binary_vector[3] = 0
                         binary_vector[4] = 0
-                        binary_vector[5] = 0
-                        binary_vector[8] =0
-                        binary_vector[10] =0
-                        binary_vector[11] =0
-                        binary_vector[12] =0
+                        binary_vector[5] =0
+                        binary_vector[6] =0
+                        # binary_vector[11] =0
+                        # binary_vector[12] =0
 
 
                     # flip_flag = True
