@@ -26,24 +26,33 @@ output_folder_sam_feature = working_root+ "cholec80/output_sam_features/"
 
 train_test_list_dir = working_root + "output/train_test_list/"
 train_sam_feature_dir = working_root+ "cholec80/train_sam_feature/"
+sam_feature_OLG_dir= working_root+ "cholec80/sam_feature_OLG/"
 
 img_size = 64
 GPU_mode= True
 Continue_flag = True
-Visdom_flag = False
-Display_flag = True
+Visdom_flag = True
+Display_flag = False
 Save_flag =False
-loadmodel_index = '3.pth'
+loadmodel_index = '2.pth'
 
 Batch_size =1
 Data_aug = False
 Random_mask = False
 Random_Full_mask = False
 Load_feature = True
+Save_feature_OLG = True
+
+if Load_feature == True:
+   Save_feature_OLG= False
+if Save_feature_OLG == True:
+    Batch_size=1
+
 Load_flow = False
-Max_lr = 0.0001
-learningR = 0.0001
-learningR_res = 0.0001
+Weight_decay = 0.00001
+Max_lr = 0.001
+learningR = 0.00001
+learningR_res = 0.00001
 Call_gradcam = False 
 
 class Para(object):

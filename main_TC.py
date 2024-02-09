@@ -15,7 +15,7 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import  model_experiement, model_infer,model_infer_T
+from model import  model_experiement, model_infer,model_infer_TC
 from working_dir_root import Output_root
 from dataset.dataset import myDataloader
 from display import Display
@@ -24,11 +24,16 @@ import torch.distributed as dist
 import scheduler
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
 from working_dir_root import Max_lr, learningR,learningR_res,Save_feature_OLG,sam_feature_OLG_dir
+from dataset import io
+
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
+Output_root = Output_root+ "temporal consistent/"
+io.self_check_path_create(Output_root)
+
 import pickle
 
 if torch.cuda.is_available():
@@ -88,7 +93,7 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model_infer = model_infer_T._Model_infer(GPU_mode,num_gpus)
+Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus)
 # if GPU_mode == True:
 #     if num_gpus > 1:
 #         Model_infer.VideoNets = torch.nn.DataParallel(Model_infer.VideoNets)
@@ -110,7 +115,7 @@ else:
     # 3. load the new state dict
     Model_infer.VideoNets.load_state_dict(pretrained_dict )
 
-    pretrained_dict2 = torch.load(Output_root + 'outResNets' + loadmodel_index )
+    pretrained_dict2 = torch.load(Output_root + 'outNets_s' + loadmodel_index )
     # model_dict = Model_infer.resnet.state_dict()
 
     # # 1. filter out unnecessary keys
@@ -118,7 +123,7 @@ else:
     # # 2. overwrite entries in the existing state dict
     # model_dict.update(pretrained_dict_trim)
     # 3. load the new state dict
-    Model_infer.resnet.load_state_dict(pretrained_dict2 )
+    Model_infer.VideoNets_S.load_state_dict(pretrained_dict2 )
 read_id = 0
 print(Model_infer.resnet)
 print(Model_infer.VideoNets)
@@ -180,13 +185,18 @@ while (1):
     if read_id % 1== 0   :
         print(" epoch" + str (epoch) )
         print(" loss" + str (Model_infer.lossDisplay.cpu().detach().numpy()) )
+        print(" loss_SS" + str (Model_infer.lossDisplay_s.cpu().detach().numpy()) )
+
 
     if read_id % 50== 0 and Visdom_flag == True  :
         
         plotter.plot('l0', 'l0', 'l0', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
+        plotter.plot('l0s', 'l0s', 'l0s', visdom_id, Model_infer.lossDisplay_s.cpu().detach().numpy())
+
     if (read_id % 1000) == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
-        torch.save(Model_infer.resnet.state_dict(), Output_root + "outResNets" + str(saver_id) + ".pth")
+        torch.save(Model_infer.VideoNets_S.state_dict(), Output_root + "outNets_s" + str(saver_id) + ".pth")
+        # torch.save(Model_infer.resnet.state_dict(), Output_root + "outResNets" + str(saver_id) + ".pth")
 
         saver_id +=1
         if saver_id >5:

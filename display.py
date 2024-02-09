@@ -68,8 +68,8 @@ class Display(object):
                 stack1 = np.hstack((stack1,Gray_video[i]))
 
         # Display the final image
-        cv2.imshow('Stitched in put Image', stack1.astype((np.uint8)))
-        cv2.waitKey(1)
+        # cv2.imshow('Stitched in put Image', stack1.astype((np.uint8)))
+        # cv2.waitKey(1)
 
         if Save_flag == True:
             io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack1.astype((np.uint8)) )
@@ -105,7 +105,7 @@ class Display(object):
                         stack = np.hstack((stack, this_image))
                 stack = stack -np.min(stack)
                 stack = stack /(np.max(stack)+0.0000001)*254
-                stack = (stack>20)*stack
+                # stack = (stack>20)*stack
                 # stack = (stack>0.5)*128
                 stack = np.clip(stack,0,254)
                 alpha= 0.5
@@ -150,7 +150,7 @@ class Display(object):
 
         image_all = np.vstack((stitch_over,stitch_im))
         cv2.imshow( 'all', image_all.astype((np.uint8)))
-        cv2.imshow( 'overlay', stitch_over.astype((np.uint8)))
+        # cv2.imshow( 'overlay', stitch_over.astype((np.uint8)))
 
         cv2.waitKey(1)
         if Save_flag == True:

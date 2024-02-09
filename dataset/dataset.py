@@ -24,7 +24,7 @@ import torch
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
 from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask,output_folder_sam_feature,Data_aug,train_test_list_dir
 Seperate_LR = False
-Mask_out_partial_label = True
+Mask_out_partial_label = False
 input_ch = 3 # input channel of each image/video
 Cholec_data_flag = True
 
@@ -63,11 +63,19 @@ if Cholec_data_flag == True:
         'SpecimenBag',#6     -11924               
     ]
     categories_count =[5266.0,  592.0, 4252.0,  239.0,  352.0,  624.0,  623.0]
+
     total_samples = sum(categories_count)
     class_weights = [total_samples / (abs(count) * len(categories_count)) for count in categories_count]
 
 
 Obj_num = len(categories)
+if Mask_out_partial_label == True:
+    label_mask = np.zeros(Obj_num)
+    label_mask[4]=1
+else:
+    label_mask = np.ones(Obj_num)
+
+
 class myDataloader(object):
     def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,
                  Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True,Train_list = True):
@@ -394,12 +402,15 @@ class myDataloader(object):
                     # self.video_buff[1,:,:,:]= self.motion 
                     # self.video_buff[2,:,:,:]= self.motion 
                     if Mask_out_partial_label == True:
-                        binary_vector[1] =0
-                        binary_vector[2] = 0
-                        binary_vector[3] = 0
-                        binary_vector[4] = 0
-                        binary_vector[5] =0
-                        binary_vector[6] =0
+                        # binary_vector[0] =0
+
+                        # binary_vector[1] =0
+                        # binary_vector[2] = 0
+                        # binary_vector[3] = 0
+                        # binary_vector[4] = 0
+                        # binary_vector[5] =0
+                        # binary_vector[6] =0
+                        binary_vector = binary_vector*label_mask
                         # binary_vector[11] =0
                         # binary_vector[12] =0
 

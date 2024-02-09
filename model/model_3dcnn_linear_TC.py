@@ -12,7 +12,7 @@ import random
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=256,base_f=512):
+    def __init__(self, inputC=256,base_f=384):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -23,7 +23,7 @@ class _VideoCNN(nn.Module):
 
         #
 
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,k=(1,1,1), s=(1,1,1), p=(0,0,0), resnet= True,dropout = True))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,k=(1,1,1), s=(1,1,1), p=(0,0,0), resnet= False,dropout = True))
 
         # # 16*256  - 8*256
         # # self.side_branch1.append(  conv_keep_all(base_f, base_f))
@@ -33,7 +33,8 @@ class _VideoCNN(nn.Module):
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         base_f = base_f * 2
         # # 8*256  - 4*256\
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = True,dropout = True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = False,dropout = True))
+        base_f = base_f * 2
 
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = False))
         # base_f = base_f * 2
@@ -67,9 +68,9 @@ class _VideoCNN(nn.Module):
         # else:
         #     self.classifier = nn.Linear(base_f, Obj_num )  # 4*256
         if Seperate_LR == True: # douvle the channel as the cat of flow masked tensor
-            self.classifier = nn.Conv3d(base_f, Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
+            self.classifier = nn.Conv3d(int(base_f+inputC+base_f/2+base_f/4), Obj_num *2, (1,1,1), (1,1,1), (0,0,0), bias=False) # 4*256
         else:
-            self.classifier = nn.Conv3d(base_f, Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+            self.classifier = nn.Conv3d(int(base_f+inputC+base_f/2+base_f/4), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
     def Top_rank_pooling (self,T,num_selected):
         B, C, D, H, W = T.size()
 
@@ -154,8 +155,8 @@ class _VideoCNN(nn.Module):
             Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         
         slice_valid = Maxpool_keepD(input)
-        final = Maxpool_keepC(slice_valid)
-        # final = self.Top_rank_pooling(slice_valid,10)
+        # final = Maxpool_keepC(slice_valid)
+        final = self.Top_rank_pooling(slice_valid,10)
         # final = self.Threshold_pooling(slice_valid)
 
         #Note: how about add a number of object loss here ??
@@ -165,9 +166,17 @@ class _VideoCNN(nn.Module):
 
         return final, slice_valid
     def forward(self, x,input_flows):
+        bz, ch, D, H, W = x.size()
+        
+        Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
+        x = Pure_down_pool(x)
+        # x=F.interpolate(x,  size=(D,int( H/2), int(W/2)), mode='trilinear', align_corners=False)
         out = x
+
+        features=[]
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
+            features.append(out)
         bz, ch, D, H, W = out.size()
         # downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
         # expanded_mask = downsampled_mask.unsqueeze(1)
@@ -175,7 +184,7 @@ class _VideoCNN(nn.Module):
         # cat_feature = torch.cat([out, masked_feature], dim=1)
         # cat_feature = torch.cat([out, out], dim=1)
         # cat_feature = torch.cat([out, out], dim=1)
-        cat_feature = out
+        cat_feature = torch.cat([x, features[0],features[1],features[2]], dim=1)
 
         activation = nn.Sigmoid()
         activationLU = nn.ReLU()
@@ -183,7 +192,7 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([False, False])
+        flag =random. choice([True, False])
         cam = activationLU(self.classifier(cat_feature))
 
         if flag== True:
