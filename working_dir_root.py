@@ -27,13 +27,15 @@ output_folder_sam_feature = working_root+ "cholec80/output_sam_features/"
 train_test_list_dir = working_root + "output/train_test_list/"
 train_sam_feature_dir = working_root+ "cholec80/train_sam_feature/"
 sam_feature_OLG_dir= working_root+ "cholec80/sam_feature_OLG/"
-
+Evaluation = True
 img_size = 64
 GPU_mode= True
 Continue_flag = True
+if Evaluation == True:
+    Continue_flag = True
 Visdom_flag = True
-Display_flag = False
-Save_flag =False
+Display_flag = True
+Save_flag =True
 loadmodel_index = '2.pth'
 
 Batch_size =1

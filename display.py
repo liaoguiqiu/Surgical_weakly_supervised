@@ -79,7 +79,7 @@ class Display(object):
         if len (Cam3D.shape) == 3:
             Cam3D = Cam3D.unsqueeze(1)
         ch, D, H, W = Cam3D.size()
-        activation = nn.Sigmoid()
+        # activation = nn.Sigmoid()
         # Cam3D =  activation( Cam3D)
         # average_tensor = Cam3D.mean(dim=[1,2,3], keepdim=True)
         # _, sorted_indices = average_tensor.sort(dim=0)

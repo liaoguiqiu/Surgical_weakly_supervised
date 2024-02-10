@@ -78,7 +78,7 @@ else:
 
 class myDataloader(object):
     def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,
-                 Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True,Train_list = True):
+                 Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True,Train_list = False):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
         self.categories = categories
         self.categories_count = categories_count

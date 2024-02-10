@@ -6,6 +6,7 @@ from dataset.dataset import myDataloader
 import model.base_models as block_buider
 from dataset.dataset import Obj_num, Seperate_LR
 import random
+from working_dir_root import Evaluation
 
 # Seperate_LR = True # seperate left and right
 
@@ -20,20 +21,23 @@ class _VideoCNN_S(nn.Module):
         # 256*256 - 128*256
         # limit=1024
         self.blocks = nn.ModuleList()
+        Drop_out = True
+        if Evaluation == True:
+            Drop_out = False
 
         #
 
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,k=(1,1,1), s=(1,1,1), p=(0,0,0), resnet= False,dropout = True))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f,k=(1,1,1), s=(1,1,1), p=(0,0,0), resnet= False,dropout = Drop_out))
 
         # # 16*256  - 8*256
         # # self.side_branch1.append(  conv_keep_all(base_f, base_f))
         # # self.side_branch1.append(  conv_keep_all(base_f, base_f))
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(3,1,1), s=(1,1,1), p=(1,0,0),resnet = False,dropout = True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(3,1,1), s=(1,1,1), p=(1,0,0),resnet = False,dropout = Drop_out))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         base_f = base_f * 2
         # # 8*256  - 4*256\
-        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(3,1,1), s=(1,1,1), p=(1,0, 0),resnet = False,dropout = True))
+        self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(3,1,1), s=(1,1,1), p=(1,0, 0),resnet = False,dropout = Drop_out))
         base_f = base_f * 2
 
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = False))

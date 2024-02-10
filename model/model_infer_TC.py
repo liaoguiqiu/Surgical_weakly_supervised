@@ -5,11 +5,14 @@ import torchvision.models as models
 
 from model.model_3dcnn_linear_TC import _VideoCNN
 from model.model_3dcnn_linear_ST import _VideoCNN_S
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation
 from dataset.dataset import class_weights
 from SAM.segment_anything import  SamPredictor, sam_model_registry
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from dataset.dataset import label_mask,Mask_out_partial_label
+if Evaluation == True:
+    learningR=0
+    Weight_decay=0
 # learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
@@ -74,6 +77,9 @@ class _Model_infer(object):
         self.resnet .to(device)
         self.Vit_encoder.to(device)
         self.sam_model .to (device)
+        if Evaluation:
+             self.VideoNets.eval()
+             self.VideoNets_S.eval()
 
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
@@ -157,7 +163,7 @@ class _Model_infer(object):
             self.cam3D_target = self.cam3D.detach().clone()
         self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,input_flows)
         # self.sam_mask_prompt_decode(self.cam3D,self.f)
-        # self.cam3D = self. sam_mask
+        # self.cam3D = self. cam3D_s
     def CAM_to_slice_hardlabel(self,cam):
         bz, ch, D, H, W = cam.size()
         raw_masks = cam -torch.min(cam)
