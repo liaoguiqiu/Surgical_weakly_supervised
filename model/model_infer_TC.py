@@ -2,11 +2,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
-
+import cv2
 from model.model_3dcnn_linear_TC import _VideoCNN
 from model.model_3dcnn_linear_ST import _VideoCNN_S
 from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation
 from dataset.dataset import class_weights
+import numpy as np
+from image_operator import basic_operator   
+import pydensecrf.densecrf as dcrf
+from pydensecrf.utils import unary_from_softmax
 from SAM.segment_anything import  SamPredictor, sam_model_registry
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from dataset.dataset import label_mask,Mask_out_partial_label
@@ -162,8 +166,11 @@ class _Model_infer(object):
             self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(self.cam3D)
             self.cam3D_target = self.cam3D.detach().clone()
         self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,input_flows)
-        # self.sam_mask_prompt_decode(self.cam3D,self.f)
-        # self.cam3D = self. cam3D_s
+        self.sam_mask_prompt_decode(self.cam3D_s,self.f,input)
+        # self.cam3D = self.cam3D_s
+        # self.cam3D = self. sam_mask
+        self.cam3D = self. post_processed_masks
+
     def CAM_to_slice_hardlabel(self,cam):
         bz, ch, D, H, W = cam.size()
         raw_masks = cam -torch.min(cam)
@@ -175,43 +182,60 @@ class _Model_infer(object):
         slice_hard_label = (count_masks>10)*1.0
         return slice_hard_label,binary_mask
 
-    def sam_mask_prompt_decode(self,raw_masks,features ,multimask_output: bool = False):
+    def sam_mask_prompt_decode(self,raw_masks,features,input,multimask_output: bool = False):
+        bz_i, ch_i, D_i, H_i, W_i = input.size()
+
         bz, ch, D, H, W = raw_masks.size()
         bz_f, ch_f, D_f, H_f, W_f = features.size()
 
         raw_masks = raw_masks -torch.min(raw_masks)
         raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001) 
-        self.mask_resample =   F.interpolate(raw_masks,  size=(D, 256, 256), mode='trilinear', align_corners=False)
-        binary_mask = (self.mask_resample >0.1)*1.0
+        self.mask_resample =   F.interpolate(raw_masks,  size=(D, H_i, W_i), mode='trilinear', align_corners=False)
+        binary_mask =  self.mask_resample 
+        # binary_mask = (self.mask_resample >0.05)*1.0
+
         # binary_mask =  self.mask_resample 
 
         # binary_mask = binary_mask.float(). to (self.device)
         # flattened_tensor = binary_mask.reshape(bz *ch* D,  256, 256)
+        flattened_video= input.permute(0,2,1,3,4)
+        flattened_video = flattened_video.reshape(bz * D, ch_i, H_i, W_i)
+
         flattened_feature = features.permute(0,2,1,3,4)
         flattened_feature = flattened_feature.reshape(bz_f * D_f, ch_f, H_f, W_f)
 
         flattened_mask= binary_mask.permute(0,2,1,3,4)
-        flattened_mask = flattened_mask.reshape(bz * D, ch, 256, 256)
-        output_mask = flattened_mask*0
+        flattened_mask = flattened_mask.reshape(bz * D, ch, H_i, W_i)
 
+
+
+        output_mask = torch.zeros(bz * D, ch, 256, 256)
+        post_process_mask = torch.zeros((bz * D, ch, H_i, W_i))
         with torch.no_grad():
                 for i in range(ch):
                     for j in range (bz*D):
+                        this_input_image=  flattened_video[j,:,:,:]
+
                         this_input_mask =  flattened_mask[j,i,:,:]
                         this_feature= flattened_feature[j:j+1,:,:,:]
-                        coordinates = torch.ones(bz * D,1,2)*512.0
-                        coordinates= coordinates.cuda()
-                        labels = torch.ones(bz * D,1)
+                        this_input_mask= torch.tensor(self.post_process_softmask(this_input_mask,this_input_image))
+                        # this_input_mask =(this_input_mask>125)*1.0
+                        post_process_mask[j,i,:,:] = this_input_mask
+                        # coordinates = torch.ones(bz * D,1,2)*512.0
+                        # coordinates= coordinates.cuda()
+                        # labels = torch.ones(bz * D,1)
                         forground_num =  int(torch.sum(this_input_mask).item())
-                        if forground_num>41:
+                        if forground_num>2000:
                             foreground_indices = torch.nonzero(this_input_mask > 0.5, as_tuple=False)
-                            cntral = self.extract_central_point_coordinates(this_input_mask)
+                            # cntral = self.extract_central_point_coordinates(this_input_mask)
                                 # Extract coordinates from indices
                             foreground_coordinates = foreground_indices[:, [1, 0]]  # Swap x, y to get (y, x) format
-                            labels = torch.ones(1,1)
-                            coordinates = cntral.view(1,1,2)*4
-                            coordinates= coordinates.cuda()
-                            labels = labels.cuda()
+                            mask = self.decode_mask_with_multi_coord(foreground_coordinates*1024/H,this_feature)
+                            output_mask[j,i,:,:] = mask
+                            # labels = torch.ones(1,1)
+                            # coordinates = cntral.view(1,1,2)*4
+                            # coordinates= coordinates.cuda()
+                            # labels = labels.cuda()
 
 
                         # sampled_coordinates, sampled_labels = self.sample_points(this_input_mask, num_points=16)
@@ -227,29 +251,109 @@ class _Model_infer(object):
                     # coordinates = torch.stack((y_coordinates, x_coordinates), dim=1).unsqueeze(1)*4
 
                     # coordinates = max_indices.unsqueeze(-1)
-                            points = (coordinates, labels)
+                            # points = (coordinates, labels)
 
-                            # Embed prompts
-                            sparse_embeddings, dense_embeddings = self.sam_model.prompt_encoder(
-                                points=points,
-                                boxes=None,
-                                masks=None,
-                            )
-                            # Predict masks
-                            low_res_masks, iou_predictions = self.sam_model.mask_decoder(
-                                image_embeddings= this_feature,
-                                image_pe=self.sam_model.prompt_encoder.get_dense_pe(),
-                                sparse_prompt_embeddings=sparse_embeddings,
-                                dense_prompt_embeddings=dense_embeddings,
-                                multimask_output=multimask_output,
-                            )
-                            output_mask[j,i,:,:] = low_res_masks[:,0,:,:]>0
+                            # # Embed prompts
+                            # sparse_embeddings, dense_embeddings = self.sam_model.prompt_encoder(
+                            #     points=points,
+                            #     boxes=None,
+                            #     masks=None,
+                            # )
+                            # # Predict masks
+                            # low_res_masks, iou_predictions = self.sam_model.mask_decoder(
+                            #     image_embeddings= this_feature,
+                            #     image_pe=self.sam_model.prompt_encoder.get_dense_pe(),
+                            #     sparse_prompt_embeddings=sparse_embeddings,
+                            #     dense_prompt_embeddings=dense_embeddings,
+                            #     multimask_output=multimask_output,
+                            # )
+                            # 
 
 
         # self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
         self.sam_mask = output_mask.reshape (bz,D,ch,256,256).permute(0,2,1,3,4)
+        self.post_processed_masks = post_process_mask.reshape (bz,D,ch,H_i,W_i).permute(0,2,1,3,4)
         # self.sam_mask = binary_mask
 
+        pass
+    def post_process_softmask(self,mask,image):
+        def apply_opening(mask, kernel_size=5):
+            """
+            Apply opening operation to the mask.
+            
+            Parameters:
+                mask (ndarray): Binary mask array.
+                kernel_size (int): Size of the kernel for morphological opening.
+            
+            Returns:
+                ndarray: Mask after applying morphological opening.
+            """
+            kernel = np.ones((kernel_size, kernel_size), np.uint8)
+            return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        
+        image= image.permute(1,2,0)
+        # mask = mask -torch.min(mask)
+        # mask = mask /(torch.max(mask)+0.0000001) 
+        mask= mask*4
+        # mask = (mask>0.3)*1.0
+        mask =mask.cpu().detach().numpy()  
+        image= image.cpu().detach().numpy()  
+        mask= np.clip(mask,0,1)
+        mask=basic_operator .DCRF (image,mask)
+        final_seg = np.argmax(mask, axis=0)
+        # mask_uint8 = np.uint8(mask * 255)
+        # # Ensure it's binary
+        # _, mask = cv2.threshold(mask_uint8, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # # Clear boundary errors if needed
+        # # mask_cleaned = clear_boundary_errors(mask, boundary_size=5)
+
+        # # Apply morphological opening if needed
+        # mask_opened = apply_opening(mask, kernel_size=3)
+        return final_seg
+    def decode_mask_with_multi_coord(self,foreground_coordinates,this_feature):
+        N = foreground_coordinates.size(0)
+
+# Calculate the step size
+        step = N // 20
+
+        # Sample coordinates using the step size
+        sampled_coordinates = foreground_coordinates[::step]
+        # sampled_coordinates = foreground_coordinates 
+
+        labels = torch.ones(1,1)
+        # coordinates = cntral.view(1,1,2)*4
+        # coordinates= coordinates.cuda()
+        labels = labels.cuda()
+
+        masks=[]
+        N= len(sampled_coordinates)
+        for i in range(len(sampled_coordinates)):
+            coordinates = sampled_coordinates[i,:].view(1,1,2)
+            coordinates= coordinates.cuda() 
+
+            points = (coordinates, labels)
+
+            # Embed prompts
+            sparse_embeddings, dense_embeddings = self.sam_model.prompt_encoder(
+                points=points,
+                boxes=None,
+                masks=None,
+            )
+            # Predict masks
+            low_res_masks, iou_predictions = self.sam_model.mask_decoder(
+                image_embeddings= this_feature,
+                image_pe=self.sam_model.prompt_encoder.get_dense_pe(),
+                sparse_prompt_embeddings=sparse_embeddings,
+                dense_prompt_embeddings=dense_embeddings,
+                multimask_output=False,
+            )
+            this_mask = (low_res_masks[0,0,:,:]>0)*1.0
+            masks.append(this_mask)
+        masks = torch.stack(masks)
+        sum_mask = torch.sum(masks,dim=0)
+        out_mask= (sum_mask>10)*1.0
+        return out_mask
         pass
     def sample_points(self,mask, num_points=16):
     # Get mask shape
@@ -350,3 +454,42 @@ class _Model_infer(object):
     def optimization_slicevalid(self):
 
         pass
+def refine_mask_with_densecrf(grayscale_mask, num_classes=2, theta_col=80, compat_spat=15, num_iters=5):
+    """
+    Refine a grayscale mask using DenseCRF.
+
+    Parameters:
+        grayscale_mask (ndarray): Grayscale mask with values in the range [0, 1].
+        num_classes (int): Number of classes (background and foreground).
+        theta_col (float): Color compatibility parameter in the pairwise potential.
+        compat_spat (float): Spatial compatibility parameter in the pairwise potential.
+        num_iters (int): Number of iterations for DenseCRF inference.
+
+    Returns:
+        ndarray: Refined segmentation mask.
+    """
+    # Scale the grayscale mask values to integer range
+    grayscale_mask_scaled = (grayscale_mask * 255).astype(np.uint8)
+
+    # Define unary potential (negative logarithm of softmax output)
+    unary = np.stack([1 - grayscale_mask_scaled, grayscale_mask_scaled], axis=0)  # Assuming binary mask
+
+    # Create a DenseCRF object
+    d = dcrf.DenseCRF2D(grayscale_mask.shape[1], grayscale_mask.shape[0], num_classes)
+
+    # Set unary potentials
+    unary_flat = unary.reshape(num_classes, -1)  # Flatten to (num_classes, num_pixels)
+    d.setUnaryEnergy(-np.log(unary_flat))
+    # d.setUnaryEnergy(-np.log(unary))
+
+    # Add pairwise potentials
+    d.addPairwiseGaussian(sxy=(3, 3), compat=compat_spat)
+    d.addPairwiseBilateral(sxy=(80, 80), srgb=(13, 13, 13), rgbim=grayscale_mask_scaled, compat=theta_col)
+
+    # Run inference
+    refined_mask = d.inference(num_iters)
+
+    # Get the result
+    refined_mask = np.argmax(refined_mask, axis=0).reshape(grayscale_mask.shape)
+
+    return refined_mask

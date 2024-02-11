@@ -31,9 +31,11 @@ Evaluation = True
 img_size = 64
 GPU_mode= True
 Continue_flag = True
+
+Visdom_flag = True
 if Evaluation == True:
     Continue_flag = True
-Visdom_flag = True
+    Visdom_flag= False
 Display_flag = True
 Save_flag =True
 loadmodel_index = '2.pth'
