@@ -11,7 +11,7 @@ from SAM.segment_anything import  SamPredictor, sam_model_registry
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 
 from working_dir_root import learningR,learningR_res,SAM_pretrain_root
-Create_sam_feature = True
+Create_sam_feature = False
 GPU_mode = True
 if GPU_mode ==True:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -98,12 +98,12 @@ for file_name in sorted(os.listdir(dataset_label_root)):
                 
 
                 # Save frames and labels to HDF5 file
-                hdf5_file_name = f"clip_{file_counter:06d}.h5"
-                hdf5_file_path = os.path.join(output_folder_hdf5, hdf5_file_name)
+                # hdf5_file_name = f"clip_{file_counter:06d}.h5"
+                # hdf5_file_path = os.path.join(output_folder_hdf5, hdf5_file_name)
 
-                with h5py.File(hdf5_file_path, 'w') as file:
-                    for key, value in data_dict.items():
-                        file.create_dataset(key, data=value)
+                # with h5py.File(hdf5_file_path, 'w') as file:
+                #     for key, value in data_dict.items():
+                #         file.create_dataset(key, data=value)
 
                 # Save frames and labels to PKL file
                 pkl_file_name = f"clip_{file_counter:06d}.pkl"

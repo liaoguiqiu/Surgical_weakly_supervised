@@ -23,11 +23,15 @@ import torch
 # from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
 from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask,output_folder_sam_feature,Data_aug,train_test_list_dir
+from working_dir_root import Test_on_cholec_seg8k, Dataset_video_pkl_cholec8k, output_folder_sam_feature_cholec8k
+
+if Test_on_cholec_seg8k == True:
+   output_folder_sam_feature=  output_folder_sam_feature_cholec8k
+   Dataset_video_pkl_cholec = Dataset_video_pkl_cholec8k
 Seperate_LR = False
 Mask_out_partial_label = False
 input_ch = 3 # input channel of each image/video
 Cholec_data_flag = True
-
 categories_count = [17, 13163, 17440, 576, 1698, 4413, 11924, 10142, 866, 2992,131, 17, 181, 1026]
 
 total_samples = sum(categories_count)
@@ -78,7 +82,7 @@ else:
 
 class myDataloader(object):
     def __init__(self, OLG=False,img_size = 128,Display_loading_video = False,
-                 Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True,Train_list = False):
+                 Read_from_pkl= True,Save_pkl = False,Load_flow =False,Load_feature=True,Train_list = "test"):
         print("GPU function is : "+ str(cv2.cuda.getCudaEnabledDeviceCount()))
         self.categories = categories
         self.categories_count = categories_count
@@ -118,8 +122,10 @@ class myDataloader(object):
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_root)
             else:
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec)
-            if Train_list == True:
+            if Train_list == "train":
                 self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set')
+            if Test_on_cholec_seg8k ==True:
+                self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec8k)
         self.video_num = len (self.all_video_dir_list)
 
         #Guiqiu modified for my computer
@@ -289,9 +295,12 @@ class myDataloader(object):
                 folder_path = Dataset_video_pkl_root
             else:
                 folder_path = Dataset_video_pkl_cholec
+            # if Test_on_cholec_seg8k ==True:
+            #     folder_path =  Dataset_video_pkl_cholec8k
 
             file_name_extention = ".pkl"
         self.features=[]
+        self.all_raw_labels=[]
         self.this_file_name = None
         self.this_label = None
         for i in range(self.batch_size): # load a batch of images
@@ -325,7 +334,7 @@ class myDataloader(object):
 
                         io.save_a_pkl(Dataset_video_pkl_root, clip_name, this_video_buff)
                         io.save_a_pkl(Dataset_video_pkl_flow_root, clip_name, this_flow_buff)
-
+                        
                 else:
                     # if clip_name!="clip_000189":
                     if Cholec_data_flag == False:
@@ -335,6 +344,7 @@ class myDataloader(object):
                         data_dict = io.read_a_pkl(Dataset_video_pkl_cholec, clip_name)
                         this_video_buff = data_dict['frames']
                         labels = data_dict['labels']
+                        self.all_raw_labels . append(labels)
                         self.video_buff = this_video_buff[:,0:self.video_len,:,:]
                     if self.Load_flow == True:
                         # if clip_name=="clip_000189":

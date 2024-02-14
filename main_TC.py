@@ -23,7 +23,7 @@ import torch.nn.parallel
 import torch.distributed as dist
 import scheduler
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
-from working_dir_root import Max_lr, learningR,learningR_res,Save_feature_OLG,sam_feature_OLG_dir
+from working_dir_root import Max_lr, learningR,learningR_res,Save_feature_OLG,sam_feature_OLG_dir, Evaluation
 from dataset import io
 
 # GPU_mode= True
@@ -155,7 +155,8 @@ while (1):
 
     lr=scheduler.cyclic_learning_rate(current_epoch=epoch,max_lr=Max_lr,min_lr=learningR,cycle_length=4)
     print("learning rate is :" + str(lr))
-    Model_infer.optimization(labels_GPU,lr) 
+    if Evaluation == False:
+        Model_infer.optimization(labels_GPU,lr) 
 
     if  Save_feature_OLG== True:
         this_features= Model_infer.f[0].permute(1,0,2,3).half()
@@ -182,16 +183,18 @@ while (1):
         read_id=0
 
         # break
-    if read_id % 1== 0   :
-        print(" epoch" + str (epoch) )
-        print(" loss" + str (Model_infer.lossDisplay.cpu().detach().numpy()) )
-        print(" loss_SS" + str (Model_infer.lossDisplay_s.cpu().detach().numpy()) )
+    
 
-
-    if read_id % 50== 0 and Visdom_flag == True  :
+    if Evaluation == False:
         
-        plotter.plot('l0', 'l0', 'l0', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
-        plotter.plot('l0s', 'l0s', 'l0s', visdom_id, Model_infer.lossDisplay_s.cpu().detach().numpy())
+        if read_id % 50== 0 and Visdom_flag == True  :
+            
+            plotter.plot('l0', 'l0', 'l0', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
+            plotter.plot('1ls', '1ls', 'l1s', visdom_id, Model_infer.lossDisplay_s.cpu().detach().numpy())
+        if read_id % 1== 0   :
+            print(" epoch" + str (epoch) )
+            print(" loss" + str (Model_infer.lossDisplay.cpu().detach().numpy()) )
+            print(" loss_SS" + str (Model_infer.lossDisplay_s.cpu().detach().numpy()) )
 
     if (read_id % 1000) == 0  :
         torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")

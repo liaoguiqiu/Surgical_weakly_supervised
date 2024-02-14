@@ -88,7 +88,12 @@ class _Model_infer(object):
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         # self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
-        self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
+        # self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
+        self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        self.customeBCE_S = torch.nn.BCEWithLogitsLoss().to(device)
+
+
+
         self.customeBCE_mask = torch.nn.MSELoss( ).to(device)
 
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
@@ -165,17 +170,17 @@ class _Model_infer(object):
         with torch.no_grad():
             self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(self.cam3D)
             self.cam3D_target = self.cam3D.detach().clone()
-        self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,input_flows)
-        self.sam_mask_prompt_decode(self.cam3D_s,self.f,input)
+        self.output_s,self.slice_valid_s,self.cam3D_s,self.cam3D_s_low = self.VideoNets_S(self.f,input_flows)
+        # self.sam_mask_prompt_decode(self.cam3D_s,self.f,input)
         # self.cam3D = self.cam3D_s
         # self.cam3D = self. sam_mask
-        self.cam3D = self. post_processed_masks
+        # self.cam3D = self. post_processed_masks
 
     def CAM_to_slice_hardlabel(self,cam):
         bz, ch, D, H, W = cam.size()
         raw_masks = cam -torch.min(cam)
         raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001)        
-        binary_mask = (raw_masks >0.05)*1.0
+        binary_mask = (raw_masks >0.1)*1.0
         binary_mask = self. clear_boundary(binary_mask)
         # flatten_mask = binary_mask.view(bz,ch)
         count_masks = torch.sum(binary_mask, dim=(-1, -2), keepdim=True)
@@ -232,42 +237,7 @@ class _Model_infer(object):
                             foreground_coordinates = foreground_indices[:, [1, 0]]  # Swap x, y to get (y, x) format
                             mask = self.decode_mask_with_multi_coord(foreground_coordinates*1024/H,this_feature)
                             output_mask[j,i,:,:] = mask
-                            # labels = torch.ones(1,1)
-                            # coordinates = cntral.view(1,1,2)*4
-                            # coordinates= coordinates.cuda()
-                            # labels = labels.cuda()
-
-
-                        # sampled_coordinates, sampled_labels = self.sample_points(this_input_mask, num_points=16)
-                        # sampled_coordinates= sampled_coordinates.cuda() *4
-                    # flat_mask =  this_input_mask.view(bz*D, -1)
-
-# Find the index of the maximum value
-                    # max_indices = torch.argmax(flat_mask, dim=1)
-
-                    # # Convert indices to coordinates
-                    # y_coordinates = max_indices // W
-                    # x_coordinates = max_indices % W
-                    # coordinates = torch.stack((y_coordinates, x_coordinates), dim=1).unsqueeze(1)*4
-
-                    # coordinates = max_indices.unsqueeze(-1)
-                            # points = (coordinates, labels)
-
-                            # # Embed prompts
-                            # sparse_embeddings, dense_embeddings = self.sam_model.prompt_encoder(
-                            #     points=points,
-                            #     boxes=None,
-                            #     masks=None,
-                            # )
-                            # # Predict masks
-                            # low_res_masks, iou_predictions = self.sam_model.mask_decoder(
-                            #     image_embeddings= this_feature,
-                            #     image_pe=self.sam_model.prompt_encoder.get_dense_pe(),
-                            #     sparse_prompt_embeddings=sparse_embeddings,
-                            #     dense_prompt_embeddings=dense_embeddings,
-                            #     multimask_output=multimask_output,
-                            # )
-                            # 
+                        
 
 
         # self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
@@ -405,6 +375,19 @@ class _Model_infer(object):
         
         # Return centroid coordinates reshaped to [bz, 1, 2]
         return centroid.view(1, 1, 2)
+    def loss_of_one_scale(self,output,label,BCEtype = 1):
+        out_logits = output.view(label.size(0), -1)
+        bz,length = out_logits.size()
+
+        label_mask_torch = torch.tensor(label_mask, dtype=torch.float32)
+        label_mask_torch = label_mask_torch.repeat(bz, 1)
+        label_mask_torch = label_mask_torch.to(self.device)
+        if BCEtype == 1:
+            loss = self.customeBCE(out_logits * label_mask_torch, label * label_mask_torch)
+        else:
+            loss = self.customeBCE_S (out_logits * label_mask_torch, label * label_mask_torch)
+        return loss
+
     def optimization(self, label,lr):
         # for param_group in  self.optimizer.param_groups:
         #     param_group['lr'] = lr 
@@ -416,37 +399,46 @@ class _Model_infer(object):
 
         # self.set_requires_grad(self.VideoNets_S,True)
         # self.set_requires_grad(self.resnet, True)
-        out_logits = self.output.view(label.size(0), -1)
-        bz,length = out_logits.size()
+        loss0 =self.loss_of_one_scale(self.output[0],label)
+        loss1 =self.loss_of_one_scale(self.output[1],label)
+        loss2 =self.loss_of_one_scale(self.output[2],label)
+        # self.loss = 0.01*loss2 + 0.1*loss1+ loss0
+        # self.loss =  loss0 +0.01*loss1+ 0.01*loss2
+        self.loss =  loss2
 
-        label_mask_torch = torch.tensor(label_mask, dtype=torch.float32)
-        label_mask_torch = label_mask_torch.repeat(bz, 1)
-        label_mask_torch = label_mask_torch.to(self.device)
 
-        self.loss = self.customeBCE(out_logits * label_mask_torch, label * label_mask_torch)
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 
         self.optimizer.step()
 
-        out_logits_s = self.output_s.view(label.size(0), -1)
+        # out_logits_s = self.output_s.view(label.size(0), -1)
+
+
         # bz,length = out_logits.size()
 
         # label_mask_torch = torch.tensor(label_mask, dtype=torch.float32)
         # label_mask_torch = label_mask_torch.repeat(bz, 1)
         # label_mask_torch = label_mask_torch.to(self.device)
-        self.loss_s_v = self.customeBCE(out_logits_s * label_mask_torch, label * label_mask_torch)
+        # self.loss_s_v = self.loss_of_one_scale(out_logits_s  , label * labelmask_torch)
+        loss_s0 =self.loss_of_one_scale(self.output_s[0],label,BCEtype=2)
+        loss_s1 =self.loss_of_one_scale(self.output_s[1],label,BCEtype=2)
+        loss_s2 =self.loss_of_one_scale(self.output_s[2],label,BCEtype=2)
+        # self.loss_s_v = 0.01*loss_s2 + 0.01*loss_s1 + 1.0*loss_s0
+        self.loss_s_v = loss_s2  
+
+
         bz, ch, D, H, W = self.cam3D_s.size()
 
         valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
-        predit_mask= self.cam3D_s * valid_masks_repeated
+        predit_mask= self.cam3D_s_low * valid_masks_repeated
         target_mask= self.cam3D_target  * valid_masks_repeated
-        # self.loss_s_pix = self.customeBCE(self.cam3D_s * valid_masks_repeated, self.binary_masks * valid_masks_repeated)
-        self.loss_s_pix = self.customeBCE_mask(predit_mask , target_mask   )
+        self.loss_s_pix = self.customeBCE_mask(predit_mask, self.binary_masks * target_mask)
+        # self.loss_s_pix = self.customeBCE_mask(self.cam3D_s_low  , self.cam3D_target   )
 
-        self.loss_s = self.loss_s_v  +self.loss_s_pix
+        self.loss_s = self.loss_s_v  + 0.01*self.loss_s_pix
         # self.set_requires_grad(self.VideoNets, False)
-        self.loss_s.backward( )
+        self.loss_s.backward()
         self.optimizer_s.step()
         self.lossDisplay = self.loss. data.mean()
         self.lossDisplay_s = self.loss_s. data.mean()
@@ -454,42 +446,3 @@ class _Model_infer(object):
     def optimization_slicevalid(self):
 
         pass
-def refine_mask_with_densecrf(grayscale_mask, num_classes=2, theta_col=80, compat_spat=15, num_iters=5):
-    """
-    Refine a grayscale mask using DenseCRF.
-
-    Parameters:
-        grayscale_mask (ndarray): Grayscale mask with values in the range [0, 1].
-        num_classes (int): Number of classes (background and foreground).
-        theta_col (float): Color compatibility parameter in the pairwise potential.
-        compat_spat (float): Spatial compatibility parameter in the pairwise potential.
-        num_iters (int): Number of iterations for DenseCRF inference.
-
-    Returns:
-        ndarray: Refined segmentation mask.
-    """
-    # Scale the grayscale mask values to integer range
-    grayscale_mask_scaled = (grayscale_mask * 255).astype(np.uint8)
-
-    # Define unary potential (negative logarithm of softmax output)
-    unary = np.stack([1 - grayscale_mask_scaled, grayscale_mask_scaled], axis=0)  # Assuming binary mask
-
-    # Create a DenseCRF object
-    d = dcrf.DenseCRF2D(grayscale_mask.shape[1], grayscale_mask.shape[0], num_classes)
-
-    # Set unary potentials
-    unary_flat = unary.reshape(num_classes, -1)  # Flatten to (num_classes, num_pixels)
-    d.setUnaryEnergy(-np.log(unary_flat))
-    # d.setUnaryEnergy(-np.log(unary))
-
-    # Add pairwise potentials
-    d.addPairwiseGaussian(sxy=(3, 3), compat=compat_spat)
-    d.addPairwiseBilateral(sxy=(80, 80), srgb=(13, 13, 13), rgbim=grayscale_mask_scaled, compat=theta_col)
-
-    # Run inference
-    refined_mask = d.inference(num_iters)
-
-    # Get the result
-    refined_mask = np.argmax(refined_mask, axis=0).reshape(grayscale_mask.shape)
-
-    return refined_mask

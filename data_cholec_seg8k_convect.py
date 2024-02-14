@@ -5,8 +5,38 @@ import cv2
 import random
 import copy
 import shutil
+import pickle
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.models as models
+from SAM.segment_anything import  SamPredictor, sam_model_registry
+from working_dir_root import SAM_pretrain_root
 import numpy as np
 Show_img =True
+Create_sam_feature = True
+GPU_mode = True
+if GPU_mode ==True:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+else:
+    device = torch.device("cpu")
+sam_checkpoint = SAM_pretrain_root+"sam_vit_h_4b8939.pth"
+sam_checkpoint = SAM_pretrain_root+"sam_vit_l_0b3195.pth"
+sam_checkpoint =SAM_pretrain_root+ "sam_vit_b_01ec64.pth"
+# self.inter_bz =1
+model_type = "vit_h"
+model_type = "vit_l"
+model_type = "vit_b"
+
+# model_type = "vit_t"
+# sam_checkpoint = "./MobileSAM/weights/mobile_sam.pt"
+
+# mobile SAM
+sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+# self.predictor = SamPredictor(self.sam) 
+Vit_encoder = sam.image_encoder
+Vit_encoder.to(device)
 color_class_mapping={(127, 127, 127): 0,
                     (210, 140, 140): 1,
                     (255, 114, 114): 2,
@@ -52,6 +82,8 @@ def read_frames(video_folder, img_size):
 
 path='C:/2data/cholecseg8k_working/cholecseg8k/'
 op_path='C:/2data/cholecseg8k_working/'
+output_folder_pkl = op_path +"output_pkl/"
+output_folder_sam_feature = op_path + "output_sam_features/"
 rawimages_path=os.path.join(op_path, 'raw_images')
 maskimages_path=os.path.join(op_path, 'mask_images')
 labels_path=os.path.join(op_path, 'labels')
@@ -80,7 +112,7 @@ n=0 # variable for counting total images
 o=0 # variable for counting total raw images
 p=0 # variable for counting total masks
 q=0 # variable for counting total directories
-video_count= 0 # for counting total videos
+file_counter= 0 # for counting total videos
 for directory in os.listdir(path):
     dir_path=os.path.join(path, directory)
     m=m+len(os.listdir(dir_path))
@@ -147,11 +179,50 @@ for directory in os.listdir(path):
             step = len(video_masks) // downsample_len
             video_masks = video_masks[:downsample_len * step:step]
         video_images  = np.transpose(video_images , (3, 0, 1, 2))  # Reshape to (3, 29, 64, 64)
+        video_masks  = np.transpose(video_masks , (1, 0, 2, 3))  # Reshape to (3, 29, 64, 64)
+
+
         print(video_images.shape)
-
-
-
         print(video_masks.shape) 
+        data_dict = {'frames': video_images,
+                    'labels': video_masks}
+
+
+        pkl_file_name = f"clip_{file_counter:06d}.pkl"
+        pkl_file_path = os.path.join(output_folder_pkl, pkl_file_name)
+
+        with open(pkl_file_path, 'wb') as file:
+            pickle.dump(data_dict, file)
+            print("Pkl file created:" +pkl_file_name)
+        if Create_sam_feature == True:
+                    this_video_buff = data_dict['frames'] 
+                    video_buff_GPU = torch.from_numpy(np.float32(this_video_buff)).to (device)
+                    video_buff_GPU = video_buff_GPU.permute(1,0,2,3) # Reshape to (29, 3, 64, 64)
+                    input_resample =   F.interpolate(video_buff_GPU,  size=(1024,  1024), mode='bilinear', align_corners=False)
+                    
+                    bz,  ch, H, W = input_resample.size()
+                    predicted_tensors =[]
+                    with torch.no_grad():
+
+                        for i in range(bz):
+                            
+                            input_chunk = (input_resample[i:i+1] -124.0)/60.0
+                            output_chunk = Vit_encoder(input_chunk)
+                            predicted_tensors.append(output_chunk)
+                        
+                        # Concatenate predicted tensors along batch dimension
+                        concatenated_tensor = torch.cat(predicted_tensors, dim=0)
+                        
+                    
+                    features = concatenated_tensor.half()
+                    sam_pkl_file_name = f"clip_{file_counter:06d}.pkl"
+                    sam_pkl_file_path = os.path.join(output_folder_sam_feature, sam_pkl_file_name)
+
+                    with open(sam_pkl_file_path, 'wb') as file:
+                        pickle.dump(features, file)
+                        print("sam Pkl file created:" +sam_pkl_file_name)
+        file_counter +=1  
+        
 
 
 
