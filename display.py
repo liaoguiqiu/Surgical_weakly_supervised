@@ -48,6 +48,7 @@ class Display(object):
         self.dataLoader.labels = mydata_loader.labels
         self.dataLoader.input_flows = mydata_loader.input_flows
         self.Model_infer.input_resample = MODEL_infer.input_resample
+        self.dataLoader.all_raw_labels = mydata_loader.all_raw_labels
 
         if Load_flow == True:
             Gray_video = self.dataLoader.input_flows[0,:,:,:] # RGB together

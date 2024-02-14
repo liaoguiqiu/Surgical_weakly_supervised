@@ -10,9 +10,10 @@
 # #
 
 # Remote
-
+Linux_computer= False
 working_root = "/home/guiqiu/GQ_project/weakly_supervised/Data/"
 working_root = "C:/2data/"
+working_pcaso_raid = "/media/guiqiu/pcaso_raid1/Weakly_supervised_data/"
 
 Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"
@@ -23,15 +24,22 @@ config_root =   working_root + "config/"
 Output_root =   working_root+"output/"
 SAM_pretrain_root = working_root+"output/SAM/"
 output_folder_sam_feature = working_root+ "cholec80/output_sam_features/"
+Dataset_video_pkl_cholec8k =  working_root+ "cholecseg8k_working/output_pkl/"
+output_folder_sam_feature_cholec8k = working_root + "cholecseg8k_working/output_sam_features/"
 
-# path='C:/2data/cholecseg8k_working/cholecseg8k/'
-# op_path='C:/2data/cholecseg8k_working/'
-Dataset_video_pkl_cholec8k =  "C:/2data/cholecseg8k_working/output_pkl/"
-output_folder_sam_feature_cholec8k =  "C:/2data/cholecseg8k_working/output_sam_features/"
 
 train_test_list_dir = working_root + "output/train_test_list/"
 train_sam_feature_dir = working_root+ "cholec80/train_sam_feature/"
 sam_feature_OLG_dir= working_root+ "cholec80/sam_feature_OLG/"
+
+if Linux_computer == True:
+    output_folder_sam_feature = working_pcaso_raid+ "cholec80/output_sam_features/"
+    Dataset_video_pkl_cholec8k =  working_pcaso_raid+ "cholecseg8k_working/output_pkl/"
+    output_folder_sam_feature_cholec8k = working_pcaso_raid + "cholecseg8k_working/output_sam_features/"
+    train_sam_feature_dir = working_pcaso_raid+ "cholec80/train_sam_feature/"
+    sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
+
+
 
 Evaluation = True
 img_size = 64
