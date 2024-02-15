@@ -55,7 +55,7 @@ if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
 Display_flag = True
-Save_flag =True
+Save_flag =False
 loadmodel_index = '0.pth'
 
 Batch_size =2
@@ -73,10 +73,10 @@ if Save_feature_OLG == True:
 
 Save_sam_mask = False
 Load_flow = False
-Weight_decay = 0.001
+Weight_decay = 0.01
 Max_lr = 0.0001
-learningR = 0.001
-learningR_res = 0.001
+learningR = 0.0005
+learningR_res = 0.0005
 Call_gradcam = False 
 
 class Para(object):

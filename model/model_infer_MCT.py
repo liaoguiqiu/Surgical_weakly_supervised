@@ -64,6 +64,8 @@ class _Model_infer(object):
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        # self.customeBCE = F.multilabel_soft_margin_loss()
+
         # self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
 
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
@@ -146,8 +148,8 @@ class _Model_infer(object):
         # c_out,_= torch.max (self.c_logits,dim=2)
         # p_out,_= torch.max (self.p_logits,dim=2)
         # self.loss=  self.customeBCE(self.slice_valid, frame_label)
-        loss_c = self.customeBCE(self.c_logits, frame_label)
-        loss_p = self.customeBCE(self.p_logits, frame_label)
+        loss_c = F.multilabel_soft_margin_loss(self.c_logits, frame_label)
+        loss_p = F.multilabel_soft_margin_loss(self.p_logits, frame_label)
         self.loss = loss_c +loss_p
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( retain_graph=True)
