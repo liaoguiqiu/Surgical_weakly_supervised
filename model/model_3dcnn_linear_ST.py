@@ -6,28 +6,30 @@ from dataset.dataset import myDataloader
 import model.base_models as block_buider
 from dataset.dataset import Obj_num, Seperate_LR
 import random
-from working_dir_root import Evaluation
+from working_dir_root import Evaluation,Fintune
 # Seperate_LR = True # seperate left and right
-
+from model import model_operator 
 class _VideoCNN_S(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=256,base_f=256):
+    def __init__(self, inputC=256,base_f=384):
         super(_VideoCNN_S, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
         # a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         # limit=1024
+        self.Random_mask_temporal =True
         Drop_out = True
         if Evaluation == True:
             Drop_out = False
+            self.Random_mask_temporal = False
         self.blocks = nn.ModuleList()
 
         #
         base_f1= base_f
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(3,1,1), s=(1,1,1), p=(1,0,0), resnet= True,dropout = Drop_out))
-        self.blocks.append(nn.AvgPool3d((1,2,2),stride=(1,2,2)))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(3,1,1), s=(1,1,1), p=(1,0,0), resnet= False,dropout = Drop_out))
+        # self.blocks.append(nn.AvgPool3d((1,2,2),stride=(1,2,2)))
        
         base_f2= base_f1*2
 
@@ -35,14 +37,14 @@ class _VideoCNN_S(nn.Module):
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         # base_f = base_f * 2
-        base_f3 = base_f2
+        base_f3 = base_f2*2
         # # 8*256  - 4*256\
-        self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(3,1,1), s=(1,1,1), p=(1,0, 0),resnet = True,dropout = Drop_out))
+        self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(3,1,1), s=(1,1,1), p=(1,0, 0),resnet = False,dropout = Drop_out))
         # base_f = base_f  
         # self.classifier1 = nn.Conv3d(int(inputC), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
-        self.classifier1 = nn.Conv3d(int(base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
-        self.classifier2 = nn.Conv3d(int(base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
-        self.classifier3 = nn.Conv3d(int(base_f3+base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+        self.classifier = nn.Conv3d(int(base_f3), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+        # self.classifier2 = nn.Conv3d(int(base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+        # self.classifier3 = nn.Conv3d(int(base_f3+base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
 
 
 
@@ -143,12 +145,13 @@ class _VideoCNN_S(nn.Module):
         # slice_valid = activation(slice_valid)
 
         return final, slice_valid
+     
     def forward(self, x,input_flows):
         bz, ch, D, H, W = x.size()
         
-        # Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
-        # x = Pure_down_pool(x)
-        # x=F.interpolate(x,  size=(D,int( H/2), int(W/2)), mode='trilinear', align_corners=False)
+        if Fintune ==False:
+            Pure_down_pool = nn.MaxPool3d((1,1,1),stride=(1,2,2))
+            x = Pure_down_pool(x)
         out = x
 
         features=[]
@@ -162,36 +165,33 @@ class _VideoCNN_S(nn.Module):
         # cat_feature = torch.cat([out, masked_feature], dim=1)
         # cat_feature = torch.cat([out, out], dim=1)
         # cat_feature = torch.cat([out, out], dim=1)
-        cat_feature1 = features[1]
-        cat_feature2 = torch.cat([features[1],features[2]], dim=1)
-        cat_feature3 = torch.cat([features[1],features[2],features[3]], dim=1)
+        # cat_feature1 = features[1]
+        # cat_feature2 = torch.cat([features[1],features[2]], dim=1)
+        # cat_feature3 = torch.cat([features[1],features[2],features[3]], dim=1)
+        if self.Random_mask_temporal == True:
+            out =   model_operator.random_mask_out_dimension(out, 0.5, 2)
 
-        all_features = [cat_feature1,cat_feature2,cat_feature3]
-        all_classifers = [self.classifier1,self.classifier2,self.classifier3]
+        # all_features = [cat_feature1,cat_feature2,cat_feature3]
+        # all_classifers = [self.classifier1,self.classifier2,self.classifier3]
         activation = nn.Sigmoid()
         activationLU = nn.ReLU()
         # pooled, slice_valid = self.maxpooling(out)
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([False, False])
-        # cam1 = activationLU(self.classifier1(cat_feature1))
-        cam = activationLU(self.classifier3(cat_feature3))
-
+        flag =random. choice([True, False])
+        cam =  self.classifier(out)
+        # cam = activation(cam)
 
         if flag== True:
             # bz, ch, D, H, W = out.size()
             final, slice_valid = self.maxpooling(cam)
         else:
             # pooled=[]
-            final=[]
-            # slice_valid[]
-            for i in range(len(all_features)):
-                this_pooled, _ = self.maxpooling(all_features[i])
-                this_final = all_classifers[i](this_pooled)
-                final.append(this_final)
-
+        
+            pooled, _ = self.maxpooling(out)
+            final = self.classifier(pooled)
             _, slice_valid = self.maxpooling(cam)
 
         # final = activation(final)
-        return final, slice_valid, cam, cam
+        return final, slice_valid, cam

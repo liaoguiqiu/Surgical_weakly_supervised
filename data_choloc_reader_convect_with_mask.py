@@ -39,7 +39,7 @@ sam.to(device=device)
 
 mask_generator = SamAutomaticMaskGenerator(
     model=sam,
-    points_per_side=10,
+    points_per_side=20,
     pred_iou_thresh=0.86,
     stability_score_thresh=0.92,
     crop_n_layers=1,
@@ -47,14 +47,14 @@ mask_generator = SamAutomaticMaskGenerator(
     min_mask_region_area=100,  # Requires open-cv to run post-processing
 )
 
-
+working_pcaso_raid = "/media/guiqiu/pcaso_raid1/Weakly_supervised_data/"
 # Folder paths
-dataset_label_root = "C:/2data/cholec80/tool_annotations/"
-dataset_video_root = "C:/2data/cholec80/frames/"
-output_folder_hdf5 = "C:/2data/cholec80/output_hdf5/"
-output_folder_pkl = "C:/2data/cholec80/output_pkl/"
+dataset_label_root = working_pcaso_raid+"cholec80/tool_annotations/"
+dataset_video_root = working_pcaso_raid+"cholec80/frames/"
+output_folder_hdf5 = working_pcaso_raid+"cholec80/output_hdf5/"
+output_folder_pkl = working_pcaso_raid+"cholec80/output_pkl/"
 # output_folder_sam_feature = "C:/2data/cholec80/output_sam_features/"
-output_folder_sam_masks = "C:/2data/cholec80/output_sam_masks/"
+output_folder_sam_masks = working_pcaso_raid+"cholec80/output_sam_masks/"
 
 
 img_size = (128, 128)  # Specify the desired size

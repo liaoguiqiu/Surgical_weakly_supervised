@@ -133,6 +133,8 @@ class _Model_infer(object):
     def forward(self,input,input_flows, features):
         # self.res_f = self.resnet(input)
         bz, ch, D, H, W = input.size()
+        activationLU = nn.ReLU()
+
 
         self.input_resample =   F.interpolate(input,  size=(D, self.input_size, self.input_size), mode='trilinear', align_corners=False)
         # self.
@@ -168,16 +170,16 @@ class _Model_infer(object):
                 self.f = features
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,input_flows)
         with torch.no_grad():
-            self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(self.cam3D)
+            self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(activationLU(self.cam3D))
             self.cam3D_target = self.cam3D.detach().clone()
-        self.output_s,self.slice_valid_s,self.cam3D_s,self.cam3D_s_low = self.VideoNets_S(self.f,input_flows)
-        self.sam_mask_prompt_decode(self.cam3D_s,self.f,input)
-        stack = self.cam3D_s -torch.min(self.cam3D_s)
-        stack = stack /(torch.max(stack)+0.0000001)
-        # self.cam3D = self.cam3D_s
-        self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
-        self.cam3D = self. sam_mask.to(self.device)  
-        self.cam3D = self.cam3D+stack
+        self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,input_flows)
+        # self.sam_mask_prompt_decode(activationLU(self.cam3D_s),self.f,input)
+        # stack = self.cam3D_s -torch.min(self.cam3D_s)
+        # stack = stack /(torch.max(stack)+0.0000001)
+        # # self.cam3D = self.cam3D_s
+        # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
+        # self.cam3D = self. sam_mask.to(self.device)  
+        # self.cam3D = self.cam3D+stack
         # self.cam3D = self. post_processed_masks
 
     def CAM_to_slice_hardlabel(self,cam):
@@ -408,14 +410,8 @@ class _Model_infer(object):
         self.set_requires_grad(self.VideoNets, True)
         self.set_requires_grad(self.VideoNets_S,True)
 
-        # self.set_requires_grad(self.VideoNets_S,True)
-        # self.set_requires_grad(self.resnet, True)
-        loss0 =self.loss_of_one_scale(self.output[0],label)
-        loss1 =self.loss_of_one_scale(self.output[1],label)
-        loss2 =self.loss_of_one_scale(self.output[2],label)
-        # self.loss = 0.01*loss2 + 0.1*loss1+ loss0
-        # self.loss =  loss0 +0.01*loss1+ 0.01*loss2
-        self.loss =  loss2
+      
+        self.loss = self.loss_of_one_scale(self.output,label)
 
 
         # self.lossEa.backward(retain_graph=True)
@@ -425,24 +421,14 @@ class _Model_infer(object):
 
         # out_logits_s = self.output_s.view(label.size(0), -1)
 
-
-        # bz,length = out_logits.size()
-
-        # label_mask_torch = torch.tensor(label_mask, dtype=torch.float32)
-        # label_mask_torch = label_mask_torch.repeat(bz, 1)
-        # label_mask_torch = label_mask_torch.to(self.device)
-        # self.loss_s_v = self.loss_of_one_scale(out_logits_s  , label * labelmask_torch)
-        loss_s0 =self.loss_of_one_scale(self.output_s[0],label,BCEtype=2)
-        loss_s1 =self.loss_of_one_scale(self.output_s[1],label,BCEtype=2)
-        loss_s2 =self.loss_of_one_scale(self.output_s[2],label,BCEtype=2)
-        # self.loss_s_v = 0.01*loss_s2 + 0.01*loss_s1 + 1.0*loss_s0
-        self.loss_s_v = loss_s2  
+ 
+        self.loss_s_v = self.loss_of_one_scale(self.output_s,label,BCEtype=2)  
 
 
         bz, ch, D, H, W = self.cam3D_s.size()
 
         valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
-        predit_mask= self.cam3D_s_low * valid_masks_repeated
+        predit_mask= self.cam3D_s * valid_masks_repeated
         target_mask= self.cam3D_target  * valid_masks_repeated
         self.loss_s_pix = self.customeBCE_mask(predit_mask, self.binary_masks * target_mask)
         # self.loss_s_pix = self.customeBCE_mask(self.cam3D_s_low  , self.cam3D_target   )

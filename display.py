@@ -111,6 +111,7 @@ class Display(object):
                         stack = this_image
                     else:
                         stack = np.hstack((stack, this_image))
+                stack= (stack>0)*stack
                 stack = stack -np.min(stack)
                 stack = stack /(np.max(stack)+0.0000001)*254 
                 # stack

@@ -41,13 +41,13 @@ if Linux_computer == True:
     train_sam_feature_dir = working_pcaso_raid+ "cholec80/train_sam_feature/"
     sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
 
+Fintune= False
 
-
-Evaluation = True
+Evaluation = False
 img_size = 64
 GPU_mode= True
 
-Continue_flag = True
+Continue_flag = False
 Test_on_cholec_seg8k= False
 
 Visdom_flag = True
@@ -63,7 +63,7 @@ Data_aug = False
 Random_mask = False
 Random_Full_mask = False
 Load_feature = True
-Save_feature_OLG = True
+Save_feature_OLG = False
 
 if Load_feature == True:
    Save_feature_OLG= False
@@ -71,7 +71,7 @@ if Save_feature_OLG == True:
     Batch_size=1
 
 
-Save_sam_mask = True
+Save_sam_mask = False
 Load_flow = False
 Weight_decay = 0.0001
 Max_lr = 0.0001
