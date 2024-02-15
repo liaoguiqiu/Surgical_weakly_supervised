@@ -23,7 +23,7 @@ import torch.nn.parallel
 import torch.distributed as dist
 import scheduler
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
-from working_dir_root import Max_lr, learningR,learningR_res,Save_feature_OLG,sam_feature_OLG_dir, Evaluation
+from working_dir_root import Max_lr, learningR,learningR_res,Save_feature_OLG,sam_feature_OLG_dir, Evaluation,Save_sam_mask,output_folder_sam_masks
 from dataset import io
 
 # GPU_mode= True
@@ -72,7 +72,15 @@ def find_external_drives():
                        and not drive.startswith(('media', 'run', 'dev'))]
 
     return external_drives
-
+def remove_module_prefix(state_dict):
+    new_state_dict = {}
+    for key, value in state_dict.items():
+        if key.startswith('module.'):
+            new_key = key[7:]  # Remove the 'module.' prefix
+        else:
+            new_key = key
+        new_state_dict[new_key] = value
+    return new_state_dict
 # weight init
 def weights_init(m):
     classname = m.__class__.__name__
@@ -107,7 +115,7 @@ if Continue_flag == False:
 else:
     pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index )
     # model_dict = Model_infer.VideoNets.state_dict()
-
+    pretrained_dict = remove_module_prefix(pretrained_dict)
     # # 1. filter out unnecessary keys
     # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
     # # 2. overwrite entries in the existing state dict
@@ -117,6 +125,7 @@ else:
 
     pretrained_dict2 = torch.load(Output_root + 'outNets_s' + loadmodel_index )
     # model_dict = Model_infer.resnet.state_dict()
+    pretrained_dict2= remove_module_prefix(pretrained_dict2)
 
     # # 1. filter out unnecessary keys
     # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
@@ -166,7 +175,15 @@ while (1):
         with open(sam_pkl_file_path, 'wb') as file:
             pickle.dump(this_features, file)
             print("sam Pkl file created:" +sam_pkl_file_name)
+    if Save_sam_mask == True:
+        pass
+        this_mask= Model_infer.sam_mask.half()
+        mask_pkl_file_name = dataLoader.this_file_name
+        mask_pkl_file_path = os.path.join(output_folder_sam_masks, mask_pkl_file_name)
 
+        with open(mask_pkl_file_path, 'wb') as file:
+            pickle.dump(this_mask, file)
+            print("sam Pkl file created:" +mask_pkl_file_name)
 
 
     if Display_flag == True:

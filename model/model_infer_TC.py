@@ -171,9 +171,13 @@ class _Model_infer(object):
             self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(self.cam3D)
             self.cam3D_target = self.cam3D.detach().clone()
         self.output_s,self.slice_valid_s,self.cam3D_s,self.cam3D_s_low = self.VideoNets_S(self.f,input_flows)
-        # self.sam_mask_prompt_decode(self.cam3D_s,self.f,input)
+        self.sam_mask_prompt_decode(self.cam3D_s,self.f,input)
+        stack = self.cam3D_s -torch.min(self.cam3D_s)
+        stack = stack /(torch.max(stack)+0.0000001)
         # self.cam3D = self.cam3D_s
-        # self.cam3D = self. sam_mask
+        self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
+        self.cam3D = self. sam_mask.to(self.device)  
+        self.cam3D = self.cam3D+stack
         # self.cam3D = self. post_processed_masks
 
     def CAM_to_slice_hardlabel(self,cam):
@@ -223,19 +227,22 @@ class _Model_infer(object):
 
                         this_input_mask =  flattened_mask[j,i,:,:]
                         this_feature= flattened_feature[j:j+1,:,:,:]
-                        this_input_mask= torch.tensor(self.post_process_softmask(this_input_mask,this_input_image))
+                        # this_input_mask= torch.tensor(self.post_process_softmask(this_input_mask,this_input_image))
+                        this_input_mask =(this_input_mask >0.1)*1.0
                         # this_input_mask =(this_input_mask>125)*1.0
                         post_process_mask[j,i,:,:] = this_input_mask
                         # coordinates = torch.ones(bz * D,1,2)*512.0
                         # coordinates= coordinates.cuda()
                         # labels = torch.ones(bz * D,1)
                         forground_num =  int(torch.sum(this_input_mask).item())
-                        if forground_num>2000:
+                        if forground_num>30:
                             foreground_indices = torch.nonzero(this_input_mask > 0.5, as_tuple=False)
-                            # cntral = self.extract_central_point_coordinates(this_input_mask)
+                            cntral = self.extract_central_point_coordinates(this_input_mask)
                                 # Extract coordinates from indices
                             foreground_coordinates = foreground_indices[:, [1, 0]]  # Swap x, y to get (y, x) format
-                            mask = self.decode_mask_with_multi_coord(foreground_coordinates*1024/H,this_feature)
+                            mask = self.decode_mask_with_multi_coord(foreground_coordinates*1024/H_i,this_feature)
+                            # mask = self.decode_mask_with_multi_coord(cntral[0]*1024/H_i,this_feature)
+
                             output_mask[j,i,:,:] = mask
                         
 
@@ -247,7 +254,7 @@ class _Model_infer(object):
 
         pass
     def post_process_softmask(self,mask,image):
-        def apply_opening(mask, kernel_size=5):
+        def apply_opening(mask, kernel_size=3):
             """
             Apply opening operation to the mask.
             
@@ -279,16 +286,19 @@ class _Model_infer(object):
         # # mask_cleaned = clear_boundary_errors(mask, boundary_size=5)
 
         # # Apply morphological opening if needed
-        # mask_opened = apply_opening(mask, kernel_size=3)
+        final_seg = apply_opening(final_seg.astype(np.uint8), kernel_size=3)
         return final_seg
     def decode_mask_with_multi_coord(self,foreground_coordinates,this_feature):
         N = foreground_coordinates.size(0)
 
 # Calculate the step size
-        step = N // 20
+        step = N // 30
 
         # Sample coordinates using the step size
-        sampled_coordinates = foreground_coordinates[::step]
+        if step == 0:
+            sampled_coordinates= foreground_coordinates
+        else:
+            sampled_coordinates = foreground_coordinates[::step]
         # sampled_coordinates = foreground_coordinates 
 
         labels = torch.ones(1,1)
@@ -322,7 +332,8 @@ class _Model_infer(object):
             masks.append(this_mask)
         masks = torch.stack(masks)
         sum_mask = torch.sum(masks,dim=0)
-        out_mask= (sum_mask>10)*1.0
+        out_mask= (sum_mask>(N*0.5))*1.0
+        # out_mask = this_mask
         return out_mask
         pass
     def sample_points(self,mask, num_points=16):
