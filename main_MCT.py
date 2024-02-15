@@ -22,11 +22,14 @@ from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
+Load_feature = False
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
+Output_root = Output_root+ "MCTformer/"
+
 
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
@@ -92,7 +95,7 @@ Model_infer = model_infer_MCT._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature)
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=False,Train_list="train")
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
@@ -139,13 +142,17 @@ while (1):
     labels_GPU = torch.from_numpy(np.float32(labels))
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
+
+    frame_level_label =   torch.from_numpy(np.float32(np.stack(dataLoader.all_raw_labels)))
+    frame_level_label = frame_level_label.to (device)
+    
     input_flows = dataLoader.input_flows*1.0/ 255.0
     input_flows_GPU = torch.from_numpy(np.float32(input_flows))  
     input_flows_GPU = input_flows_GPU.to (device)
     if Load_feature == True:
         features = dataLoader.features.to (device)
     Model_infer.forward(input_videos_GPU,input_flows_GPU,features)
-    Model_infer.optimization(labels_GPU) 
+    Model_infer.optimization(labels_GPU,frame_level_label) 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
         pass

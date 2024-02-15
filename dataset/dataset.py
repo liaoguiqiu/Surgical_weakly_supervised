@@ -111,6 +111,7 @@ class myDataloader(object):
         self.labels_LR= np.zeros((self.batch_size,2*self.obj_num))  # predifine the path number is 2 to seperate Left and right
         self.labels= np.zeros((self.batch_size, self.obj_num))  # left right merge
 
+
         self.all_read_flag =0
         self.save_id =0
         self.read_record = 0

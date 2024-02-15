@@ -58,7 +58,7 @@ Display_flag = True
 Save_flag =True
 loadmodel_index = '0.pth'
 
-Batch_size =1
+Batch_size =2
 Data_aug = False
 Random_mask = False
 Random_Full_mask = False
@@ -73,9 +73,9 @@ if Save_feature_OLG == True:
 
 Save_sam_mask = False
 Load_flow = False
-Weight_decay = 0.0001
+Weight_decay = 0.001
 Max_lr = 0.0001
-learningR = 0.0001
+learningR = 0.001
 learningR_res = 0.001
 Call_gradcam = False 
 

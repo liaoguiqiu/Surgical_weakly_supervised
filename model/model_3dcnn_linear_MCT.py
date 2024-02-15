@@ -180,7 +180,7 @@ class _VideoCNN(nn.Module):
         # Check the size of the final feature map
         # final = self.classifier(pooled)
         flag =random. choice([True, True])
-        cam = activationLU(cat_feature)
+        cam = cat_feature
 
         if flag== True:
             # bz, ch, D, H, W = out.size()

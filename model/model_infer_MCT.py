@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torchvision.models as models_torch
 
 from model.model_3dcnn_linear_MCT import _VideoCNN
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay
 from dataset.dataset import class_weights,Obj_num
 from SAM.segment_anything import  SamPredictor, sam_model_registry
 
@@ -63,15 +63,15 @@ class _Model_infer(object):
 
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
-        # self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
-        self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
+        self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
+        # self.customeBCE = torch.nn.BCEWithLogitsLoss(weight=weight_tensor).to(device)
 
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
 
-        self.optimizer = torch.optim.Adam([
+        self.optimizer = torch.optim.AdamW([
             {'params': self.Vit_encoder.parameters(),'lr': learningR_res},
             {'params': self.VideoNets .parameters(),'lr': learningR}
-        ] )
+        ] , weight_decay=Weight_decay)
         # if GPU_mode ==True:
         #     if num_gpus > 1:
         #         self.optimizer = torch.nn.DataParallel(optself.optimizerimizer)
@@ -138,16 +138,17 @@ class _Model_infer(object):
         else:
             self.f = features
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
-    def optimization(self, label):
+    def optimization(self, label,frame_label):
+        frame_label = frame_label.permute(0,2,1)
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
         self.set_requires_grad(self.Vit_encoder, True)
-        c_out,_= torch.max (self.c_logits,dim=2)
-        p_out,_= torch.max (self.p_logits,dim=2)
-        self.loss=  self.customeBCE(self.output.view(label.size(0), -1), label)
-        loss_c = self.customeBCE(c_out, label)
-        loss_p = self.customeBCE(p_out, label)
-        self.loss = self.loss  + loss_c
+        # c_out,_= torch.max (self.c_logits,dim=2)
+        # p_out,_= torch.max (self.p_logits,dim=2)
+        # self.loss=  self.customeBCE(self.slice_valid, frame_label)
+        loss_c = self.customeBCE(self.c_logits, frame_label)
+        loss_p = self.customeBCE(self.p_logits, frame_label)
+        self.loss = loss_c +loss_p
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( retain_graph=True)
 
