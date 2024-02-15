@@ -16,7 +16,7 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer,model_infer_T,model_infer_MCT
-from working_dir_root import Output_root
+from working_dir_root import Output_root,Linux_computer
 from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
@@ -99,7 +99,7 @@ dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
-    Model_infer.Vit_encoder.apply(weights_init)
+    # Model_infer.Vit_encoder.apply(weights_init)
 
 else:
     pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index )

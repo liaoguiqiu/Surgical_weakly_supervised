@@ -16,7 +16,7 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer,model_infer_TC
-from working_dir_root import Output_root
+from working_dir_root import Output_root,Linux_computer
 from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
@@ -115,7 +115,8 @@ if Continue_flag == False:
 else:
     pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index )
     # model_dict = Model_infer.VideoNets.state_dict()
-    pretrained_dict = remove_module_prefix(pretrained_dict)
+    if Linux_computer ==False:
+        pretrained_dict = remove_module_prefix(pretrained_dict)
     # # 1. filter out unnecessary keys
     # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
     # # 2. overwrite entries in the existing state dict
@@ -125,7 +126,9 @@ else:
 
     pretrained_dict2 = torch.load(Output_root + 'outNets_s' + loadmodel_index )
     # model_dict = Model_infer.resnet.state_dict()
-    pretrained_dict2= remove_module_prefix(pretrained_dict2)
+    if Linux_computer ==False:
+
+        pretrained_dict2= remove_module_prefix(pretrained_dict2)
 
     # # 1. filter out unnecessary keys
     # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
