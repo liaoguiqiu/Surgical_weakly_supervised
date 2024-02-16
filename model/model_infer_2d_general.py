@@ -12,10 +12,13 @@ from timm.models import create_model
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler
-from MCTformer import models
+import torchvision.models as models
+
+from torchcam.methods import CAM
+Show_cam = False
 # learningR = 0.0001
 class _Model_infer(object):
-    def __init__(self, GPU_mode =True,num_gpus=1):
+    def __init__(self, GPU_mode =True,num_gpus=1,Name= None):
         self.inter_bz =29
 
         if GPU_mode ==True:
@@ -23,46 +26,35 @@ class _Model_infer(object):
 
         else:
             device = torch.device("cpu")
-        model = create_model(
-        'deit_small_MCTformerV2_patch16_224',
-        pretrained=True,
-        num_classes= Obj_num,
-        drop_rate= 0.0,
-        drop_path_rate=0.0,
-        drop_block_rate=None
-        )
-        
-        
-        # self.predictor = SamPredictor(self.sam) 
-        self.Vit_encoder = model
-        self.set_requires_grad(self.Vit_encoder, True)
+        resnet = models.resnet18(pretrained=True)
+        num_ftrs = resnet.fc.in_features
+        resnet.fc = nn.Linear(num_ftrs, Obj_num)  # Assuming you have 7 output classes
 
-        self.VideoNets = _VideoCNN()
-        self.input_size = 224
-        resnet18 = models_torch.resnet18(pretrained=True)
+        # self.predictor = SamPredictor(self.sam) 
+        # self.Vit_encoder = model
+        # self.set_requires_grad(self.Vit_encoder, True)
+
+       
+        self.input_size = 256
+        # resnet18 = models_torch.resnet18(pretrained=True)
         self.gradcam = None
         # Remove the fully connected layers at the end
-        partial = nn.Sequential(*list(resnet18.children())[0:-2])
-        
+       
         # Modify the last layer to produce the desired feature map size
-        self.resnet = nn.Sequential(
-            partial,
-            nn.ReLU()
-        )
+        self.resnet =  resnet
         # if GPU_mode ==True:
         #     self.VideoNets.cuda()
         
         if GPU_mode == True:
             if num_gpus > 1:
-                self.VideoNets = torch.nn.DataParallel(self.VideoNets)
+                 
                 self.resnet  = torch.nn.DataParallel(self.resnet )
-                self.Vit_encoder   = torch.nn.DataParallel(self.Vit_encoder  )
-        self.VideoNets.to(device)
+               
+         
         self.resnet .to(device)
-        self.Vit_encoder.to(device)
+        self.cam = CAM(resnet, 'layer4', 'fc')
 
-        
-        weight_tensor = torch.tensor(class_weights, dtype=torch.float)
+ 
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
         # self.customeBCE = F.multilabel_soft_margin_loss()
 
@@ -71,8 +63,8 @@ class _Model_infer(object):
         # self.customeBCE = torch.nn.BCELoss(weight=weight_tensor).to(device)
 
         self.optimizer = torch.optim.AdamW([
-            {'params': self.Vit_encoder.parameters(),'lr': learningR_res},
-            {'params': self.VideoNets .parameters(),'lr': learningR}
+            {'params': self.resnet.parameters(),'lr': learningR_res},
+            
         ] , betas=(0.9, 0.999),weight_decay=Weight_decay)
         # if GPU_mode ==True:
         #     if num_gpus > 1:
@@ -108,7 +100,7 @@ class _Model_infer(object):
             predicted_tensors = []
             predicted_tensors_x_cls_logits=[]
             predicted_tensors_x_patch_logits=[]
-
+            cams = []
             
             # Chunk input tensor and predict
             # with torch.cuda.amp.autocast():
@@ -116,46 +108,64 @@ class _Model_infer(object):
                 start_idx = i * self.inter_bz
                 end_idx = min((i + 1) * self.inter_bz, bz*D)
                 input_chunk = flattened_tensor[start_idx:end_idx]
-                x_cls_logits, cls_attentions, patch_attn,x_patch_logits = self.Vit_encoder(input_chunk,return_att=True)
+                output_chunk = self.resnet(input_chunk)
 
-                patch_attn = torch.sum(patch_attn, dim=0)
+                cam_tensors = []
+
+                # Iterate over the range of class indices
+                for id in range(Obj_num):
+                    # Call the cam function for the current class index
+                    cam_tensor = self.cam(class_idx=id)  # Assuming cam() is a function defined elsewhere
+                    # Append the cam tensor to the list
+                    cam_tensors.append(cam_tensor[0])
+
+                cam_tensor_stack = torch.stack(cam_tensors, dim=0)
+                # patch_attn = torch.sum(patch_attn, dim=0)
                 # cls_attentions = torch.matmul(patch_attn.unsqueeze(1), cls_attentions.view(cls_attentions.shape[0],cls_attentions.shape[1], -1, 1)).reshape(cls_attentions.shape[0],cls_attentions.shape[1], 14, 14)
-                predicted_tensors.append(cls_attentions)
-                predicted_tensors_x_cls_logits.append(x_cls_logits)
-                predicted_tensors_x_patch_logits.append(x_patch_logits)
-
+                predicted_tensors.append(output_chunk)
+                cams.append(cam_tensor_stack)
 
                     # torch.cuda.empty_cache()  # Release memory
             
             # Concatenate predicted tensors along batch dimension
             self.concatenated_tensor = torch.cat(predicted_tensors, dim=0)
-            self.concatenated_x_cls_logits = torch.cat(predicted_tensors_x_cls_logits, dim=0)
-            self.concatenated_x_patch_logits = torch.cat(predicted_tensors_x_patch_logits, dim=0)
+            self.concatenated_cams =  torch.cat(cams, dim=0)
+        #     self.concatenated_x_cls_logits = torch.cat(predicted_tensors_x_cls_logits, dim=0)
+        #     self.concatenated_x_patch_logits = torch.cat(predicted_tensors_x_patch_logits, dim=0)
 
-            new_bz, new_ch, new_H, new_W = self.concatenated_tensor.size()
-            self.f = self.concatenated_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
+        #     new_bz, new_ch, new_H, new_W = self.concatenated_tensor.size()
+        #     self.f = self.concatenated_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
 
-            new_bz, class_num= self.concatenated_x_cls_logits.size()
-            self.c_logits = self.concatenated_x_cls_logits.reshape (bz,D,class_num).permute(0,2,1)
+        #     new_bz, class_num= self.concatenated_x_cls_logits.size()
+        #     self.c_logits = self.concatenated_x_cls_logits.reshape (bz,D,class_num).permute(0,2,1)
 
-            new_bz, class_num= self.concatenated_x_patch_logits.size()
-            self.p_logits = self.concatenated_x_patch_logits.reshape (bz,D,class_num).permute(0,2,1)
-        else:
-            self.f = features
-        self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
+        #     new_bz, class_num= self.concatenated_x_patch_logits.size()
+        #     self.p_logits = self.concatenated_x_patch_logits.reshape (bz,D,class_num).permute(0,2,1)
+        # else:
+        #     self.f = features
+            avgpool = nn.AdaptiveAvgPool2d(1)
+            self.cam_logits =avgpool(self.concatenated_cams) .squeeze(3).squeeze(2)
+            new_bz, new_ch, new_H, new_W = self.concatenated_cams.size()
+            self. cam3D = self.concatenated_cams.reshape (bz,Obj_num,D,new_H, new_W).permute(0,1,2,3,4)
+            # self.output = torch.max( self.concatenated_tensor,dim=0).view(bz,Obj_num)
+            new_bz, class_num= self.concatenated_tensor.size()
+            self.logits = self.concatenated_tensor.reshape (bz,D,class_num).permute(0,2,1)
+            self.output = self.logits.max(dim=2)[0].view(bz, Obj_num,1,1)
+
+        # self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
     def optimization(self, label,frame_label):
         new_bz, D, ch= frame_label.size()
         frame_label = frame_label.view(new_bz*D,ch)
         self.optimizer.zero_grad()
-        self.set_requires_grad(self.VideoNets, True)
-        self.set_requires_grad(self.Vit_encoder, True)
+        self.set_requires_grad(self.resnet, True)
+        # self.set_requires_grad(self.Vit_encoder, True)
         # c_out,_= torch.max (self.c_logits,dim=2)
         # p_out,_= torch.max (self.p_logits,dim=2)
         # self.loss=  self.customeBCE(self.slice_valid, frame_label)
-        loss_c = F.multilabel_soft_margin_loss(self.concatenated_x_cls_logits, frame_label)
-        loss_p = F.multilabel_soft_margin_loss(self.concatenated_x_patch_logits, frame_label)
+        loss_c = F.multilabel_soft_margin_loss(self.concatenated_tensor, frame_label)
+        # loss_p = F.multilabel_soft_margin_loss(self.concatenated_x_patch_logits, frame_label)
         # self.loss = loss_c +loss_p
-        self.loss = loss_p  
+        self.loss = loss_c  
 
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward()

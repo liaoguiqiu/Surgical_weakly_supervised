@@ -47,16 +47,16 @@ Evaluation = False
 img_size = 64
 GPU_mode= True
 
-Continue_flag = False
+Continue_flag = True
 Test_on_cholec_seg8k= False
 
-Visdom_flag = False
+Visdom_flag = True
 if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
-Display_flag = True
+Display_flag = False
 Save_flag =False
-loadmodel_index = '5.pth'
+loadmodel_index = '0.pth'
 
 Batch_size =1
 Data_aug = False
@@ -76,10 +76,10 @@ if Evaluation:
 
 Save_sam_mask = False
 Load_flow = False
-Weight_decay = 0.005
+Weight_decay = 0.00001
 Max_lr = 0.0001
-learningR = 0.01
-learningR_res = 0.005
+learningR = 0.00001
+learningR_res = 0.00001
 Call_gradcam = False 
 
 class Para(object):
