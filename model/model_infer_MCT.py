@@ -116,8 +116,11 @@ class _Model_infer(object):
                 start_idx = i * self.inter_bz
                 end_idx = min((i + 1) * self.inter_bz, bz*D)
                 input_chunk = flattened_tensor[start_idx:end_idx]
-                x_cls_logits, cams, patch_attn,x_patch_logits = self.Vit_encoder(input_chunk,return_att=True)
-                predicted_tensors.append(cams)
+                x_cls_logits, cls_attentions, patch_attn,x_patch_logits = self.Vit_encoder(input_chunk,return_att=True)
+
+                patch_attn = torch.sum(patch_attn, dim=0)
+                cls_attentions = torch.matmul(patch_attn.unsqueeze(1), cls_attentions.view(cls_attentions.shape[0],cls_attentions.shape[1], -1, 1)).reshape(cls_attentions.shape[0],cls_attentions.shape[1], 14, 14)
+                predicted_tensors.append(cls_attentions)
                 predicted_tensors_x_cls_logits.append(x_cls_logits)
                 predicted_tensors_x_patch_logits.append(x_patch_logits)
 
