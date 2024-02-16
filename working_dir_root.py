@@ -50,15 +50,15 @@ GPU_mode= True
 Continue_flag = False
 Test_on_cholec_seg8k= False
 
-Visdom_flag = True
+Visdom_flag = False
 if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
 Display_flag = True
 Save_flag =False
-loadmodel_index = '0.pth'
+loadmodel_index = '5.pth'
 
-Batch_size =2
+Batch_size =1
 Data_aug = False
 Random_mask = False
 Random_Full_mask = False
@@ -70,13 +70,16 @@ if Load_feature == True:
 if Save_feature_OLG == True:
     Batch_size=1
 
+Enable_student = False
+if Evaluation:
+    Enable_student = True
 
 Save_sam_mask = False
 Load_flow = False
-Weight_decay = 0.01
+Weight_decay = 0.005
 Max_lr = 0.0001
-learningR = 0.0005
-learningR_res = 0.0005
+learningR = 0.01
+learningR_res = 0.005
 Call_gradcam = False 
 
 class Para(object):

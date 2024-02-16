@@ -19,7 +19,7 @@ class _VideoCNN_S(nn.Module):
         # a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         # limit=1024
-        self.Random_mask_temporal =True
+        self.Random_mask_temporal =False
         Drop_out = True
         if Evaluation == True:
             Drop_out = False
@@ -150,7 +150,7 @@ class _VideoCNN_S(nn.Module):
         bz, ch, D, H, W = x.size()
         
         if Fintune ==False:
-            Pure_down_pool = nn.MaxPool3d((1,1,1),stride=(1,2,2))
+            Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
             x = Pure_down_pool(x)
         out = x
 
@@ -179,7 +179,7 @@ class _VideoCNN_S(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([True, False])
+        flag =random. choice([False, False])
         cam =  self.classifier(out)
         # cam = activation(cam)
 

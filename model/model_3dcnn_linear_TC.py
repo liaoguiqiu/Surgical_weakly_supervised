@@ -19,7 +19,7 @@ class _VideoCNN(nn.Module):
         # a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         # limit=1024
-        self.Random_mask_temporal =True
+        self.Random_mask_temporal =False
         Drop_out = True
         if Evaluation == True:
             Drop_out = False
@@ -28,7 +28,7 @@ class _VideoCNN(nn.Module):
 
         #
         base_f1= base_f
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,1,1), s=(1,1,1), p=(0,0,0), resnet= False,dropout = Drop_out))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,3,3), s=(1,1,1), p=(0,1,1), resnet= False,dropout = Drop_out))
         # self.blocks.append(nn.AvgPool3d((1,2,2),stride=(1,2,2)))
        
         base_f2= base_f1*2
@@ -39,7 +39,7 @@ class _VideoCNN(nn.Module):
         # base_f = base_f * 2
         base_f3 = base_f2*2
         # # 8*256  - 4*256\
-        self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(1,1,1), s=(1,1,1), p=(0,0, 0),resnet = False,dropout = Drop_out))
+        self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(1,3,3), s=(1,1,1), p=(0,1,1),resnet = False,dropout = Drop_out))
         # base_f = base_f  
         # self.classifier1 = nn.Conv3d(int(inputC), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
         self.classifier = nn.Conv3d(int(base_f3), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
@@ -149,7 +149,7 @@ class _VideoCNN(nn.Module):
     def forward(self, x,input_flows):
         bz, ch, D, H, W = x.size()
         if Fintune ==False:
-            Pure_down_pool = nn.MaxPool3d((1,1,1),stride=(1,2,2))
+            Pure_down_pool = nn.AvgPool3d((1,1,1),stride=(1,2,2))
             x = Pure_down_pool(x)
         # x=F.interpolate(x,  size=(D,int( H/2), int(W/2)), mode='trilinear', align_corners=False)
         out = x
@@ -179,7 +179,7 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([True, False])
+        flag =random. choice([False, False])
         cam =  self.classifier(out)
         # cam = activation(cam)
 

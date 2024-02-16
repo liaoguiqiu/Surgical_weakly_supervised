@@ -12,6 +12,8 @@ from image_operator import basic_operator
 import pydensecrf.densecrf as dcrf
 from pydensecrf.utils import unary_from_softmax
 from SAM.segment_anything import  SamPredictor, sam_model_registry
+from working_dir_root import Enable_student
+
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from dataset.dataset import label_mask,Mask_out_partial_label
 if Evaluation == True:
@@ -172,7 +174,8 @@ class _Model_infer(object):
         with torch.no_grad():
             self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(activationLU(self.cam3D))
             self.cam3D_target = self.cam3D.detach().clone()
-        self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,input_flows)
+        if Enable_student:
+            self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,input_flows)
         # self.sam_mask_prompt_decode(activationLU(self.cam3D_s),self.f,input)
         # stack = self.cam3D_s -torch.min(self.cam3D_s)
         # stack = stack /(torch.max(stack)+0.0000001)
@@ -408,7 +411,6 @@ class _Model_infer(object):
         self.optimizer_s.zero_grad()
         torch.autograd.set_detect_anomaly(True)
         self.set_requires_grad(self.VideoNets, True)
-        self.set_requires_grad(self.VideoNets_S,True)
 
       
         self.loss = self.loss_of_one_scale(self.output,label)
@@ -418,27 +420,31 @@ class _Model_infer(object):
         self.loss.backward( )
 
         self.optimizer.step()
+        self.lossDisplay = self.loss. data.mean()
+
 
         # out_logits_s = self.output_s.view(label.size(0), -1)
+        if Enable_student:
+            self.set_requires_grad(self.VideoNets_S,True)
 
- 
-        self.loss_s_v = self.loss_of_one_scale(self.output_s,label,BCEtype=2)  
+            self.loss_s_v = self.loss_of_one_scale(self.output_s,label,BCEtype=2)  
 
 
-        bz, ch, D, H, W = self.cam3D_s.size()
+            bz, ch, D, H, W = self.cam3D_s.size()
 
-        valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
-        predit_mask= self.cam3D_s * valid_masks_repeated
-        target_mask= self.cam3D_target  * valid_masks_repeated
-        self.loss_s_pix = self.customeBCE_mask(predit_mask, self.binary_masks * target_mask)
-        # self.loss_s_pix = self.customeBCE_mask(self.cam3D_s_low  , self.cam3D_target   )
+            valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
+            predit_mask= self.cam3D_s * valid_masks_repeated
+            target_mask= self.cam3D_target  * valid_masks_repeated
+            # self.loss_s_pix = self.customeBCE_mask(predit_mask, self.binary_masks * target_mask)
+            self.loss_s_pix = self.customeBCE_mask(predit_mask,  target_mask)
 
-        self.loss_s = self.loss_s_v  + 0.01*self.loss_s_pix
-        # self.set_requires_grad(self.VideoNets, False)
-        self.loss_s.backward()
-        self.optimizer_s.step()
-        self.lossDisplay = self.loss. data.mean()
-        self.lossDisplay_s = self.loss_s. data.mean()
+            # self.loss_s_pix = self.customeBCE_mask(self.cam3D_s_low  , self.cam3D_target   )
+
+            self.loss_s = self.loss_s_v  + self.loss_s_pix
+            # self.set_requires_grad(self.VideoNets, False)
+            self.loss_s.backward()
+            self.optimizer_s.step()
+            self.lossDisplay_s = self.loss_s. data.mean()
 
     def optimization_slicevalid(self):
 
