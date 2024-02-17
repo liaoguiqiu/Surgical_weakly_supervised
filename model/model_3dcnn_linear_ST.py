@@ -28,7 +28,7 @@ class _VideoCNN_S(nn.Module):
 
         #
         base_f1= base_f
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,3,3), s=(1,3,3), p=(0,1,1), resnet= False,dropout = Drop_out))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,3,3), s=(1,1,1), p=(0,1,1), resnet= False,dropout = Drop_out))
         # self.blocks.append(nn.AvgPool3d((1,2,2),stride=(1,2,2)))
        
         base_f2= 64
