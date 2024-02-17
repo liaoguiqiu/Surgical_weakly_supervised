@@ -35,6 +35,9 @@ class _Model_infer(object):
                 self.resnet  = torch.nn.DataParallel(self.resnet )
         self.imageNets.to(device)
         self.resnet .to(device)
+        self.imageNets.train(True)
+        self.resnet.train(True)
+
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
@@ -81,8 +84,8 @@ class _Model_infer(object):
         new_bz, D, ch= frame_label.size()
         frame_label = frame_label.reshape(new_bz*D,ch)
         self.optimizer.zero_grad()
-        self.set_requires_grad(self.imageNets, True)
-        self.set_requires_grad(self.resnet, True)
+        # self.set_requires_grad(self.imageNets, True)
+        # self.set_requires_grad(self.resnet, True)
 
         self.loss=  F.multilabel_soft_margin_loss(self.output.reshape(frame_label.size(0), frame_label.size(1)), frame_label)
         # self.lossEa.backward(retain_graph=True)

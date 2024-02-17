@@ -86,6 +86,9 @@ class _Model_infer(object):
         if Evaluation:
              self.VideoNets.eval()
              self.VideoNets_S.eval()
+        else:
+            self.VideoNets.train(True)
+            self.VideoNets_S.train(True)
 
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
@@ -410,8 +413,8 @@ class _Model_infer(object):
         #     param_group['lr'] = lr 
         self.optimizer.zero_grad()
         self.optimizer_s.zero_grad()
-        torch.autograd.set_detect_anomaly(True)
-        self.set_requires_grad(self.VideoNets, True)
+        # torch.autograd.set_detect_anomaly(True)
+        # self.set_requires_grad(self.VideoNets, True)
 
       
         self.loss = self.loss_of_one_scale(self.output,label)

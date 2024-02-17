@@ -20,8 +20,8 @@ working_pcaso_raid = "/media/guiqiu/pcaso_raid1/Weakly_supervised_data/"
 Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"
 Dataset_video_pkl_flow_root = working_root + "training_data/video_clips_pkl_flow/"
-Dataset_video_pkl_cholec = working_root + "training_data/video_clips_pkl_cholec/"
-# Dataset_video_pkl_cholec = working_root + "cholec80/output_pkl/"
+# Dataset_video_pkl_cholec = working_root + "training_data/video_clips_pkl_cholec/"
+Dataset_video_pkl_cholec = working_root + "cholec80/output_pkl/"
 
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
@@ -45,8 +45,8 @@ if Linux_computer == True:
 
 Fintune= False
 
-Evaluation = False
-img_size = 64
+Evaluation = True
+img_size = 256
 GPU_mode= True
 
 Continue_flag = True
@@ -56,7 +56,7 @@ Visdom_flag = True
 if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
-Display_flag = False
+Display_flag = True
 Save_flag =False
 loadmodel_index = '5.pth'
 
@@ -78,10 +78,10 @@ if Evaluation:
 
 Save_sam_mask = False
 Load_flow = False
-Weight_decay =0.0
+Weight_decay =0.00001
 Max_lr = 0.001
-learningR = 0.0001
-learningR_res = 0.0001
+learningR = 0.00001
+learningR_res = 0.00001
 Call_gradcam = False 
 
 class Para(object):
