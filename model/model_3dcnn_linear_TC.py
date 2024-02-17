@@ -166,7 +166,7 @@ class _VideoCNN(nn.Module):
         # masked_feature = out * expanded_mask
         # cat_feature = torch.cat([out, masked_feature], dim=1)
         # cat_feature = torch.cat([out, out], dim=1)
-        cat_feature = torch.cat([x, features[1],features[2],features[3],features[4]], dim=1)
+        cat_feature = torch.cat([x, features[0],features[1],features[2],features[3]], dim=1)
         # cat_feature1 = features[1]
         # cat_feature2 = torch.cat([features[1],features[2]], dim=1)
         # cat_feature3 = torch.cat([features[1],features[2],features[3]], dim=1)
