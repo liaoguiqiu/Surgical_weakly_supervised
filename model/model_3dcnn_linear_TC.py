@@ -44,7 +44,7 @@ class _VideoCNN(nn.Module):
         self.blocks.append(block_buider.conv_keep_all(base_f3, base_f4,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
         # base_f = base_f  
         # self.classifier1 = nn.Conv3d(int(inputC), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
-        self.classifier = nn.Conv3d(int(base_f4), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+        self.classifier = nn.Conv3d(int(inputC+base_f1+base_f3+base_f4), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
         # self.classifier2 = nn.Conv3d(int(base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
         # self.classifier3 = nn.Conv3d(int(base_f3+base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
 
@@ -166,12 +166,12 @@ class _VideoCNN(nn.Module):
         # masked_feature = out * expanded_mask
         # cat_feature = torch.cat([out, masked_feature], dim=1)
         # cat_feature = torch.cat([out, out], dim=1)
-        # cat_feature = torch.cat([out, out], dim=1)
+        cat_feature = torch.cat([x, features[1],features[2],features[3],features[4]], dim=1)
         # cat_feature1 = features[1]
         # cat_feature2 = torch.cat([features[1],features[2]], dim=1)
         # cat_feature3 = torch.cat([features[1],features[2],features[3]], dim=1)
         if self.Random_mask_temporal == True:
-            out =   model_operator.random_mask_out_dimension(out, 0.5, 2)
+            cat_feature =   model_operator.random_mask_out_dimension(out, 0.5, 2)
 
         # all_features = [cat_feature1,cat_feature2,cat_feature3]
         # all_classifers = [self.classifier1,self.classifier2,self.classifier3]
@@ -182,7 +182,7 @@ class _VideoCNN(nn.Module):
         # Check the size of the final feature map
         # final = self.classifier(pooled)
         flag =random. choice([False, False])
-        cam =  self.classifier(out)
+        cam =  self.classifier(cat_feature)
         # cam = activation(cam)
 
         if flag== True:
@@ -191,7 +191,7 @@ class _VideoCNN(nn.Module):
         else:
             # pooled=[]
         
-            pooled, _ = self.maxpooling(out)
+            pooled, _ = self.maxpooling(cat_feature)
             final = self.classifier(pooled)
             _, slice_valid = self.maxpooling(cam)
 
