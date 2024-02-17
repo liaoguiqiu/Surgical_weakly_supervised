@@ -164,7 +164,7 @@ while (1):
     input_flows_GPU = input_flows_GPU.to (device)
     if Load_feature ==True:
         features = dataLoader.features.to (device)
-    Model_infer.forward(input_videos_GPU,input_flows_GPU,features)
+    Model_infer.forward(input_videos_GPU,input_flows_GPU,features,Enable_student)
 
     lr=scheduler.cyclic_learning_rate(current_epoch=epoch,max_lr=Max_lr,min_lr=learningR,cycle_length=4)
     print("learning rate is :" + str(lr))

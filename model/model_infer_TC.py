@@ -135,7 +135,7 @@ class _Model_infer(object):
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
-    def forward(self,input,input_flows, features):
+    def forward(self,input,input_flows, features,Enable_student):
         # self.res_f = self.resnet(input)
         bz, ch, D, H, W = input.size()
         activationLU = nn.ReLU()
