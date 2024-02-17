@@ -44,7 +44,7 @@ class _VideoCNN(nn.Module):
         self.blocks.append(block_buider.conv_keep_all(base_f3, base_f4,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
         # base_f = base_f  
         # self.classifier1 = nn.Conv3d(int(inputC), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
-        self.classifier = nn.Conv3d(int(inputC+base_f1+base_f3+base_f4), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+        self.classifier = nn.Conv3d(int(inputC+base_f1+base_f2+base_f3+base_f4), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
         # self.classifier2 = nn.Conv3d(int(base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
         # self.classifier3 = nn.Conv3d(int(base_f3+base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
 
