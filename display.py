@@ -29,7 +29,7 @@ class Display(object):
     def __init__(self,GPU=False):
         self.Model_infer = model_infer._Model_infer(GPU)
         self.dataLoader = myDataloader()
-        self.show_num=15
+        self.show_num=8
 
     def train_display(self,MODEL_infer,mydata_loader, read_id):
         # copy all the input videos and labels
@@ -61,19 +61,22 @@ class Display(object):
                     stack = np.hstack((stack,Gray_video[i]))
 
             # Display the final image
-            cv2.imshow('Stitched in put flows', stack.astype((np.uint8)))
-            cv2.waitKey(1)
+            # cv2.imshow('Stitched in put flows', stack.astype((np.uint8)))
+            # cv2.waitKey(1)
 
 
         # Gray_video = self.Model_infer.input_resample[0,2,:,:,:].cpu().detach().numpy()# RGB together
-        Gray_video = self.dataLoader.input_videos[0,0,:,:,:] # RGB together
-        Ori_D,Ori_H,Ori_W = Gray_video.shape
+            ### OG video #################################
+        Gray_video = self.dataLoader.input_videos[0,:,:,:,:] # RGB together
+        ch,Ori_D,Ori_H,Ori_W = Gray_video.shape
+        Gray_video = np.transpose(Gray_video,(1,2,3,0))
         step_l = int(Ori_D/self.show_num)+1
         for i in range(0,Ori_D,step_l):
             if i ==0:
                 stack1 =  Gray_video[i] 
             else:
                 stack1 = np.hstack((stack1,Gray_video[i]))
+        # stack1 = np.array(cv2.merge((stack1, stack1, stack1)))
 
         # Display the final image
         # cv2.imshow('Stitched in put Image', stack1.astype((np.uint8)))
@@ -118,6 +121,7 @@ class Display(object):
                 # stack = (stack>20)*stack
                 # stack = (stack>0.5)*128
                 stack = np.clip(stack,0,254)
+                stack = cv2.applyColorMap(stack.astype((np.uint8)), cv2.COLORMAP_JET)
                 alpha= 0.5
                 overlay = cv2.addWeighted(stack1.astype((np.uint8)), 1 - alpha, stack.astype((np.uint8)), alpha, 0)
                 # stack =  stack - np.min(stack)
@@ -143,6 +147,8 @@ class Display(object):
                 cv2.putText(infor_image, text3, text_position, font, font_scale, font_color, font_thickness)
                 # stack = stack -np.min(stack)
                 # stack = stack /(np.max(stack)+0.0000001)*254
+                infor_image = cv2.merge((infor_image, infor_image, infor_image))
+
                 stack = np.hstack((infor_image, stack))
                 overlay = np.hstack((infor_image, overlay))
                
@@ -165,7 +171,7 @@ class Display(object):
         cv2.waitKey(1)
         if Save_flag == True:
 
-            io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_im.astype((np.uint8)) )
+            io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_over.astype((np.uint8)) )
             io.save_img_to_folder(Output_root + "image/predict_overlay/" ,  read_id, image_all.astype((np.uint8)) )
 
 
