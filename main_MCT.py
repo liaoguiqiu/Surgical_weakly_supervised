@@ -77,6 +77,21 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
     pass
+def initialize_weights_transformer(model):
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            if 'embed' in name or 'proj' in name:
+                # Initialize embedding and projection matrices with Xavier initialization
+                nn.init.xavier_uniform_(param)
+            elif 'bias' in name:
+                # Initialize biases to zeros
+                nn.init.constant_(param, 0.0)
+        elif 'layer_norm' in name:
+            # Initialize layer normalization parameters to ones for scale and zeros for bias
+            if 'weight' in name:
+                nn.init.constant_(param, 1.0)
+            elif 'bias' in name:
+                nn.init.constant_(param, 0.0)
 ############ for the linux to find the extenral drive
 external_drives = find_external_drives()
 
@@ -99,7 +114,7 @@ dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
-    # Model_infer.Vit_encoder.apply(weights_init)
+    # initialize_weights_transformer(Model_infer.Vit_encoder)
 
 else:
     pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index )

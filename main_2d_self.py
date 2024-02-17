@@ -15,27 +15,24 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import  model_experiement, model_infer,model_infer_TC
+from model import  model_experiement, model_infer,model_infer_T,model_infer_2d_self
 from working_dir_root import Output_root,Linux_computer
 from dataset.dataset import myDataloader
 from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
-import scheduler
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
-from working_dir_root import Max_lr, learningR,learningR_res,Save_feature_OLG,sam_feature_OLG_dir, Evaluation,Save_sam_mask,output_folder_sam_masks
-from working_dir_root import Enable_student
-from dataset import io
+from working_dir_root import Evaluation
+Load_feature = False
 
+Name = "self_cam"
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
-Output_root = Output_root+ "temporal consistent/"
-io.self_check_path_create(Output_root)
+Output_root = Output_root+ Name +  "/"
 
-import pickle
 
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
@@ -73,15 +70,7 @@ def find_external_drives():
                        and not drive.startswith(('media', 'run', 'dev'))]
 
     return external_drives
-def remove_module_prefix(state_dict):
-    new_state_dict = {}
-    for key, value in state_dict.items():
-        if key.startswith('module.'):
-            new_key = key[7:]  # Remove the 'module.' prefix
-        else:
-            new_key = key
-        new_state_dict[new_key] = value
-    return new_state_dict
+
 # weight init
 def weights_init(m):
     classname = m.__class__.__name__
@@ -102,44 +91,45 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus)
+Model_infer = model_infer_2d_self._Model_infer(GPU_mode,num_gpus,Name=Name)
 # if GPU_mode == True:
 #     if num_gpus > 1:
 #         Model_infer.VideoNets = torch.nn.DataParallel(Model_infer.VideoNets)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature)
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=False,Train_list="train")
 
 if Continue_flag == False:
-    Model_infer.VideoNets.apply(weights_init)
+    pass
+    # Model_infer.resnet.apply(weights_init)
+    Model_infer.imageNets.apply(weights_init)
+
 else:
-    pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index )
+    pretrained_dict = torch.load(Output_root + 'outNets_res' + loadmodel_index )
     # model_dict = Model_infer.VideoNets.state_dict()
-    if Linux_computer ==False:
-        pretrained_dict = remove_module_prefix(pretrained_dict)
-    # # 1. filter out unnecessary keys
-    # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-    # # 2. overwrite entries in the existing state dict
-    # model_dict.update(pretrained_dict_trim)
-    # 3. load the new state dict
-    Model_infer.VideoNets.load_state_dict(pretrained_dict )
-
-    pretrained_dict2 = torch.load(Output_root + 'outNets_s' + loadmodel_index )
-    # model_dict = Model_infer.resnet.state_dict()
-    if Linux_computer ==False:
-
-        pretrained_dict2= remove_module_prefix(pretrained_dict2)
 
     # # 1. filter out unnecessary keys
     # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
     # # 2. overwrite entries in the existing state dict
     # model_dict.update(pretrained_dict_trim)
     # 3. load the new state dict
-    Model_infer.VideoNets_S.load_state_dict(pretrained_dict2 )
+    Model_infer.resnet.load_state_dict(pretrained_dict )
+
+    pretrained_dict = torch.load(Output_root + 'outencoder' + loadmodel_index )
+    # model_dict = Model_infer.VideoNets.state_dict()
+
+    # # 1. filter out unnecessary keys
+    # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+    # # 2. overwrite entries in the existing state dict
+    # model_dict.update(pretrained_dict_trim)
+    # 3. load the new state dict
+    Model_infer.imageNets.load_state_dict(pretrained_dict )
+
+     
 read_id = 0
 print(Model_infer.resnet)
-print(Model_infer.VideoNets)
+# print(Model_infer.VideoNets)
 
 epoch = 0
 # transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
@@ -150,8 +140,8 @@ iteration_num = 0
 saver_id =0
 displayer = Display(GPU_mode)
 epoch =0
-features =None
-visdom_id=0
+features = None
+visdom_id = 0
 while (1):
     start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
@@ -159,71 +149,39 @@ while (1):
     labels_GPU = torch.from_numpy(np.float32(labels))
     input_videos_GPU = input_videos_GPU.to (device)
     labels_GPU = labels_GPU.to (device)
+
+    frame_level_label =   torch.from_numpy(np.float32(np.stack(dataLoader.all_raw_labels)))
+    frame_level_label = frame_level_label.to (device)
+    
     input_flows = dataLoader.input_flows*1.0/ 255.0
     input_flows_GPU = torch.from_numpy(np.float32(input_flows))  
     input_flows_GPU = input_flows_GPU.to (device)
-    if Load_feature ==True:
+    if Load_feature == True:
         features = dataLoader.features.to (device)
-    Model_infer.forward(input_videos_GPU,input_flows_GPU,features)
-
-    lr=scheduler.cyclic_learning_rate(current_epoch=epoch,max_lr=Max_lr,min_lr=learningR,cycle_length=4)
-    print("learning rate is :" + str(lr))
+    Model_infer.forward(input_videos_GPU)
     if Evaluation == False:
-        Model_infer.optimization(labels_GPU,Enable_student) 
-
-    if  Save_feature_OLG== True:
-        this_features= Model_infer.f[0].permute(1,0,2,3).half()
-        sam_pkl_file_name = dataLoader.this_file_name
-        sam_pkl_file_path = os.path.join(sam_feature_OLG_dir, sam_pkl_file_name)
-
-        with open(sam_pkl_file_path, 'wb') as file:
-            pickle.dump(this_features, file)
-            print("sam Pkl file created:" +sam_pkl_file_name)
-    if Save_sam_mask == True:
-        pass
-        this_mask= Model_infer.sam_mask.half()
-        mask_pkl_file_name = dataLoader.this_file_name
-        mask_pkl_file_path = os.path.join(output_folder_sam_masks, mask_pkl_file_name)
-
-        with open(mask_pkl_file_path, 'wb') as file:
-            pickle.dump(this_mask, file)
-            print("sam Pkl file created:" +mask_pkl_file_name)
-
-
+        Model_infer.optimization(frame_level_label) 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
         pass
 
     if dataLoader.all_read_flag ==1:
-        Save_feature_OLG = False
         #remove this for none converting mode
         epoch +=1
 
         print("finished epoch" + str (epoch) )
         dataLoader.all_read_flag = 0
         read_id=0
-        
 
         # break
-    
-
-    if Evaluation == False:
+    if read_id % 1== 0   :
+        print(" epoch" + str (epoch) )
+    if read_id % 100== 0 and Visdom_flag == True  :
         
-        if read_id % 50== 0 and Visdom_flag == True  :
-            
-            plotter.plot('l0', 'l0', 'l0', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
-            if Enable_student:
-                plotter.plot('1ls', '1ls', 'l1s', visdom_id, Model_infer.lossDisplay_s.cpu().detach().numpy())
-        if read_id % 1== 0   :
-            print(" epoch" + str (epoch) )
-            print(" loss" + str (Model_infer.lossDisplay.cpu().detach().numpy()) )
-            if Enable_student:
-                print(" loss_SS" + str (Model_infer.lossDisplay_s.cpu().detach().numpy()) )
-
+        plotter.plot('l0', 'l0', 'l0', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
     if (read_id % 1000) == 0  :
-        torch.save(Model_infer.VideoNets.state_dict(), Output_root + "outNets" + str(saver_id) + ".pth")
-        torch.save(Model_infer.VideoNets_S.state_dict(), Output_root + "outNets_s" + str(saver_id) + ".pth")
-        # torch.save(Model_infer.resnet.state_dict(), Output_root + "outResNets" + str(saver_id) + ".pth")
+        torch.save(Model_infer.resnet.state_dict(), Output_root + "outNets_res" + str(saver_id) + ".pth")
+        torch.save(Model_infer.imageNets.state_dict(), Output_root + "outencoder" + str(saver_id) + ".pth")
 
         saver_id +=1
         if saver_id >5:
@@ -235,8 +193,7 @@ while (1):
 
     read_id+=1
     visdom_id+=1
-    if epoch>8:
-        Enable_student =True
+
     # print(labels)
 
     # pass

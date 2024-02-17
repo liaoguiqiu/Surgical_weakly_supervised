@@ -22,6 +22,7 @@ from display import Display
 import torch.nn.parallel
 import torch.distributed as dist
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
+from working_dir_root import Evaluation
 Load_feature = False
 
 Name = "Layer_cam"
@@ -100,7 +101,8 @@ Model_infer = model_infer_2d_general._Model_infer(GPU_mode,num_gpus,Name=Name)
 dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=False,Train_list="train")
 
 if Continue_flag == False:
-    Model_infer.resnet.apply(weights_init)
+    pass
+    # Model_infer.resnet.apply(weights_init)
     # Model_infer.Vit_encoder.apply(weights_init)
 
 else:
@@ -147,7 +149,8 @@ while (1):
     if Load_feature == True:
         features = dataLoader.features.to (device)
     Model_infer.forward(input_videos_GPU,input_flows_GPU,features)
-    Model_infer.optimization(labels_GPU,frame_level_label) 
+    if Evaluation == False:
+        Model_infer.optimization(labels_GPU,frame_level_label) 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
         pass

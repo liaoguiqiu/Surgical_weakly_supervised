@@ -31,11 +31,11 @@ class _Model_infer(object):
         drop_path_rate=0.0,
         drop_block_rate=None
         )
-        
+        # model.train(True)
         
         # self.predictor = SamPredictor(self.sam) 
         self.Vit_encoder = model
-        self.set_requires_grad(self.Vit_encoder, True)
+        # self.set_requires_grad(self.Vit_encoder, True)
 
         self.VideoNets = _VideoCNN()
         self.input_size = 224
@@ -61,7 +61,7 @@ class _Model_infer(object):
         self.resnet .to(device)
         self.Vit_encoder.to(device)
 
-        
+        self.Vit_encoder.train(True)
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
         # self.customeBCE = F.multilabel_soft_margin_loss()
@@ -145,17 +145,17 @@ class _Model_infer(object):
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
     def optimization(self, label,frame_label):
         new_bz, D, ch= frame_label.size()
-        frame_label = frame_label.view(new_bz*D,ch)
+        frame_label = frame_label.reshape(new_bz*D,ch)
         self.optimizer.zero_grad()
-        self.set_requires_grad(self.VideoNets, True)
-        self.set_requires_grad(self.Vit_encoder, True)
+        # self.set_requires_grad(self.VideoNets, True)
+        # self.set_requires_grad(self.Vit_encoder, True)
         # c_out,_= torch.max (self.c_logits,dim=2)
         # p_out,_= torch.max (self.p_logits,dim=2)
         # self.loss=  self.customeBCE(self.slice_valid, frame_label)
         loss_c = F.multilabel_soft_margin_loss(self.concatenated_x_cls_logits, frame_label)
         loss_p = F.multilabel_soft_margin_loss(self.concatenated_x_patch_logits, frame_label)
-        # self.loss = loss_c +loss_p
-        self.loss = loss_p  
+        self.loss = loss_c +loss_p
+        # self.loss = loss_p  
 
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward()

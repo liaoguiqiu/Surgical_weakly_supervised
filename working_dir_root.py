@@ -21,6 +21,8 @@ Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"
 Dataset_video_pkl_flow_root = working_root + "training_data/video_clips_pkl_flow/"
 Dataset_video_pkl_cholec = working_root + "training_data/video_clips_pkl_cholec/"
+# Dataset_video_pkl_cholec = working_root + "cholec80/output_pkl/"
+
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
 Output_root =   working_root+"output/"
@@ -56,7 +58,7 @@ if Evaluation == True:
     Visdom_flag= False
 Display_flag = False
 Save_flag =False
-loadmodel_index = '0.pth'
+loadmodel_index = '5.pth'
 
 Batch_size =1
 Data_aug = False
@@ -76,10 +78,10 @@ if Evaluation:
 
 Save_sam_mask = False
 Load_flow = False
-Weight_decay = 0.00001
-Max_lr = 0.0001
-learningR = 0.00001
-learningR_res = 0.00001
+Weight_decay =0.0
+Max_lr = 0.001
+learningR = 0.0001
+learningR_res = 0.0001
 Call_gradcam = False 
 
 class Para(object):

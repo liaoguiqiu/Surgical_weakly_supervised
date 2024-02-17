@@ -179,7 +179,8 @@ class _Model_infer(object):
         # self.sam_mask_prompt_decode(activationLU(self.cam3D_s),self.f,input)
         # stack = self.cam3D_s -torch.min(self.cam3D_s)
         # stack = stack /(torch.max(stack)+0.0000001)
-        # # self.cam3D = self.cam3D_s
+        if Enable_student:
+            self.cam3D = self.cam3D_s
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  
         # self.cam3D = self.cam3D+stack
@@ -399,12 +400,12 @@ class _Model_infer(object):
         label_mask_torch = label_mask_torch.repeat(bz, 1)
         label_mask_torch = label_mask_torch.to(self.device)
         if BCEtype == 1:
-            loss = self.customeBCE(out_logits * label_mask_torch, label * label_mask_torch)
+            loss = F.multilabel_soft_margin_loss(out_logits * label_mask_torch, label * label_mask_torch)
         else:
-            loss = self.customeBCE_S (out_logits * label_mask_torch, label * label_mask_torch)
+            loss = F.multilabel_soft_margin_loss (out_logits * label_mask_torch, label * label_mask_torch)
         return loss
 
-    def optimization(self, label,lr):
+    def optimization(self, label,Enable_student):
         # for param_group in  self.optimizer.param_groups:
         #     param_group['lr'] = lr 
         self.optimizer.zero_grad()

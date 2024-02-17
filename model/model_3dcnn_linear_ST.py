@@ -12,7 +12,7 @@ from model import model_operator
 class _VideoCNN_S(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=256,base_f=384):
+    def __init__(self, inputC=256,base_f=128):
         super(_VideoCNN_S, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -31,18 +31,18 @@ class _VideoCNN_S(nn.Module):
         self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,1,1), s=(1,1,1), p=(0,0,0), resnet= False,dropout = Drop_out))
         # self.blocks.append(nn.AvgPool3d((1,2,2),stride=(1,2,2)))
        
-        base_f2= base_f1*2
+        base_f2= 64
 
         self.blocks.append(block_buider.conv_keep_all(base_f1, base_f2,k=(1,3,3), s=(1,1,1), p=(0,1,1),resnet = False,dropout = Drop_out))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         # base_f = base_f * 2
-        base_f3 = base_f2*2
+        base_f3 = 32
         # # 8*256  - 4*256\
         self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(3,1,1), s=(1,1,1), p=(1,0, 0),resnet = False,dropout = Drop_out))
         # base_f = base_f  
         # self.classifier1 = nn.Conv3d(int(inputC), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
-        base_f4 =base_f3*2
+        base_f4 =16
         self.blocks.append(block_buider.conv_keep_all(base_f3, base_f4,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
         # base_f = base_f  
         # self.classifier1 = nn.Conv3d(int(inputC), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
