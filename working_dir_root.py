@@ -49,7 +49,7 @@ Evaluation = False
 img_size = 256
 GPU_mode= True
 
-Continue_flag = True
+Continue_flag = False
 Test_on_cholec_seg8k= False
 
 Visdom_flag = True

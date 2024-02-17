@@ -12,7 +12,7 @@ from model import model_operator
 class _VideoCNN_S(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=256,base_f=128):
+    def __init__(self, inputC=256,base_f=256):
         super(_VideoCNN_S, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -28,23 +28,23 @@ class _VideoCNN_S(nn.Module):
 
         #
         base_f1= base_f
-        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,3,3), s=(1,1,1), p=(0,1,1), resnet= False,dropout = Drop_out))
+        self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,3,3), s=(1,1,1), p=(0,0,1), resnet= False,dropout = Drop_out))
         # self.blocks.append(nn.AvgPool3d((1,2,2),stride=(1,2,2)))
        
-        base_f2= 64
+        base_f2= 512
 
-        self.blocks.append(block_buider.conv_keep_all(base_f1, base_f2,k=(3,1,1), s=(1,1,1), p=(1,0,0),resnet = False,dropout = Drop_out))
+        self.blocks.append(block_buider.conv_keep_all(base_f1, base_f2,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         # base_f = base_f * 2
-        base_f3 = 32
+        base_f3 = 768
         # # 8*256  - 4*256\
-        self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
-        base_f4 =16
-        self.blocks.append(block_buider.conv_keep_all(base_f3, base_f4,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
+        self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(3,1,1), s=(1,1,1), p=(1,0,0),resnet = False,dropout = Drop_out))
+        # base_f4 =16
+        # self.blocks.append(block_buider.conv_keep_all(base_f3, base_f4,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
         # base_f = base_f  
         # self.classifier1 = nn.Conv3d(int(inputC), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
-        self.classifier = nn.Conv3d(int(inputC+base_f1+base_f2+base_f3+base_f4), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
+        self.classifier = nn.Conv3d(int(inputC+base_f1+base_f2+base_f3), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
         # self.classifier2 = nn.Conv3d(int(base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
         # self.classifier3 = nn.Conv3d(int(base_f3+base_f2+base_f1), Obj_num , (1,1,1), (1,1,1), (0,0,0), bias=False)  # 4*256
 
@@ -90,7 +90,7 @@ class _VideoCNN_S(nn.Module):
 
         T_norm = activation(T)
         # Reshape the input tensor to (B, C, D, H*W)
-         
+        
 
         # Create a boolean mask based on the threshold range
         threshold_mask = (T_norm >= threshold_range[0]) & (T_norm <= threshold_range[1])
@@ -151,22 +151,35 @@ class _VideoCNN_S(nn.Module):
     def forward(self, x,input_flows):
         bz, ch, D, H, W = x.size()
         if Fintune ==False:
-            Pure_down_pool = nn.AvgPool3d((1,1,1),stride=(1,2,2))
+            Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
             x = Pure_down_pool(x)
         # x=F.interpolate(x,  size=(D,int( H/2), int(W/2)), mode='trilinear', align_corners=False)
+        bz, ch, D, H, W = x.size()
+        # self.input_resample =   F.interpolate(input,  size=(D, self.input_size, self.input_size), mode='trilinear', align_corners=False)
+
+        
         out = x
 
         features=[]
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
+            if j==1 or j==2:
+
+                out = Pure_down_pool(out)
+
             features.append(out)
-        bz, ch, D, H, W = out.size()
+        # bz, ch, D, H, W = out.size()
         # downsampled_mask = F.interpolate(input_flows, size=(H, W), mode='nearest')
         # expanded_mask = downsampled_mask.unsqueeze(1)
         # masked_feature = out * expanded_mask
         # cat_feature = torch.cat([out, masked_feature], dim=1)
         # cat_feature = torch.cat([out, out], dim=1)
-        cat_feature = torch.cat([x, features[0],features[1],features[2],features[3]], dim=1)
+        features[0]=F.interpolate(features[0],  size=(D,H,W), mode='trilinear', align_corners=False)
+        features[1]=F.interpolate(features[1],  size=(D,H,W), mode='trilinear', align_corners=False)
+        features[2]=F.interpolate(features[2],  size=(D,H,W), mode='trilinear', align_corners=False)
+
+
+        cat_feature = torch.cat([x, features[0],features[1],features[2] ], dim=1)
         # cat_feature1 = features[1]
         # cat_feature2 = torch.cat([features[1],features[2]], dim=1)
         # cat_feature3 = torch.cat([features[1],features[2],features[3]], dim=1)
