@@ -30,7 +30,7 @@ from working_dir_root import train_sam_feature_dir
 # Display_flag = False
 # loadmodel_index = '3.pth'
 Creat_balance_set = False
-Save_sam_feature = True
+Save_sam_feature = False
 
 if torch.cuda.is_available():
     print(torch.cuda.current_device())
@@ -96,7 +96,7 @@ Model_infer = model_infer_MCT._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list=True)
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list='else')
  
 read_id = 0
 print(Model_infer.resnet)
@@ -113,6 +113,7 @@ displayer = Display(GPU_mode)
 epoch =0
 features = None
 label_sum =0
+all_frame_sum = 0
 label_sum_appended = 0
 training_list=[]
 # Initialize counters for each category
@@ -124,6 +125,8 @@ while (1):
     input_videos_GPU = torch.from_numpy(np.float32(input_videos))
     labels_GPU = torch.from_numpy(np.float32(labels))
     label_sum += labels
+    all_counter= np.sum( dataLoader.this_raw_labels,axis=0)
+    all_frame_sum+=all_counter
     label_none =0
     if Save_sam_feature == True:
         this_features= dataLoader.this_features
@@ -157,6 +160,8 @@ while (1):
         print("finished epoch" + str (epoch) )
         print ("all_labels")
         print(label_sum)
+        print ("all framez")
+        print(all_frame_sum)
         dataLoader.all_read_flag = 0
         read_id=0
     if Creat_balance_set == True:

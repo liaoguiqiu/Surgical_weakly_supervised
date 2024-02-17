@@ -58,13 +58,13 @@ categories = [
 
 if Cholec_data_flag == True:
     categories = [
-        'Grasper', #0   - 17
-        'Bipolar', #1     -13163
-        'Hook', #2     -17440
-        'Scissors', #3        -576
-        'Clipper',#4         - 1698
-        'Irrigator',#5     -4413
-        'SpecimenBag',#6     -11924               
+        'Grasper', #0   
+        'Bipolar', #1    
+        'Hook', #2    
+        'Scissors', #3      
+        'Clipper',#4       
+        'Irrigator',#5    
+        'SpecimenBag',#6                  
     ]
     categories_count =[5266.0,  592.0, 4252.0,  239.0,  352.0,  624.0,  623.0]
 
@@ -345,6 +345,7 @@ class myDataloader(object):
                         data_dict = io.read_a_pkl(Dataset_video_pkl_cholec, clip_name)
                         this_video_buff = data_dict['frames']
                         labels = data_dict['labels']
+                        self.this_raw_labels = labels
                         self.all_raw_labels . append(labels)
                         self.video_buff = this_video_buff[:,0:self.video_len,:,:]
                     if self.Load_flow == True:
@@ -454,8 +455,12 @@ class myDataloader(object):
             self.read_record +=1
             if self.read_record>= self.video_num:
                 print("all videos have been readed")
+                # random.shuffle(self.all_video_dir_list)
+                 
                 self.all_read_flag = 1
                 self.read_record =0
+                random.shuffle(self.all_video_dir_list)
+
 
             pass
         if self.Load_feature == True:
