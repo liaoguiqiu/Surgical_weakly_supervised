@@ -5,7 +5,7 @@ import torchvision.models as models
 import cv2
 from model.model_3dcnn_linear_TC import _VideoCNN
 from model.model_3dcnn_linear_ST import _VideoCNN_S
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation,Display_student
 from dataset.dataset import class_weights
 import numpy as np
 from image_operator import basic_operator   
@@ -182,8 +182,9 @@ class _Model_infer(object):
         # self.sam_mask_prompt_decode(activationLU(self.cam3D_s),self.f,input)
         # stack = self.cam3D_s -torch.min(self.cam3D_s)
         # stack = stack /(torch.max(stack)+0.0000001)
-        if Enable_student:
-            self.cam3D = self.cam3D_s
+        if Display_student:
+            with torch.no_grad():
+                self.cam3D = self.cam3D_s.detach().clone()
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  
         # self.cam3D = self.cam3D+stack

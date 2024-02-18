@@ -21,9 +21,9 @@ Dataset_video_root =  working_root + "training_data/video_clips/"
 Dataset_video_pkl_root = working_root + "training_data/video_clips_pkl/"
 Dataset_video_pkl_flow_root = working_root + "training_data/video_clips_pkl_flow/"
 Dataset_video_pkl_cholec = working_root + "training_data/video_clips_pkl_cholec/"
-# Dataset_video_pkl_cholec = working_root + "cholec80/output_pkl/"
-# if Linux_computer == True:
-#       Dataset_video_pkl_cholec = working_pcaso_raid + "cholec80/output_pkl/"
+Dataset_video_pkl_cholec = working_root + "cholec80/output_pkl/"
+if Linux_computer == True:
+      Dataset_video_pkl_cholec = working_pcaso_raid + "cholec80/output_pkl/"
 
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
@@ -48,7 +48,7 @@ if Linux_computer == True:
 Fintune= False
 
 Evaluation = False
-img_size = 64
+img_size = 256
 GPU_mode= True
 
 Continue_flag = True
@@ -58,9 +58,10 @@ Visdom_flag = True
 if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
-Display_flag = False
-Save_flag =False
-loadmodel_index = '5.pth'
+Display_flag = True
+Display_student = False
+Save_flag =True
+loadmodel_index = '3.pth'
 
 Batch_size =1
 Data_aug = False

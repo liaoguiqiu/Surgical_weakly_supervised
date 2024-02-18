@@ -10,12 +10,12 @@ from dataset.dataset import class_weights
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1,Name = None):
         self.imageNets = _VideoCNN2d()
-        self.input_size = 256
+        self.input_size = 512+256
         resnet18 = models.resnet18(pretrained=True)
         self.gradcam = None
         
         # Remove the fully connected layers at the end
-        partial = nn.Sequential(*list(resnet18.children())[0:-2])
+        partial = nn.Sequential(*list(resnet18.children())[0:-3])
         
         # Modify the last layer to produce the desired feature map size
         self.resnet = nn.Sequential(
