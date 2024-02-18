@@ -148,13 +148,13 @@ class _VideoCNN_S(nn.Module):
 
         return final, slice_valid
      
-    def forward(self, x,input_flows):
+    def forward(self, x,down_in):
         bz, ch, D, H, W = x.size()
         Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
 
         if Fintune ==False:
-            flag =random. choice([True, False])
-            if flag:
+            
+            if down_in:
                 x = Pure_down_pool(x)
         # x=F.interpolate(x,  size=(D,int( H/2), int(W/2)), mode='trilinear', align_corners=False)
         bz, ch, D, H, W = x.size()

@@ -16,6 +16,8 @@ from working_dir_root import Enable_student
 
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from dataset.dataset import label_mask,Mask_out_partial_label
+import random
+
 if Evaluation == True:
     learningR=0
     Weight_decay=0
@@ -173,12 +175,14 @@ class _Model_infer(object):
         else:
             with torch.no_grad():
                 self.f = features
-        self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,input_flows)
+        flag =random. choice([False, False])
+        
+        self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,flag)
         with torch.no_grad():
             self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(activationLU(self.cam3D))
             self.cam3D_target = self.cam3D.detach().clone()
         if Enable_student:
-            self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,input_flows)
+            self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,flag)
         # self.sam_mask_prompt_decode(activationLU(self.cam3D_s),self.f,input)
         # stack = self.cam3D_s -torch.min(self.cam3D_s)
         # stack = stack /(torch.max(stack)+0.0000001)
