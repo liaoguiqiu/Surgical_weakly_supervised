@@ -444,7 +444,7 @@ class _Model_infer(object):
 
             # self.loss_s_pix = self.customeBCE_mask(self.cam3D_s_low  , self.cam3D_target   )
 
-            self.loss_s = self.loss_s_v  + self.loss_s_pix
+            self.loss_s = self.loss_s_v  + 0.002*self.loss_s_pix
             # self.set_requires_grad(self.VideoNets, False)
             self.loss_s.backward()
             self.optimizer_s.step()
