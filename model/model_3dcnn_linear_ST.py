@@ -153,7 +153,9 @@ class _VideoCNN_S(nn.Module):
         Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
 
         if Fintune ==False:
-            x = Pure_down_pool(x)
+            flag =random. choice([True, False])
+            if flag:
+                x = Pure_down_pool(x)
         # x=F.interpolate(x,  size=(D,int( H/2), int(W/2)), mode='trilinear', align_corners=False)
         bz, ch, D, H, W = x.size()
         # self.input_resample =   F.interpolate(input,  size=(D, self.input_size, self.input_size), mode='trilinear', align_corners=False)
@@ -164,7 +166,7 @@ class _VideoCNN_S(nn.Module):
         features=[]
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
-            if j==0 or j==1:
+            if  j==1:
 
                 out = Pure_down_pool(out)
 

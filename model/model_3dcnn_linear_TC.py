@@ -151,9 +151,11 @@ class _VideoCNN(nn.Module):
     def forward(self, x,input_flows):
         bz, ch, D, H, W = x.size()
         Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
-
         if Fintune ==False:
-            x = Pure_down_pool(x)
+            flag =random. choice([True, False])
+            if flag:
+                x = Pure_down_pool(x)
+ 
         # x=F.interpolate(x,  size=(D,int( H/2), int(W/2)), mode='trilinear', align_corners=False)
         bz, ch, D, H, W = x.size()
         # self.input_resample =   F.interpolate(input,  size=(D, self.input_size, self.input_size), mode='trilinear', align_corners=False)
