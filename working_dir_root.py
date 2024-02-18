@@ -48,7 +48,7 @@ if Linux_computer == True:
 Fintune= False
 
 Evaluation = False
-img_size = 256
+img_size = 64
 GPU_mode= True
 
 Continue_flag = True
@@ -58,7 +58,7 @@ Visdom_flag = True
 if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
-Display_flag = False
+Display_flag = True
 Save_flag =False
 loadmodel_index = '5.pth'
 
