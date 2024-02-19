@@ -45,9 +45,9 @@ if Linux_computer == True:
     train_sam_feature_dir = working_pcaso_raid+ "cholec80/train_sam_feature/"
     sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
 
-Fintune= True
+Fintune= False
 
-Evaluation = True
+Evaluation = False
 img_size = 256
 GPU_mode= True
 
@@ -77,7 +77,7 @@ if Load_feature == True:
 if Save_feature_OLG == True:
     Batch_size=1
 
-Enable_student = False
+Enable_student = True
 if Evaluation:
     Enable_student = True
 

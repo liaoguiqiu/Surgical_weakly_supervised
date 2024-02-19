@@ -478,7 +478,8 @@ class _Model_infer(object):
 
 
             bz, ch, D, H, W = self.cam3D_s.size()
-            label_valid_repeat = label.repeat(1,1,D,H,W)
+            
+            label_valid_repeat = label.reshape(bz,ch,1,1,1).repeat(1,1,D,H,W)
             valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
             valid_masks_repeated = valid_masks_repeated * label_valid_repeat
             predit_mask= self.cam3D_s * valid_masks_repeated
