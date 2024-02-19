@@ -19,7 +19,7 @@ class _VideoCNN_S(nn.Module):
         # a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         # limit=1024
-        self.Random_mask_temporal =False
+        self.Random_mask_temporal =True
         Drop_out = True
         if Evaluation == True:
             Drop_out = False
@@ -187,7 +187,7 @@ class _VideoCNN_S(nn.Module):
         # cat_feature2 = torch.cat([features[1],features[2]], dim=1)
         # cat_feature3 = torch.cat([features[1],features[2],features[3]], dim=1)
         if self.Random_mask_temporal == True:
-            cat_feature =   model_operator.random_mask_out_dimension(out, 0.5, 2)
+            cat_feature =   model_operator.random_mask_out_dimension(cat_feature, 0.5, 2)
 
         # all_features = [cat_feature1,cat_feature2,cat_feature3]
         # all_classifers = [self.classifier1,self.classifier2,self.classifier3]

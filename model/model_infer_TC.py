@@ -5,7 +5,7 @@ import torchvision.models as models
 import cv2
 from model.model_3dcnn_linear_TC import _VideoCNN
 from model.model_3dcnn_linear_ST import _VideoCNN_S
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation,Display_student
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation,Display_student,Display_final_SAM
 from dataset.dataset import class_weights
 import numpy as np
 from image_operator import basic_operator   
@@ -183,12 +183,16 @@ class _Model_infer(object):
             self.cam3D_target = self.cam3D.detach().clone()
         if Enable_student:
             self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,flag)
-        # self.sam_mask_prompt_decode(activationLU(self.cam3D_s),self.f,input)
         # stack = self.cam3D_s -torch.min(self.cam3D_s)
         # stack = stack /(torch.max(stack)+0.0000001)
         if Display_student:
             with torch.no_grad():
                 self.cam3D = self.cam3D_s.detach().clone()
+        if Display_final_SAM:
+            with torch.no_grad():
+                self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
+
+                self.cam3D = self. sam_mask.to(self.device) 
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  
         # self.cam3D = self.cam3D+stack
@@ -233,6 +237,7 @@ class _Model_infer(object):
 
 
         output_mask = torch.zeros(bz * D, ch, 256, 256)
+        
         post_process_mask = torch.zeros((bz * D, ch, H_i, W_i))
         with torch.no_grad():
                 for i in range(ch):
@@ -241,8 +246,8 @@ class _Model_infer(object):
 
                         this_input_mask =  flattened_mask[j,i,:,:]
                         this_feature= flattened_feature[j:j+1,:,:,:]
-                        # this_input_mask= torch.tensor(self.post_process_softmask(this_input_mask,this_input_image))
-                        this_input_mask =(this_input_mask >0.1)*1.0
+                        this_input_mask= torch.tensor(self.post_process_softmask2(this_input_mask,this_input_image))
+                        this_input_mask =(this_input_mask >0.05)*1.0
                         # this_input_mask =(this_input_mask>125)*1.0
                         post_process_mask[j,i,:,:] = this_input_mask
                         # coordinates = torch.ones(bz * D,1,2)*512.0
@@ -302,6 +307,38 @@ class _Model_infer(object):
         # # Apply morphological opening if needed
         final_seg = apply_opening(final_seg.astype(np.uint8), kernel_size=3)
         return final_seg
+    def post_process_softmask2(self,mask,image):
+        def apply_opening(mask, kernel_size=3):
+            """
+            Apply opening operation to the mask.
+            
+            Parameters:
+                mask (ndarray): Binary mask array.
+                kernel_size (int): Size of the kernel for morphological opening.
+            
+            Returns:
+                ndarray: Mask after applying morphological opening.
+            """
+            kernel = np.ones((kernel_size, kernel_size), np.uint8)
+            return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        
+        
+        # mask = mask -torch.min(mask)
+        # mask = mask /(torch.max(mask)+0.0000001) 
+        # mask= mask*4
+        mask = (mask>0.05)*1.0
+        mask =mask.cpu().detach().numpy()  
+        
+        mask_uint8 = np.uint8(mask * 255)
+        # Ensure it's binary
+        # _, mask = cv2.threshold(mask_uint8, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # Clear boundary errors if needed
+        # mask_cleaned = clear_boundary_errors(mask, boundary_size=5)
+
+        # Apply morphological opening if needed
+        final_seg = apply_opening(mask_uint8.astype(np.uint8), kernel_size=3)
+        return final_seg
     def decode_mask_with_multi_coord(self,foreground_coordinates,this_feature):
         N = foreground_coordinates.size(0)
 
@@ -346,7 +383,7 @@ class _Model_infer(object):
             masks.append(this_mask)
         masks = torch.stack(masks)
         sum_mask = torch.sum(masks,dim=0)
-        out_mask= (sum_mask>(N*0.5))*1.0
+        out_mask= (sum_mask>(8))*1.0
         # out_mask = this_mask
         return out_mask
         pass

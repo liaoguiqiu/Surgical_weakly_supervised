@@ -13,7 +13,7 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import  model_experiement, model_infer
+from model import  model_experiement, model_infer_TC
 from working_dir_root import Output_root,Save_flag,Load_flow
 from dataset.dataset import myDataloader,categories
 from dataset import io
@@ -27,7 +27,7 @@ def save_img_to_folder(this_save_dir,ID,img):
 
 class Display(object):
     def __init__(self,GPU=False):
-        self.Model_infer = model_infer._Model_infer(GPU)
+        self.Model_infer = model_infer_TC._Model_infer(GPU)
         self.dataLoader = myDataloader()
         self.show_num=8
 
@@ -49,7 +49,11 @@ class Display(object):
         self.dataLoader.input_flows = mydata_loader.input_flows
         self.Model_infer.input_resample = MODEL_infer.input_resample
         self.dataLoader.all_raw_labels = mydata_loader.all_raw_labels
-
+        if hasattr(MODEL_infer, 'sam_mask'):
+            self.Model_infer. sam_mask =  MODEL_infer.sam_mask
+             
+        else:
+            print("Parameter sam mask does not exist or is NaN")
         if Load_flow == True:
             Gray_video = self.dataLoader.input_flows[0,:,:,:] # RGB together
             Ori_D,Ori_H,Ori_W = Gray_video.shape
@@ -122,6 +126,8 @@ class Display(object):
                 # stack = (stack>0.5)*128
                 stack = np.clip(stack,0,254)
                 stack = cv2.applyColorMap(stack.astype((np.uint8)), cv2.COLORMAP_JET)
+                # stack = cv2.merge((stack, stack, stack))
+
                 alpha= 0.5
                 overlay = cv2.addWeighted(stack1.astype((np.uint8)), 1 - alpha, stack.astype((np.uint8)), alpha, 0)
                 # stack =  stack - np.min(stack)

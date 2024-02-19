@@ -38,7 +38,7 @@ class _Model_infer(object):
         # self.set_requires_grad(self.Vit_encoder, True)
 
         self.VideoNets = _VideoCNN()
-        self.input_size = 224
+        self.input_size = 224*2
         resnet18 = models_torch.resnet18(pretrained=True)
         self.gradcam = None
         # Remove the fully connected layers at the end
