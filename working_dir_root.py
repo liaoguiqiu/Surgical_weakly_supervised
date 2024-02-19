@@ -47,12 +47,12 @@ if Linux_computer == True:
 
 Fintune= False
 
-Evaluation = False
+Evaluation = True
 img_size = 256
 GPU_mode= True
 
 Continue_flag = True
-Test_on_cholec_seg8k= False
+Test_on_cholec_seg8k= True
 
 Visdom_flag = True
 if Evaluation == True:
@@ -64,7 +64,7 @@ Display_final_SAM = False
 Save_flag =True
 loadmodel_index = '4.pth'
 
-Random_mask_temporal_feature = True
+Random_mask_temporal_feature = False
 Batch_size =1
 Data_aug = False
 Random_mask = False

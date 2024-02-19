@@ -60,7 +60,7 @@ class _Model_infer(object):
         self.VideoNets.to(device)
         self.resnet .to(device)
         self.Vit_encoder.to(device)
-        if Evaluation:
+        if Evaluation == False:
             self.Vit_encoder.train(True)
         else:
             self.Vit_encoder.eval()

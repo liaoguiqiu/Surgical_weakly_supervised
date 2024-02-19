@@ -53,7 +53,11 @@ class _Model_infer(object):
          
         self.resnet .to(device)
         self.cam = LayerCAM(self.resnet, 'layer4')
-
+        if Evaluation:
+            self.resnet.eval()
+        else:
+            self.resnet.train(True)
+           
  
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
         # self.customeBCE = F.multilabel_soft_margin_loss()

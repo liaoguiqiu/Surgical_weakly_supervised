@@ -10,6 +10,7 @@ import dataset.io as io
 import random
 import image_operator.basic_operator as basic_operator
 import torch
+from dataset import format_convertor
 # import imageio
 # import imageio_ffmpeg as ffmpeg
 # # from decord import VideoReader
@@ -374,9 +375,17 @@ class myDataloader(object):
                         binary_vector_l, binary_vector_r = self.convert_left_right_v(this_label)
                     else:
                         binary_vector = self.merge_labels(labels)
+                        if Test_on_cholec_seg8k:
+                            mask,frame_label,video_label = format_convertor.label_from_seg8k_2_cholec(labels)
+                            binary_vector = video_label
+                            self.this_label = binary_vector
+                            self.this_frame_label = frame_label
+                            self.this_label_mask = mask
+                            self.this_raw_labels = frame_label
+
                         binary_vector_l = 0
                         binary_vector_r = 0
-                    self.this_label = binary_vector
+                    
                     # load the squess and unsquess
 
                     if self.Display_loading_video == True:

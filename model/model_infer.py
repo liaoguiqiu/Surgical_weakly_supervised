@@ -4,12 +4,12 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 from model.model_3dcnn_linear import _VideoCNN
-from working_dir_root import learningR,learningR_res
+from working_dir_root import learningR,learningR_res,Evaluation
 from dataset.dataset import class_weights
 # learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1):
-        self.VideoNets = _VideoCNN()
+        self.VideoNets = _VideoCNN(inputC=512)
         self.input_size = 256
         resnet18 = models.resnet18(pretrained=True)
         self.gradcam = None
@@ -35,6 +35,15 @@ class _Model_infer(object):
                 self.resnet  = torch.nn.DataParallel(self.resnet )
         self.VideoNets.to(device)
         self.resnet .to(device)
+        if Evaluation:
+            self.resnet.eval()
+            self.VideoNets.eval()
+
+        else:
+            self.resnet.train(True)
+            self.VideoNets.train(True)
+
+
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
