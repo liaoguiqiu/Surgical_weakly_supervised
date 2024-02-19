@@ -19,7 +19,7 @@ class _VideoCNN(nn.Module):
         # a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         # limit=1024
-        self.Random_mask_temporal =True
+        self.Random_mask_temporal =False
         Drop_out = True
         if Evaluation == True:
             Drop_out = False

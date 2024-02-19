@@ -10,7 +10,7 @@ from dataset.dataset import class_weights
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1,Name = None):
         self.imageNets = _VideoCNN2d()
-        self.input_size = 512 
+        self.input_size = 512+128
         resnet18 = models.resnet18(pretrained=True)
         self.gradcam = None
         

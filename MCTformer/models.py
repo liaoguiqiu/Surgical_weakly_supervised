@@ -66,7 +66,7 @@ class MCTformerV2(VisionTransformer):
 
         return x[:, 0:self.num_classes], x[:, self.num_classes:], attn_weights
 
-    def forward(self, x, return_att=False, n_layers=12, attention_type='fuse'):
+    def forward(self, x, return_att=False, n_layers=12, attention_type='Fused'):
         w, h = x.shape[2:]
         x_cls, x_patch, attn_weights = self.forward_features(x)
         n, p, c = x_patch.shape

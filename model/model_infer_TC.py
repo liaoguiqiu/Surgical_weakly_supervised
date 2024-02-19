@@ -12,8 +12,8 @@ from image_operator import basic_operator
 import pydensecrf.densecrf as dcrf
 from pydensecrf.utils import unary_from_softmax
 from SAM.segment_anything import  SamPredictor, sam_model_registry
-from working_dir_root import Enable_student
-
+from working_dir_root import Enable_student,Random_mask_temporal_feature
+from model import model_operator
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from dataset.dataset import label_mask,Mask_out_partial_label
 import random
@@ -176,7 +176,8 @@ class _Model_infer(object):
             with torch.no_grad():
                 self.f = features
         flag =random. choice([False, False])
-        
+        if  Random_mask_temporal_feature == True:
+            self.f =   model_operator.random_mask_out_dimension(self.f, 0.5, dim=2)
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,flag)
         with torch.no_grad():
             self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(activationLU(self.cam3D))
@@ -202,7 +203,7 @@ class _Model_infer(object):
         bz, ch, D, H, W = cam.size()
         raw_masks = cam -torch.min(cam)
         raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001)        
-        binary_mask = (raw_masks >0.1)*1.0
+        binary_mask = (raw_masks >0.05)*1.0
         binary_mask = self. clear_boundary(binary_mask)
         # flatten_mask = binary_mask.view(bz,ch)
         count_masks = torch.sum(binary_mask, dim=(-1, -2), keepdim=True)
@@ -477,8 +478,9 @@ class _Model_infer(object):
 
 
             bz, ch, D, H, W = self.cam3D_s.size()
-
+            label_valid_repeat = label.repeat(1,1,D,H,W)
             valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
+            valid_masks_repeated = valid_masks_repeated * label_valid_repeat
             predit_mask= self.cam3D_s * valid_masks_repeated
             target_mask= self.cam3D_target  * valid_masks_repeated
             # self.loss_s_pix = self.customeBCE_mask(predit_mask, self.binary_masks * target_mask)

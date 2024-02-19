@@ -35,7 +35,7 @@ class _Model_infer(object):
         # self.set_requires_grad(self.Vit_encoder, True)
 
        
-        self.input_size = 256
+        self.input_size = 512
         # resnet18 = models_torch.resnet18(pretrained=True)
         self.gradcam = None
         # Remove the fully connected layers at the end
@@ -52,7 +52,7 @@ class _Model_infer(object):
                
          
         self.resnet .to(device)
-        self.cam = GradCAM(self.resnet, 'layer4')
+        self.cam = LayerCAM(self.resnet, 'layer4')
 
  
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)

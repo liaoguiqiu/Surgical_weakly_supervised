@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torchvision.models as models_torch
 
 from model.model_3dcnn_linear_MCT import _VideoCNN
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation
 from dataset.dataset import class_weights,Obj_num
 from SAM.segment_anything import  SamPredictor, sam_model_registry
 
@@ -38,7 +38,7 @@ class _Model_infer(object):
         # self.set_requires_grad(self.Vit_encoder, True)
 
         self.VideoNets = _VideoCNN()
-        self.input_size = 224*2
+        self.input_size = 224
         resnet18 = models_torch.resnet18(pretrained=True)
         self.gradcam = None
         # Remove the fully connected layers at the end
@@ -60,8 +60,10 @@ class _Model_infer(object):
         self.VideoNets.to(device)
         self.resnet .to(device)
         self.Vit_encoder.to(device)
-
-        self.Vit_encoder.train(True)
+        if Evaluation:
+            self.Vit_encoder.train(True)
+        else:
+            self.Vit_encoder.eval()
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
         self.customeBCE = torch.nn.BCEWithLogitsLoss().to(device)
         # self.customeBCE = F.multilabel_soft_margin_loss()

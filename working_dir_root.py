@@ -64,6 +64,7 @@ Display_final_SAM = False
 Save_flag =True
 loadmodel_index = '4.pth'
 
+Random_mask_temporal_feature = True
 Batch_size =1
 Data_aug = False
 Random_mask = False
@@ -82,7 +83,7 @@ if Evaluation:
 
 Save_sam_mask = False
 Load_flow = False
-Weight_decay =0.01
+Weight_decay =0.00001
 Max_lr = 0.001
 learningR = 0.0001
 learningR_res = 0.0001
