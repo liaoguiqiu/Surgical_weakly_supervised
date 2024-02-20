@@ -14,9 +14,11 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer_TC
-from working_dir_root import Output_root,Save_flag,Load_flow
+from working_dir_root import Output_root,Save_flag,Load_flow,Test_on_cholec_seg8k
 from dataset.dataset import myDataloader,categories
 from dataset import io
+import eval
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Save_flag =False
 def save_img_to_folder(this_save_dir,ID,img):
     # this_save_dir = Output_root + "1out_img/" + Model_key + "/ground_circ/"
@@ -49,6 +51,14 @@ class Display(object):
         self.dataLoader.input_flows = mydata_loader.input_flows
         self.Model_infer.input_resample = MODEL_infer.input_resample
         self.dataLoader.all_raw_labels = mydata_loader.all_raw_labels
+        if Test_on_cholec_seg8k:
+            self.dataLoader.this_label_mask = mydata_loader.this_label_mask
+            label_mask = torch.from_numpy(np.float32(self.dataLoader.this_label_mask )).to (device)
+            self.Model_infer.cam3D[0,2:7,:,:]*=0
+            this_iou = eval.cal_J(label_mask, self.Model_infer.cam3D[0])
+            print("iou" + str(this_iou))
+            # self.Model_infer.cam3D[0] = label_mask
+
         if hasattr(MODEL_infer, 'sam_mask'):
             self.Model_infer. sam_mask =  MODEL_infer.sam_mask
              

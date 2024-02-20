@@ -34,7 +34,7 @@ def label_from_seg8k_2_cholec(inputlabel): #(13,29,256,256)
     frame_label=np.sum(new_label,axis=(2,3))
     frame_label=(frame_label>20)*1.0
     video_label=np.max(frame_label, axis=0)
-    mask = new_label
+    mask = np.transpose(new_label , (1, 0, 2, 3)) 
     return mask,frame_label,video_label
      
 

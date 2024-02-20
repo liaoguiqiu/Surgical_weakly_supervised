@@ -12,7 +12,7 @@ from model import model_operator
 class _VideoCNN_S(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=256,base_f=256):
+    def __init__(self, inputC=256,base_f=384):
         super(_VideoCNN_S, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -20,7 +20,7 @@ class _VideoCNN_S(nn.Module):
         # 256*256 - 128*256
         # limit=1024
         self.Random_mask_temporal =False
-        Drop_out = True
+        Drop_out = False
         if Evaluation == True:
             Drop_out = False
             self.Random_mask_temporal = False

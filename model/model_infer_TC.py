@@ -86,6 +86,7 @@ class _Model_infer(object):
         self.Vit_encoder.to(device)
         self.sam_model .to (device)
         if Evaluation:
+             pass
              self.VideoNets.eval()
              self.VideoNets_S.eval()
         else:
@@ -191,9 +192,11 @@ class _Model_infer(object):
                 self.cam3D = self.cam3D_s.detach().clone()
         if Display_final_SAM:
             with torch.no_grad():
-                self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
+                self.Cam_mask_post_process(activationLU(self.cam3D),self.f,input)
+                # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
 
-                self.cam3D = self. sam_mask.to(self.device) 
+
+                self.cam3D = self. post_processed_masks.to(self.device) 
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  
         # self.cam3D = self.cam3D+stack
@@ -209,7 +212,60 @@ class _Model_infer(object):
         count_masks = torch.sum(binary_mask, dim=(-1, -2), keepdim=True)
         slice_hard_label = (count_masks>10)*1.0
         return slice_hard_label,binary_mask
+    def Cam_mask_post_process(self,raw_masks,features,input,multimask_output: bool = False):
+        bz_i, ch_i, D_i, H_i, W_i = input.size()
 
+        bz, ch, D, H, W = raw_masks.size()
+        bz_f, ch_f, D_f, H_f, W_f = features.size()
+
+        raw_masks = raw_masks -torch.min(raw_masks)
+        raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001) 
+        self.mask_resample =   F.interpolate(raw_masks,  size=(D, H_i, W_i), mode='trilinear', align_corners=False)
+        binary_mask =  self.mask_resample 
+        # binary_mask = (self.mask_resample >0.05)*1.0
+
+        # binary_mask =  self.mask_resample 
+
+        # binary_mask = binary_mask.float(). to (self.device)
+        # flattened_tensor = binary_mask.reshape(bz *ch* D,  256, 256)
+        flattened_video= input.permute(0,2,1,3,4)
+        flattened_video = flattened_video.reshape(bz * D, ch_i, H_i, W_i)
+
+        flattened_feature = features.permute(0,2,1,3,4)
+        flattened_feature = flattened_feature.reshape(bz_f * D_f, ch_f, H_f, W_f)
+
+        flattened_mask= binary_mask.permute(0,2,1,3,4)
+        flattened_mask = flattened_mask.reshape(bz * D, ch, H_i, W_i)
+
+
+
+        output_mask = torch.zeros(bz * D, ch, 256, 256)
+        
+        post_process_mask = torch.zeros((bz * D, ch, H_i, W_i))
+        with torch.no_grad():
+                for i in range(ch):
+                    for j in range (bz*D):
+                        this_input_image=  flattened_video[j,:,:,:]
+
+                        this_input_mask =  flattened_mask[j,i,:,:]
+                        this_feature= flattened_feature[j:j+1,:,:,:]
+                        # this_input_mask= torch.tensor(self.post_process_softmask2(this_input_mask,this_input_image))
+                        this_input_mask =(this_input_mask >0.05)*1.0
+                        # this_input_mask =(this_input_mask>125)*1.0
+                        post_process_mask[j,i,:,:] = this_input_mask
+                        # coordinates = torch.ones(bz * D,1,2)*512.0
+                        # coordinates= coordinates.cuda()
+                        # labels = torch.ones(bz * D,1)
+                        
+                        
+
+
+        # self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
+         
+        self.post_processed_masks = post_process_mask.reshape (bz,D,ch,H_i,W_i).permute(0,2,1,3,4)
+        # self.sam_mask = binary_mask
+
+        pass
     def sam_mask_prompt_decode(self,raw_masks,features,input,multimask_output: bool = False):
         bz_i, ch_i, D_i, H_i, W_i = input.size()
 
