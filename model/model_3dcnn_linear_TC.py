@@ -12,7 +12,7 @@ from model import model_operator
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=256,base_f=256):
+    def __init__(self, inputC=256,base_f=384):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -31,13 +31,13 @@ class _VideoCNN(nn.Module):
         self.blocks.append(block_buider.conv_keep_all(inputC, base_f1,k=(1,1,1), s=(1,1,1), p=(0,0,0), resnet= False,dropout = Drop_out))
         # self.blocks.append(nn.AvgPool3d((1,2,2),stride=(1,2,2)))
        
-        base_f2= 512
+        base_f2= base_f*2
 
         self.blocks.append(block_buider.conv_keep_all(base_f1, base_f2,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f,resnet = True,dropout=False))
         # self.blocks.append(block_buider.conv_keep_all(base_f, base_f*2,dropout=False))
         # base_f = base_f * 2
-        base_f3 = 768
+        base_f3 = base_f*4
         # # 8*256  - 4*256\
         self.blocks.append(block_buider.conv_keep_all(base_f2, base_f3,k=(1,1,1), s=(1,1,1), p=(0,0,0),resnet = False,dropout = Drop_out))
         # base_f4 =16

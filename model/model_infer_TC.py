@@ -175,7 +175,7 @@ class _Model_infer(object):
         else:
             with torch.no_grad():
                 self.f = features
-        flag =random. choice([False, True])
+        flag =random. choice([True, True])
         if  Random_mask_temporal_feature == True:
             self.f =   model_operator.random_mask_out_dimension(self.f, 0.5, dim=2)
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,flag)
