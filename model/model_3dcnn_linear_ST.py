@@ -148,7 +148,7 @@ class _VideoCNN_S(nn.Module):
 
         return final, slice_valid
      
-    def forward(self, x,down_in):
+    def forward(self, x,down_in=False):
         bz, ch, D, H, W = x.size()
         Pure_down_pool = nn.AvgPool3d((1,2,2),stride=(1,2,2))
 
@@ -166,7 +166,7 @@ class _VideoCNN_S(nn.Module):
         features=[]
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
-            if  j==1:
+            if  j>0:
 
                 out = Pure_down_pool(out)
 

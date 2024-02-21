@@ -59,12 +59,14 @@ if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
 Display_flag = True
-Display_student = False
+Display_student = True
 Display_final_SAM = True
 Save_flag =True
 loadmodel_index = '4.pth'
 
 Random_mask_temporal_feature = False
+Random_mask_patch_feature = False
+
 Batch_size =1
 Data_aug = False
 Random_mask = False

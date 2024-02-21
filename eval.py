@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, average_precision_score
+import torch.nn.functional as F
 
 # Create empty DataFrames to store metrics
 metrics_video_data = []
@@ -40,8 +41,14 @@ def cal_ap_frame(true, predict):
 
     return average_precision_frame
 
-def cal_all_metrics(read_id, label_mask, frame_label, video_label, predic_mask_3D, output_video_label):
-    ch, D, H, W = predic_mask_3D.size()
+def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, predic_mask_3D, output_video_label):
+    ch, D, H, W = label_mask.size()
+    predic_mask_3D =   F.interpolate(predic_mask_3D,  size=( H, W), mode='bilinear', align_corners=False)
+    predic_mask_3D= (predic_mask_3D>0)*predic_mask_3D
+    predic_mask_3D = predic_mask_3D -torch.min(predic_mask_3D)
+    predic_mask_3D = predic_mask_3D /(torch.max(predic_mask_3D)+0.0000001)*1 
+    predic_mask_3D = predic_mask_3D>0.1
+    predic_mask_3D = torch.clamp(predic_mask_3D,0,1)
 
     output_video_label = (output_video_label > 0.5) * 1
 
@@ -72,7 +79,7 @@ def cal_all_metrics(read_id, label_mask, frame_label, video_label, predic_mask_3
     print("Intersection over Union (IoU):", IoU)
 
     # Calculate Dice coefficient for video-level predictions
-    dice = cal_dice(label_mask[0], predic_mask_3D[0])
+    dice = cal_dice(label_mask, predic_mask_3D)
     dice = round(dice.item(), 4)
     print("Dice coefficient:", dice)
 
@@ -108,8 +115,8 @@ def cal_all_metrics(read_id, label_mask, frame_label, video_label, predic_mask_3
     metrics_frame = pd.DataFrame(metrics_frame_data)
 
     # Save to Excel files
-    metrics_video.to_excel('metrics_video.xlsx', index=False, float_format='%.4f')
-    metrics_frame.to_excel('metrics_frame.xlsx', index=False, float_format='%.4f')
+    metrics_video.to_excel(Output_root+'metrics_video.xlsx', index=False, float_format='%.4f')
+    metrics_frame.to_excel(Output_root+'metrics_frame.xlsx', index=False, float_format='%.4f')
 
 # Example usage
 # cal_all_metrics(...)

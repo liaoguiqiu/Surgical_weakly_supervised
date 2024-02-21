@@ -12,7 +12,7 @@ from image_operator import basic_operator
 import pydensecrf.densecrf as dcrf
 from pydensecrf.utils import unary_from_softmax
 from SAM.segment_anything import  SamPredictor, sam_model_registry
-from working_dir_root import Enable_student,Random_mask_temporal_feature
+from working_dir_root import Enable_student,Random_mask_temporal_feature,Random_mask_patch_feature
 from model import model_operator
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from dataset.dataset import label_mask,Mask_out_partial_label
@@ -179,331 +179,36 @@ class _Model_infer(object):
         flag =random. choice([True, True])
         self.fm =self.f
         if  Random_mask_temporal_feature == True:
-            self.fm =   model_operator.random_mask_out_dimension(self.f, 0.5, dim=2)
+            self.fm =   model_operator.random_mask_out_dimension(self.fm, 0.5, dim=2)
+        if  Random_mask_patch_feature == True:
+            self.fm =   model_operator.hide_patch(self.fm )
+
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.fm,flag)
         with torch.no_grad():
-            self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(activationLU(self.cam3D))
+            self.slice_hard_label,self.binary_masks= model_operator.CAM_to_slice_hardlabel(activationLU(self.cam3D),self.output)
             self.cam3D_target = self.cam3D.detach().clone()
         if Enable_student:
             self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,flag)
         # stack = self.cam3D_s -torch.min(self.cam3D_s)
         # stack = stack /(torch.max(stack)+0.0000001)
-            
+        with torch.no_grad():
+            output = self.output.detach().clone()
         if Display_student:
             with torch.no_grad():
                 self.cam3D = self.cam3D_s.detach().clone()
+                output = self.output_s.detach().clone()
         if Display_final_SAM:
             with torch.no_grad():
-                self.Cam_mask_post_process(activationLU(self.cam3D),self.f,input)
+                post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,output)
                 # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
 
-
-                self.cam3D = self. post_processed_masks.to(self.device) 
+                sam_mask =model_operator.sam_mask_prompt_decode(self.sam_model,post_processed_masks,self.f)
+                self.cam3D = sam_mask.to(self.device) 
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  
         # self.cam3D = self.cam3D+stack
         # self.cam3D = self. post_processed_masks
 
-    def CAM_to_slice_hardlabel(self,cam):
-        bz, ch, D, H, W = cam.size()
-        cam = (cam>0.05)*cam
-        raw_masks = cam -torch.min(cam)
-        mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
-        raw_masks = raw_masks /(mean+0.0000001)        
-        binary_mask = (raw_masks >0.1)*1.0
-        binary_mask = self. clear_boundary(binary_mask)
-        # flatten_mask = binary_mask.view(bz,ch)
-        count_masks = torch.sum(binary_mask, dim=(-1, -2), keepdim=True)
-        slice_hard_label = (count_masks>10)*1.0
-        return slice_hard_label,binary_mask
-    def Cam_mask_post_process(self,raw_masks,features,input,multimask_output: bool = False):
-        bz_i, ch_i, D_i, H_i, W_i = input.size()
-
-        bz, ch, D, H, W = raw_masks.size()
-        bz_f, ch_f, D_f, H_f, W_f = features.size()
-        cam = (raw_masks>0.00)*raw_masks
-        raw_masks = cam -torch.min(cam)
-        mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
-        raw_masks = raw_masks /(100+0.0000001) 
-        raw_masks = torch.clamp(raw_masks,0,1)    
-        self.mask_resample =   F.interpolate(raw_masks,  size=(D, H_i, W_i), mode='trilinear', align_corners=False)
-        binary_mask =  self.mask_resample 
-        # binary_mask = (self.mask_resample >0.05)*1.0
-
-        # binary_mask =  self.mask_resample 
-
-        # binary_mask = binary_mask.float(). to (self.device)
-        # flattened_tensor = binary_mask.reshape(bz *ch* D,  256, 256)
-        flattened_video= input.permute(0,2,1,3,4)
-        flattened_video = flattened_video.reshape(bz * D, ch_i, H_i, W_i)
-
-        flattened_feature = features.permute(0,2,1,3,4)
-        flattened_feature = flattened_feature.reshape(bz_f * D_f, ch_f, H_f, W_f)
-
-        flattened_mask= binary_mask.permute(0,2,1,3,4)
-        flattened_mask = flattened_mask.reshape(bz * D, ch, H_i, W_i)
-
-
-
-        output_mask = torch.zeros(bz * D, ch, 256, 256)
-        
-        post_process_mask = torch.zeros((bz * D, ch, H_i, W_i))
-        with torch.no_grad():
-                for i in range(ch):
-                    for j in range (bz*D):
-                        this_input_image=  flattened_video[j,:,:,:]
-
-                        this_input_mask =  flattened_mask[j,i,:,:]
-                        this_feature= flattened_feature[j:j+1,:,:,:]
-                        this_input_mask =(this_input_mask >0.5) 
-                        # this_input_mask= torch.tensor(self.post_process_softmask(this_input_mask,this_input_image))
-
-                        # this_input_mask =(this_input_mask>125)*1.0
-                        post_process_mask[j,i,:,:] = this_input_mask
-                        # coordinates = torch.ones(bz * D,1,2)*512.0
-                        # coordinates= coordinates.cuda()
-                        # labels = torch.ones(bz * D,1)
-                        
-                        
-
-
-        # self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
-         
-        self.post_processed_masks = post_process_mask.reshape (bz,D,ch,H_i,W_i).permute(0,2,1,3,4)
-        # self.sam_mask = binary_mask
-
-        pass
-    def sam_mask_prompt_decode(self,raw_masks,features,input,multimask_output: bool = False):
-        bz_i, ch_i, D_i, H_i, W_i = input.size()
-
-        bz, ch, D, H, W = raw_masks.size()
-        bz_f, ch_f, D_f, H_f, W_f = features.size()
-
-        raw_masks = raw_masks -torch.min(raw_masks)
-        raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001) 
-        self.mask_resample =   F.interpolate(raw_masks,  size=(D, H_i, W_i), mode='trilinear', align_corners=False)
-        binary_mask =  self.mask_resample 
-        # binary_mask = (self.mask_resample >0.05)*1.0
-
-        # binary_mask =  self.mask_resample 
-
-        # binary_mask = binary_mask.float(). to (self.device)
-        # flattened_tensor = binary_mask.reshape(bz *ch* D,  256, 256)
-        flattened_video= input.permute(0,2,1,3,4)
-        flattened_video = flattened_video.reshape(bz * D, ch_i, H_i, W_i)
-
-        flattened_feature = features.permute(0,2,1,3,4)
-        flattened_feature = flattened_feature.reshape(bz_f * D_f, ch_f, H_f, W_f)
-
-        flattened_mask= binary_mask.permute(0,2,1,3,4)
-        flattened_mask = flattened_mask.reshape(bz * D, ch, H_i, W_i)
-
-
-
-        output_mask = torch.zeros(bz * D, ch, 256, 256)
-        
-        post_process_mask = torch.zeros((bz * D, ch, H_i, W_i))
-        with torch.no_grad():
-                for i in range(ch):
-                    for j in range (bz*D):
-                        this_input_image=  flattened_video[j,:,:,:]
-
-                        this_input_mask =  flattened_mask[j,i,:,:]
-                        this_feature= flattened_feature[j:j+1,:,:,:]
-                        this_input_mask =(this_input_mask >0.05)*this_input_mask
-                        this_input_mask= torch.tensor(self.post_process_softmask2(this_input_mask,this_input_image))
-                        this_input_mask =(this_input_mask >0.05)*1.0
-                        # this_input_mask =(this_input_mask>125)*1.0
-                        post_process_mask[j,i,:,:] = this_input_mask
-                        # coordinates = torch.ones(bz * D,1,2)*512.0
-                        # coordinates= coordinates.cuda()
-                        # labels = torch.ones(bz * D,1)
-                        forground_num =  int(torch.sum(this_input_mask).item())
-                        if forground_num>30:
-                            foreground_indices = torch.nonzero(this_input_mask > 0.5, as_tuple=False)
-                            cntral = self.extract_central_point_coordinates(this_input_mask)
-                                # Extract coordinates from indices
-                            foreground_coordinates = foreground_indices[:, [1, 0]]  # Swap x, y to get (y, x) format
-                            mask = self.decode_mask_with_multi_coord(foreground_coordinates*1024/H_i,this_feature)
-                            # mask = self.decode_mask_with_multi_coord(cntral[0]*1024/H_i,this_feature)
-
-                            output_mask[j,i,:,:] = mask
-                        
-
-
-        # self.f = flattened_tensor.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
-        self.sam_mask = output_mask.reshape (bz,D,ch,256,256).permute(0,2,1,3,4)
-        self.post_processed_masks = post_process_mask.reshape (bz,D,ch,H_i,W_i).permute(0,2,1,3,4)
-        # self.sam_mask = binary_mask
-
-        pass
-    def post_process_softmask(self,mask,image):
-        def apply_opening(mask, kernel_size=3):
-            """
-            Apply opening operation to the mask.
-            
-            Parameters:
-                mask (ndarray): Binary mask array.
-                kernel_size (int): Size of the kernel for morphological opening.
-            
-            Returns:
-                ndarray: Mask after applying morphological opening.
-            """
-            kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-        
-        image= image.permute(1,2,0)
-        # mask = (mask>0.05)*mask
-        # mask = mask -torch.min(mask)
-        # mean = torch.sum ((mask>0.0)* mask)/ torch.sum (mask>0.0)
-        # mask = mask /(mean+0.0000001)     
-        # mask= mask*4
-        # mask = (mask>0.3)*1.0
-        mask =mask.cpu().detach().numpy()  
-        image= image.cpu().detach().numpy()  
-        mask= np.clip(mask,0,1)
-        mask=basic_operator .DCRF (image,mask)
-        final_seg = np.argmax(mask, axis=0)
-        # mask_uint8 = np.uint8(mask * 255)
-        # # Ensure it's binary
-        # _, mask = cv2.threshold(mask_uint8, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-
-        # # Clear boundary errors if needed
-        # # mask_cleaned = clear_boundary_errors(mask, boundary_size=5)
-
-        # # Apply morphological opening if needed
-        final_seg = apply_opening(final_seg.astype(np.uint8), kernel_size=3)
-        return final_seg
-    def post_process_softmask2(self,mask,image):
-        def apply_opening(mask, kernel_size=3):
-            """
-            Apply opening operation to the mask.
-            
-            Parameters:
-                mask (ndarray): Binary mask array.
-                kernel_size (int): Size of the kernel for morphological opening.
-            
-            Returns:
-                ndarray: Mask after applying morphological opening.
-            """
-            kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-        
-        
-        # mask = mask -torch.min(mask)
-        # mask = mask /(torch.max(mask)+0.0000001) 
-        # mask= mask*4
-        mask = (mask>0.05)*1.0
-        mask =mask.cpu().detach().numpy()  
-        
-        mask_uint8 = np.uint8(mask * 255)
-        # Ensure it's binary
-        # _, mask = cv2.threshold(mask_uint8, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-
-        # Clear boundary errors if needed
-        # mask_cleaned = clear_boundary_errors(mask, boundary_size=5)
-
-        # Apply morphological opening if needed
-        final_seg = apply_opening(mask_uint8.astype(np.uint8), kernel_size=3)
-        return final_seg
-    def decode_mask_with_multi_coord(self,foreground_coordinates,this_feature):
-        N = foreground_coordinates.size(0)
-
-# Calculate the step size
-        step = N // 30
-
-        # Sample coordinates using the step size
-        if step == 0:
-            sampled_coordinates= foreground_coordinates
-        else:
-            sampled_coordinates = foreground_coordinates[::step]
-        # sampled_coordinates = foreground_coordinates 
-
-        labels = torch.ones(1,1)
-        # coordinates = cntral.view(1,1,2)*4
-        # coordinates= coordinates.cuda()
-        labels = labels.cuda()
-
-        masks=[]
-        N= len(sampled_coordinates)
-        for i in range(len(sampled_coordinates)):
-            coordinates = sampled_coordinates[i,:].view(1,1,2)
-            coordinates= coordinates.cuda() 
-
-            points = (coordinates, labels)
-
-            # Embed prompts
-            sparse_embeddings, dense_embeddings = self.sam_model.prompt_encoder(
-                points=points,
-                boxes=None,
-                masks=None,
-            )
-            # Predict masks
-            low_res_masks, iou_predictions = self.sam_model.mask_decoder(
-                image_embeddings= this_feature,
-                image_pe=self.sam_model.prompt_encoder.get_dense_pe(),
-                sparse_prompt_embeddings=sparse_embeddings,
-                dense_prompt_embeddings=dense_embeddings,
-                multimask_output=False,
-            )
-            this_mask = (low_res_masks[0,0,:,:]>0)*1.0
-            masks.append(this_mask)
-        masks = torch.stack(masks)
-        sum_mask = torch.sum(masks,dim=0)
-        out_mask= (sum_mask>(8))*1.0
-        # out_mask = this_mask
-        return out_mask
-        pass
-    def sample_points(self,mask, num_points=16):
-    # Get mask shape
-        bz, H, W = mask.shape
-
-        # Generate coordinates for sampling
-        x_coordinates = torch.linspace(0, W-1, num_points).long()
-        y_coordinates = torch.linspace(0, H-1, num_points).long()
-
-        # Generate grid of coordinates
-        x_grid, y_grid = torch.meshgrid(x_coordinates, y_coordinates)
-
-        # Flatten the grid coordinates
-        coordinates = torch.stack((y_grid.flatten(), x_grid.flatten()), dim=1)
-
-        # Get mask values at coordinates
-        mask_values = mask[:, y_grid.flatten(), x_grid.flatten()]
-
-        # Threshold mask values to determine foreground or background
-        labels = (mask_values > 0.5).float()
-
-        # Reshape coordinates and labels
-        coordinates = coordinates.unsqueeze(0).repeat(bz, 1, 1)
-        # coordinates = coordinates.permute(0,2,1)
-        labels = labels.view(bz, num_points * num_points)
-
-        return coordinates, labels
-    def clear_boundary(self,masks):
-        boundary_size =5
-        masks[:,:,:,:boundary_size, :] = 0
-        masks[:,:,:,-boundary_size:, :] = 0
-        masks[:,:,:,:, :boundary_size] = 0
-        masks[:,:,:,:, -boundary_size:] = 0
-        return masks
-        
-    def extract_central_point_coordinates(self,masks):
-        boundary_size =10
-        masks[:boundary_size, :] = 0
-        masks[-boundary_size:, :] = 0
-        masks[:, :boundary_size] = 0
-        masks[:, -boundary_size:] = 0
-        foreground_indices = torch.nonzero(masks > 0.5, as_tuple=False)
-
-# Extract coordinates from indices
-        foreground_coordinates = foreground_indices[:, [1, 0]]  # Swap x, y to get (y, x) format
-
-        # Compute centroid of foreground coordinates
-        centroid = torch.mean(foreground_coordinates.float(), dim=0)
-        
-        # Return centroid coordinates reshaped to [bz, 1, 2]
-        return centroid.view(1, 1, 2)
     def loss_of_one_scale(self,output,label,BCEtype = 1):
         out_logits = output.view(label.size(0), -1)
         bz,length = out_logits.size()

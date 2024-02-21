@@ -33,7 +33,7 @@ class Display(object):
         self.dataLoader = myDataloader()
         self.show_num=8
 
-    def train_display(self,MODEL_infer,mydata_loader, read_id):
+    def train_display(self,MODEL_infer,mydata_loader, read_id,Output_root):
         # copy all the input videos and labels
         # cv2.destroyAllWindows()
         if type(MODEL_infer.output) is list:
@@ -63,7 +63,7 @@ class Display(object):
 
             # self.Model_infer.cam3D[0,2:7,:,:]*=0
             # label_mask[2:7,:,:]*=0
-            eval.cal_all_metrics(read_id,label_mask,frame_label,video_label, self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach())
+            eval.cal_all_metrics(read_id,Output_root,label_mask,frame_label,video_label, self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach())
             # print("iou" + str(this_iou))
             # self.Model_infer.cam3D[0] = label_mask
 
