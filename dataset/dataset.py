@@ -379,6 +379,7 @@ class myDataloader(object):
                             mask,frame_label,video_label = format_convertor.label_from_seg8k_2_cholec(labels)
                             binary_vector = video_label
                             self.this_label = binary_vector
+                            self.this_video_label = binary_vector
                             self.this_frame_label = frame_label
                             self.this_label_mask = mask
                             self.this_raw_labels = frame_label

@@ -177,9 +177,10 @@ class _Model_infer(object):
             with torch.no_grad():
                 self.f = features
         flag =random. choice([True, True])
+        self.fm =self.f
         if  Random_mask_temporal_feature == True:
-            self.f =   model_operator.random_mask_out_dimension(self.f, 0.5, dim=2)
-        self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,flag)
+            self.fm =   model_operator.random_mask_out_dimension(self.f, 0.5, dim=2)
+        self.output, self.slice_valid, self. cam3D= self.VideoNets(self.fm,flag)
         with torch.no_grad():
             self.slice_hard_label,self.binary_masks= self.CAM_to_slice_hardlabel(activationLU(self.cam3D))
             self.cam3D_target = self.cam3D.detach().clone()
@@ -187,6 +188,7 @@ class _Model_infer(object):
             self.output_s,self.slice_valid_s,self.cam3D_s = self.VideoNets_S(self.f,flag)
         # stack = self.cam3D_s -torch.min(self.cam3D_s)
         # stack = stack /(torch.max(stack)+0.0000001)
+            
         if Display_student:
             with torch.no_grad():
                 self.cam3D = self.cam3D_s.detach().clone()
@@ -204,9 +206,11 @@ class _Model_infer(object):
 
     def CAM_to_slice_hardlabel(self,cam):
         bz, ch, D, H, W = cam.size()
+        cam = (cam>0.05)*cam
         raw_masks = cam -torch.min(cam)
-        raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001)        
-        binary_mask = (raw_masks >0.05)*1.0
+        mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
+        raw_masks = raw_masks /(mean+0.0000001)        
+        binary_mask = (raw_masks >0.1)*1.0
         binary_mask = self. clear_boundary(binary_mask)
         # flatten_mask = binary_mask.view(bz,ch)
         count_masks = torch.sum(binary_mask, dim=(-1, -2), keepdim=True)
@@ -217,9 +221,11 @@ class _Model_infer(object):
 
         bz, ch, D, H, W = raw_masks.size()
         bz_f, ch_f, D_f, H_f, W_f = features.size()
-
-        raw_masks = raw_masks -torch.min(raw_masks)
-        raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001) 
+        cam = (raw_masks>0.00)*raw_masks
+        raw_masks = cam -torch.min(cam)
+        mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
+        raw_masks = raw_masks /(100+0.0000001) 
+        raw_masks = torch.clamp(raw_masks,0,1)    
         self.mask_resample =   F.interpolate(raw_masks,  size=(D, H_i, W_i), mode='trilinear', align_corners=False)
         binary_mask =  self.mask_resample 
         # binary_mask = (self.mask_resample >0.05)*1.0
@@ -249,8 +255,9 @@ class _Model_infer(object):
 
                         this_input_mask =  flattened_mask[j,i,:,:]
                         this_feature= flattened_feature[j:j+1,:,:,:]
-                        # this_input_mask= torch.tensor(self.post_process_softmask2(this_input_mask,this_input_image))
-                        this_input_mask =(this_input_mask >0.05)*1.0
+                        this_input_mask =(this_input_mask >0.5) 
+                        # this_input_mask= torch.tensor(self.post_process_softmask(this_input_mask,this_input_image))
+
                         # this_input_mask =(this_input_mask>125)*1.0
                         post_process_mask[j,i,:,:] = this_input_mask
                         # coordinates = torch.ones(bz * D,1,2)*512.0
@@ -303,6 +310,7 @@ class _Model_infer(object):
 
                         this_input_mask =  flattened_mask[j,i,:,:]
                         this_feature= flattened_feature[j:j+1,:,:,:]
+                        this_input_mask =(this_input_mask >0.05)*this_input_mask
                         this_input_mask= torch.tensor(self.post_process_softmask2(this_input_mask,this_input_image))
                         this_input_mask =(this_input_mask >0.05)*1.0
                         # this_input_mask =(this_input_mask>125)*1.0
@@ -345,9 +353,11 @@ class _Model_infer(object):
             return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         
         image= image.permute(1,2,0)
+        # mask = (mask>0.05)*mask
         # mask = mask -torch.min(mask)
-        # mask = mask /(torch.max(mask)+0.0000001) 
-        mask= mask*4
+        # mean = torch.sum ((mask>0.0)* mask)/ torch.sum (mask>0.0)
+        # mask = mask /(mean+0.0000001)     
+        # mask= mask*4
         # mask = (mask>0.3)*1.0
         mask =mask.cpu().detach().numpy()  
         image= image.cpu().detach().numpy()  

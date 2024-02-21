@@ -53,10 +53,18 @@ class Display(object):
         self.dataLoader.all_raw_labels = mydata_loader.all_raw_labels
         if Test_on_cholec_seg8k:
             self.dataLoader.this_label_mask = mydata_loader.this_label_mask
+            self.dataLoader.this_frame_label = mydata_loader.this_frame_label
+            self.dataLoader.this_video_label = mydata_loader.this_video_label
+
             label_mask = torch.from_numpy(np.float32(self.dataLoader.this_label_mask )).to (device)
-            self.Model_infer.cam3D[0,2:7,:,:]*=0
-            this_iou = eval.cal_J(label_mask, self.Model_infer.cam3D[0])
-            print("iou" + str(this_iou))
+            frame_label = torch.from_numpy(np.float32(self.dataLoader.this_frame_label )).to (device)
+            video_label = torch.from_numpy(np.float32(self.dataLoader.this_video_label )).to (device)
+
+
+            # self.Model_infer.cam3D[0,2:7,:,:]*=0
+            # label_mask[2:7,:,:]*=0
+            eval.cal_all_metrics(read_id,label_mask,frame_label,video_label, self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach())
+            # print("iou" + str(this_iou))
             # self.Model_infer.cam3D[0] = label_mask
 
         if hasattr(MODEL_infer, 'sam_mask'):

@@ -77,7 +77,7 @@ if Load_feature == True:
 if Save_feature_OLG == True:
     Batch_size=1
 
-Enable_student = False
+Enable_student = True
 if Evaluation:
     Enable_student = True
 
