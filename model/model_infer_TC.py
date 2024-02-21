@@ -176,7 +176,7 @@ class _Model_infer(object):
         else:
             with torch.no_grad():
                 self.f = features
-        flag =random. choice([True, True])
+        flag =random. choice([False, True])
         self.fm =self.f
         if  Random_mask_temporal_feature == True:
             self.fm =   model_operator.random_mask_out_dimension(self.fm, 0.5, dim=2)
