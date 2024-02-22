@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer_TC
-from working_dir_root import Output_root,Save_flag,Load_flow,Test_on_cholec_seg8k
+from working_dir_root import Output_root,Save_flag,Load_flow,Test_on_cholec_seg8k,Display_images
 from dataset.dataset import myDataloader,categories
 from dataset import io
 import eval
@@ -189,10 +189,11 @@ class Display(object):
                 stitch_i+=1
 
         image_all = np.vstack((stitch_over,stitch_im))
-        cv2.imshow( 'all', image_all.astype((np.uint8)))
-        # cv2.imshow( 'overlay', stitch_over.astype((np.uint8)))
+        if Display_images:
+            cv2.imshow( 'all', image_all.astype((np.uint8)))
+            # cv2.imshow( 'overlay', stitch_over.astype((np.uint8)))
 
-        cv2.waitKey(1)
+            cv2.waitKey(1)
         if Save_flag == True:
 
             io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_over.astype((np.uint8)) )

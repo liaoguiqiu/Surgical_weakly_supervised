@@ -45,14 +45,14 @@ if Linux_computer == True:
     train_sam_feature_dir = working_pcaso_raid+ "cholec80/train_sam_feature/"
     sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
 
-Fintune= False
+Fintune= True
 
-Evaluation = False
+Evaluation = True
 img_size = 256
 GPU_mode= True
 
 Continue_flag = True
-Test_on_cholec_seg8k= False
+Test_on_cholec_seg8k= True
 
 Visdom_flag = True
 if Evaluation == True:
@@ -60,7 +60,8 @@ if Evaluation == True:
     Visdom_flag= False
 Display_flag = True
 Display_student = False
-Display_final_SAM = False
+Display_final_SAM = True
+Display_images= False
 Save_flag =True
 loadmodel_index = '4.pth'
 
