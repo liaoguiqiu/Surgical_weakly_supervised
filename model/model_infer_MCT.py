@@ -4,10 +4,10 @@ import torch.nn.functional as F
 import torchvision.models as models_torch
 
 from model.model_3dcnn_linear_MCT import _VideoCNN
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation,Display_final_SAM
 from dataset.dataset import class_weights,Obj_num
 from SAM.segment_anything import  SamPredictor, sam_model_registry
-
+from model import model_operator
 from timm.models import create_model
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
@@ -145,6 +145,17 @@ class _Model_infer(object):
         else:
             self.f = features
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
+        max_p,_ =  torch.max(self.c_logits,dim=2)
+        self.output =max_p.reshape(bz, class_num,1,1,1)
+        if Display_final_SAM:
+            with torch.no_grad():
+                activationLU = nn.ReLU()
+
+                post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,self.output)
+                # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
+
+                
+                self.cam3D = post_processed_masks 
     def optimization(self, label,frame_label):
         new_bz, D, ch= frame_label.size()
         frame_label = frame_label.reshape(new_bz*D,ch)

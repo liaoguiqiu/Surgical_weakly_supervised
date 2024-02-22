@@ -305,7 +305,8 @@ class myDataloader(object):
         self.all_raw_labels=[]
         self.this_file_name = None
         self.this_label = None
-        for i in range(self.batch_size): # load a batch of images
+        i=0
+        while(1): # load a batch of images
             start_time = time()
 
             index = self.read_record
@@ -345,9 +346,10 @@ class myDataloader(object):
                     else:                     
                         data_dict = io.read_a_pkl(Dataset_video_pkl_cholec, clip_name)
                         this_video_buff = data_dict['frames']
-                        labels = data_dict['labels']
-                        self.this_raw_labels = labels
-                        self.all_raw_labels . append(labels)
+                        
+                        labels= data_dict['labels']
+                        self.this_frame_label = labels
+                        
                         self.video_buff = this_video_buff[:,0:self.video_len,:,:]
                     if self.Load_flow == True:
                         # if clip_name=="clip_000189":
@@ -360,13 +362,17 @@ class myDataloader(object):
                             this_features = io.read_a_pkl(output_folder_sam_feature, clip_name)
                             self.this_features=this_features
                             this_features = this_features.permute(1,0,2,3).float()
-                            self.features.append(this_features)
+                            
 
 
                     Valid_video_flag = True
                 # clip_name= 'test'
+        
 
                 if (clip_name in self.all_labels and Valid_video_flag==True):
+                    if self.Load_feature == True:
+                        self.features.append(this_features)
+
                     this_label = self.all_labels[clip_name]
                     print(this_label)
                     if Cholec_data_flag == False:
@@ -378,17 +384,17 @@ class myDataloader(object):
                         if Test_on_cholec_seg8k:
                             mask,frame_label,video_label = format_convertor.label_from_seg8k_2_cholec(labels)
                             binary_vector = video_label
-                            self.this_label = binary_vector
                             self.this_video_label = binary_vector
                             self.this_frame_label = frame_label
                             self.this_label_mask = mask
                             self.this_raw_labels = frame_label
-
+                    
                         binary_vector_l = 0
                         binary_vector_r = 0
-                    
                     # load the squess and unsquess
-
+                    self.this_label = binary_vector
+                    self.this_raw_labels = self.this_frame_label
+                    self.all_raw_labels . append(self.this_frame_label)
                     if self.Display_loading_video == True:
                         cv2.imshow("SS First Frame R", this_video_buff[0,15, :, :].astype((np.uint8)))
                         cv2.imshow("SS First Frame G", this_video_buff[1,15, :, :].astype((np.uint8)))
@@ -453,6 +459,8 @@ class myDataloader(object):
                         self.labels[i, :] = binary_vector
                         if Cholec_data_flag == False:
                             self.labels_LR[i, :] = np.concatenate([binary_vector_r, binary_vector_l])
+                    i+=1
+                    
 
                 else:
                     print("Key does not exist in the dictionary.")
@@ -470,9 +478,9 @@ class myDataloader(object):
                 self.all_read_flag = 1
                 self.read_record =0
                 random.shuffle(self.all_video_dir_list)
-
-
-            pass
+             
+            if (i>=self.batch_size):
+                        break
         if self.Load_feature == True:
             self.features = torch.stack(self.features, dim=0)
         

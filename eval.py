@@ -42,6 +42,8 @@ def cal_ap_frame(true, predict):
     return average_precision_frame
 
 def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, predic_mask_3D, output_video_label):
+    device = label_mask.device
+    predic_mask_3D=predic_mask_3D.to(device)
     ch, D, H, W = label_mask.size()
     predic_mask_3D =   F.interpolate(predic_mask_3D,  size=( H, W), mode='bilinear', align_corners=False)
     predic_mask_3D= (predic_mask_3D>0)*predic_mask_3D

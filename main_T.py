@@ -165,7 +165,7 @@ while (1):
 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
-        pass
+         
 
     if dataLoader.all_read_flag ==1:
         Save_feature_OLG = False

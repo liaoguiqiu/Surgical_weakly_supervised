@@ -90,7 +90,7 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
-    pass
+     
 ############ for the linux to find the extenral drive
 external_drives = find_external_drives()
 
@@ -180,7 +180,7 @@ while (1):
             pickle.dump(this_features, file)
             print("sam Pkl file created:" +sam_pkl_file_name)
     if Save_sam_mask == True:
-        pass
+         
         this_mask= Model_infer.sam_mask.half()
         mask_pkl_file_name = dataLoader.this_file_name
         mask_pkl_file_path = os.path.join(output_folder_sam_masks, mask_pkl_file_name)
@@ -192,7 +192,7 @@ while (1):
 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id,Output_root)
-        pass
+         
 
     if dataLoader.all_read_flag ==1:
         Save_feature_OLG = False

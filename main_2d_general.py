@@ -79,7 +79,7 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
-    pass
+     
 ############ for the linux to find the extenral drive
 external_drives = find_external_drives()
 
@@ -153,7 +153,7 @@ while (1):
         Model_infer.optimization(labels_GPU,frame_level_label) 
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
-        pass
+         
 
     if dataLoader.all_read_flag ==1:
         #remove this for none converting mode

@@ -143,7 +143,7 @@ while (1):
     Model_infer.optimization(labels_GPU)
     if Display_flag == True:
         displayer.train_display(Model_infer,dataLoader,read_id)
-        pass
+         
 
     if dataLoader.all_read_flag ==1:
         #remove this for none converting mode

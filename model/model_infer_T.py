@@ -215,7 +215,7 @@ class _Model_infer(object):
         self.sam_mask = output_mask.reshape (bz,D,ch,256,256).permute(0,2,1,3,4)
         # self.sam_mask = binary_mask
 
-        pass
+         
     def sample_points(self,mask, num_points=16):
     # Get mask shape
         bz, H, W = mask.shape

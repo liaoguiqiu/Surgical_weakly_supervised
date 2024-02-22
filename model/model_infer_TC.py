@@ -86,7 +86,7 @@ class _Model_infer(object):
         self.Vit_encoder.to(device)
         self.sam_model .to (device)
         if Evaluation:
-             pass
+             
              self.VideoNets.eval()
              self.VideoNets_S.eval()
         else:
