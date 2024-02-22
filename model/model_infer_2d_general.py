@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torchvision.models as models_torch
 
 from model.model_3dcnn_linear_MCT import _VideoCNN
-from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation
+from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation,Display_final_SAM
 from dataset.dataset import class_weights,Obj_num
 from SAM.segment_anything import  SamPredictor, sam_model_registry
 
@@ -12,6 +12,7 @@ from timm.models import create_model
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler
+from model import model_operator
 import torchvision.models as models
 
 from torchcam.methods import CAM,LayerCAM,GradCAM
@@ -113,8 +114,17 @@ class _Model_infer(object):
             self.cam3D= cam_tensor_stack.reshape(bz, new_ch,D, new_H, new_W )
         new_bz, class_num= self.concatenated_tensor.size()
         self.logits = self.concatenated_tensor.reshape (bz,D,class_num).permute(0,2,1)
-        self.output = self.logits.max(dim=2)[0].view(bz, Obj_num,1,1)
-        
+        self.output = self.logits.max(dim=2)[0].view(bz, Obj_num,1,1,1)
+        self.raw_cam = self.cam3D
+        if Display_final_SAM:
+            with torch.no_grad():
+                activationLU = nn.ReLU()
+
+                post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,self.output)
+                # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
+
+                
+                self.cam3D = post_processed_masks 
         # self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
     def optimization(self, label,frame_label):
         new_bz, D, ch= frame_label.size()

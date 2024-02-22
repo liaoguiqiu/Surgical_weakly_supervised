@@ -15,7 +15,7 @@ import torch.utils.data
 from torch.autograd import Variable
 from model import  model_experiement, model_infer_TC
 from working_dir_root import Output_root,Save_flag,Load_flow,Test_on_cholec_seg8k,Display_images
-from dataset.dataset import myDataloader,categories
+from dataset.dataset import myDataloader,categories,category_colors
 from dataset import io
 import eval
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -46,11 +46,14 @@ class Display(object):
             print("It's not a list.")
         # self.Model_infer.slice_valid = MODEL_infer.slice_valid
         self.Model_infer.cam3D = MODEL_infer.cam3D
+        self.Model_infer.raw_cam = MODEL_infer.raw_cam
+
         self.dataLoader.input_videos = mydata_loader.input_videos
         self.dataLoader.labels = mydata_loader.labels
         self.dataLoader.input_flows = mydata_loader.input_flows
         self.Model_infer.input_resample = MODEL_infer.input_resample
         self.dataLoader.all_raw_labels = mydata_loader.all_raw_labels
+       
         if Test_on_cholec_seg8k:
             self.dataLoader.this_label_mask = mydata_loader.this_label_mask
             self.dataLoader.this_frame_label = mydata_loader.this_frame_label
@@ -64,6 +67,8 @@ class Display(object):
             # self.Model_infer.cam3D[0,2:7,:,:]*=0
             # label_mask[2:7,:,:]*=0
             eval.cal_all_metrics(read_id,Output_root,label_mask,frame_label,video_label, self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach())
+            
+            
             # print("iou" + str(this_iou))
             # self.Model_infer.cam3D[0] = label_mask
 
@@ -107,11 +112,14 @@ class Display(object):
         if Save_flag == True:
             io.save_img_to_folder(Output_root + "image/original/" ,  read_id, stack1.astype((np.uint8)) )
         # Combine the rows vertically to create the final 3x3 arrangement
-        Cam3D=self.Model_infer.cam3D[0]
+        Cam3D=self.Model_infer.raw_cam[0]
+        final_mask = self.Model_infer.cam3D[0].cpu().detach().numpy()
         label_0 = self.dataLoader.labels[0]
         if len (Cam3D.shape) == 3:
             Cam3D = Cam3D.unsqueeze(1)
         ch, D, H, W = Cam3D.size()
+        
+
         # activation = nn.Sigmoid()
         # Cam3D =  activation( Cam3D)
         # average_tensor = Cam3D.mean(dim=[1,2,3], keepdim=True)
@@ -124,18 +132,24 @@ class Display(object):
         stitch_i =0
         stitch_im  = np.zeros((H,W))
         stitch_over = np.zeros((H,W))
+        # ch, D, H_m, W_m = final_mask.shape
+        # color_mask = np.zeros((D,H_m,W_m,3))
+        # stack_color_mask = np.zeros((H,W))
         for j in range(len(categories)):
             # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
             this_grayVideo = Cam3D[j].cpu().detach().numpy()
+            # this_mask_channel = final_mask[j].cpu().detach().numpy()
             if (output_0[j]>0.5 or label_0[j]>0.5):
                 for i in range(0, D, step_l):
                     this_image = this_grayVideo[i]
                     this_image =  cv2.resize(this_image, (Ori_H, Ori_W), interpolation = cv2.INTER_LINEAR)
-            
+                     
                     if i == 0:
                         stack = this_image
+                        
                     else:
                         stack = np.hstack((stack, this_image))
+                        
                 stack= (stack>0)*stack
                 stack = stack -np.min(stack)
                 stack = stack /(np.max(stack)+0.0000001)*254 
@@ -187,7 +201,38 @@ class Display(object):
                     stitch_over = np.vstack((stitch_over, overlay))
 
                 stitch_i+=1
+        
+        stack_color_mask=stack_to_color_mask (final_mask,Ori_H,Ori_W,output_0,label_0,step_l)
+        if stack_color_mask is not None:
+            alpha= 0.5
+            stack_color_mask = cv2.addWeighted(stack1.astype((np.uint8)), 1 - alpha, stack_color_mask.astype((np.uint8)), alpha, 0)
+            io.save_img_to_folder(Output_root + "image/predict_color_mask/" ,  read_id, stack_color_mask.astype((np.uint8)) )
 
+        if Test_on_cholec_seg8k:
+            final_mask = label_mask.cpu().detach().numpy()
+            gt_color_mask=stack_to_color_mask (final_mask,Ori_H,Ori_W,output_0,label_0,step_l)
+            if gt_color_mask is not None:
+
+                alpha= 0.5
+                gt_color_mask = cv2.addWeighted(stack1.astype((np.uint8)), 1 - alpha, gt_color_mask.astype((np.uint8)), alpha, 0)
+                io.save_img_to_folder(Output_root + "image/GT_color_mask/" ,  read_id, gt_color_mask.astype((np.uint8)) )
+        # for j in range(len(categories)):
+        #     # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
+           
+        #     this_mask_channel = final_mask[j]
+        #     color_mask[this_mask_channel > 0.5] = category_colors[categories[j]]
+        #     if (output_0[j]>0.5 or label_0[j]>0.5):
+        #         for i in range(0, D, step_l):
+                    
+        #             this_mask_channel_frame = color_mask[i]
+        #             this_mask_channel_frame =  cv2.resize(this_mask_channel_frame, (Ori_H, Ori_W), interpolation = cv2.INTER_LINEAR)
+                     
+        #             if i == 0:
+                      
+        #                 stack_color_mask = this_mask_channel_frame
+        #             else:
+                         
+        #                 stack_color_mask = np.hstack((stack_color_mask, this_mask_channel_frame))
         image_all = np.vstack((stitch_over,stitch_im))
         if Display_images:
             cv2.imshow( 'all', image_all.astype((np.uint8)))
@@ -198,6 +243,8 @@ class Display(object):
 
             io.save_img_to_folder(Output_root + "image/predict/" ,  read_id, stitch_over.astype((np.uint8)) )
             io.save_img_to_folder(Output_root + "image/predict_overlay/" ,  read_id, image_all.astype((np.uint8)) )
+
+
 
 
         if MODEL_infer.gradcam is not None:
@@ -220,3 +267,25 @@ class Display(object):
         # Cam3D = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear')
 
 
+def stack_to_color_mask (final_mask,Ori_H,Ori_W,output_0,label_0,step_l):
+    ch, D, H_m, W_m = final_mask.shape
+    color_mask = np.zeros((D,H_m,W_m,3))
+    stack_color_mask = None
+    for j in range(len(categories)):
+            # j=sorted_indices[13-index,0,0,0].cpu().detach().numpy()
+           
+            this_mask_channel = final_mask[j]
+            color_mask[this_mask_channel > 0.5] = category_colors[categories[j]]
+            if (output_0[j]>0.5 or label_0[j]>0.5):
+                for i in range(0, D, step_l):
+                    
+                    this_mask_channel_frame = color_mask[i]
+                    this_mask_channel_frame =  cv2.resize(this_mask_channel_frame, (Ori_H, Ori_W), interpolation = cv2.INTER_LINEAR)
+                     
+                    if i == 0:
+                      
+                        stack_color_mask = this_mask_channel_frame
+                    else:
+                         
+                        stack_color_mask = np.hstack((stack_color_mask, this_mask_channel_frame))
+    return stack_color_mask

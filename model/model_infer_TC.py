@@ -195,19 +195,21 @@ class _Model_infer(object):
             output = self.output.detach().clone()
         if Display_student:
             with torch.no_grad():
-                self.cam3D = self.cam3D_s.detach().clone()
+                self.cam3D = (self.cam3D_s.detach().clone() + self.cam3D)/2
+                
                 output = self.output_s.detach().clone()
+        self.raw_cam = self.cam3D.detach().clone()
         if Display_final_SAM:
             with torch.no_grad():
                 post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,output)
                 # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
 
-                sam_mask =model_operator.sam_mask_prompt_decode(self.sam_model,post_processed_masks,self.f)
-                self.cam3D = sam_mask.to(self.device) 
+                # post_processed_masks =model_operator.sam_mask_prompt_decode(self.sam_model,post_processed_masks,self.f)
+                self.cam3D = post_processed_masks.to(self.device) 
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  
         # self.cam3D = self.cam3D+stack
-        # self.cam3D = self. post_processed_masks
+                # self.cam3D = post_processed_masks
 
     def loss_of_one_scale(self,output,label,BCEtype = 1):
         out_logits = output.view(label.size(0), -1)

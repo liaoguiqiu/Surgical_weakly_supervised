@@ -59,7 +59,7 @@ if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
 Display_flag = True
-Display_student = False
+Display_student = True
 Display_final_SAM = True
 Display_images= False
 Save_flag =True

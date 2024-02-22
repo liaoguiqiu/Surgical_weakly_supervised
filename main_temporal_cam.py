@@ -143,7 +143,7 @@ while (1):
     Model_infer.forward(input_videos_GPU,input_flows_GPU)
     Model_infer.optimization(labels_GPU) 
     if Display_flag == True:
-        displayer.train_display(Model_infer,dataLoader,read_id)
+        displayer.train_display(Model_infer,dataLoader,read_id,Output_root)
          
 
     if dataLoader.all_read_flag ==1:

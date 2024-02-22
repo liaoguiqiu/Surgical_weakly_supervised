@@ -172,6 +172,8 @@ while (1):
         print("finished epoch" + str (epoch) )
         dataLoader.all_read_flag = 0
         read_id=0
+        if Evaluation:
+            break
 
         # break
     if read_id % 1== 0   :

@@ -152,7 +152,7 @@ while (1):
     if Evaluation == False:
         Model_infer.optimization(labels_GPU,frame_level_label) 
     if Display_flag == True:
-        displayer.train_display(Model_infer,dataLoader,read_id)
+        displayer.train_display(Model_infer,dataLoader,read_id,Output_root)
          
 
     if dataLoader.all_read_flag ==1:
@@ -162,6 +162,8 @@ while (1):
         print("finished epoch" + str (epoch) )
         dataLoader.all_read_flag = 0
         read_id=0
+        if Evaluation:
+            break
 
         # break
     if read_id % 1== 0   :

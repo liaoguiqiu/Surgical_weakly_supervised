@@ -67,6 +67,16 @@ if Cholec_data_flag == True:
         'Irrigator',#5    
         'SpecimenBag',#6                  
     ]
+    category_colors = {
+    'Grasper': (0, 0, 255),        # Blue
+    'Bipolar': (0, 255, 0),        # Green
+    'Hook': (255, 0, 0),           # Red
+    'Scissors': (255, 255, 0),     # Yellow
+    'Clipper': (255, 0, 255),      # Magenta
+    'Irrigator': (255, 165, 0),    # Orange
+    'SpecimenBag': (128, 0, 128)   # Purple
+}
+
     categories_count =[5266.0,  592.0, 4252.0,  239.0,  352.0,  624.0,  623.0]
 
     total_samples = sum(categories_count)
