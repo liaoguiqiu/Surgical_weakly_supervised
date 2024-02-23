@@ -48,8 +48,8 @@ class _Model_infer(object):
         
         if GPU_mode == True:
             if num_gpus > 1:
-                 
-                self.resnet  = torch.nn.DataParallel(self.resnet )
+                pass
+                # self.resnet  = torch.nn.DataParallel(self.resnet )
                
          
         self.resnet .to(device)
@@ -112,10 +112,11 @@ class _Model_infer(object):
             cam_tensor_stack = torch.stack(cam_tensors, dim=0)
             new_ch, new_bz, new_H, new_W = cam_tensor_stack.size()
             self.cam3D= cam_tensor_stack.reshape(bz, new_ch,D, new_H, new_W )
+            self.raw_cam = self.cam3D
+
         new_bz, class_num= self.concatenated_tensor.size()
         self.logits = self.concatenated_tensor.reshape (bz,D,class_num).permute(0,2,1)
         self.output = self.logits.max(dim=2)[0].reshape(bz, Obj_num,1,1,1)
-        self.raw_cam = self.cam3D
         if Display_final_SAM:
             with torch.no_grad():
                 activationLU = nn.ReLU()
