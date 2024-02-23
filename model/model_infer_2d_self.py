@@ -4,8 +4,9 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 from model.model_2dcnn_self import _VideoCNN2d
-from working_dir_root import learningR,learningR_res,Evaluation
+from working_dir_root import learningR,learningR_res,Evaluation,Display_final_SAM
 from dataset.dataset import class_weights
+from model import model_operator
 # learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1,Name = None):
@@ -75,13 +76,27 @@ class _Model_infer(object):
         flattened_tensor = self.input_resample.permute(0,2,1,3,4)
         flattened_tensor = flattened_tensor.reshape(bz * D, ch, self.input_size, self.input_size)
         flattened_tensor = self.resnet((flattened_tensor-128.0)/60.0)
-        self.output, self.cam2d= self.imageNets(flattened_tensor)
+        self.logits, self.cam2d= self.imageNets(flattened_tensor)
+
 
 
         new_bz, new_ch, new_H, new_W = self.cam2d.size()
         self.cam3D=  self.cam2d.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
+        # self.logits = self.output.reshape (bz,D,ch).permute(0,2,1)
+        self.output = self.logits.max(dim=0)[0].reshape(bz, new_ch,1,1,1)
         # self.output, self.cam2d= self.imageNets(self.f)
+        self.raw_cam = self.cam3D
 
+        if Display_final_SAM:
+            with torch.no_grad():
+                activationLU = nn.ReLU()
+
+                post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,self.output)
+                # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
+
+                
+                self.cam3D = post_processed_masks 
+        # self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
 
     def optimization(self, frame_label):
         new_bz, D, ch= frame_label.size()
@@ -90,7 +105,7 @@ class _Model_infer(object):
         # self.set_requires_grad(self.imageNets, True)
         # self.set_requires_grad(self.resnet, True)
 
-        self.loss=  F.multilabel_soft_margin_loss(self.output.reshape(frame_label.size(0), frame_label.size(1)), frame_label)
+        self.loss=  F.multilabel_soft_margin_loss(self.logits.reshape(frame_label.size(0), frame_label.size(1)), frame_label)
         # self.lossEa.backward(retain_graph=True)
         self.loss.backward( )
 

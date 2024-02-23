@@ -162,7 +162,7 @@ while (1):
     if Evaluation == False:
         Model_infer.optimization(frame_level_label) 
     if Display_flag == True:
-        displayer.train_display(Model_infer,dataLoader,read_id)
+        displayer.train_display(Model_infer,dataLoader,read_id,Output_root)
         pass
 
     if dataLoader.all_read_flag ==1:

@@ -114,7 +114,7 @@ class _Model_infer(object):
             self.cam3D= cam_tensor_stack.reshape(bz, new_ch,D, new_H, new_W )
         new_bz, class_num= self.concatenated_tensor.size()
         self.logits = self.concatenated_tensor.reshape (bz,D,class_num).permute(0,2,1)
-        self.output = self.logits.max(dim=2)[0].view(bz, Obj_num,1,1,1)
+        self.output = self.logits.max(dim=2)[0].reshape(bz, Obj_num,1,1,1)
         self.raw_cam = self.cam3D
         if Display_final_SAM:
             with torch.no_grad():

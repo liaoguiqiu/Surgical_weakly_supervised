@@ -62,7 +62,7 @@ def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool =
         bz_i, ch_i, D_i, H_i, W_i = input.size()
 
         bz, ch, D, H, W = raw_masks.size()
-        video_predict = video_predict>0.5
+        video_predict = video_predict>0.05
         label_valid_repeat = video_predict.reshape(bz,ch,1,1,1).repeat(1,1,D,H,W)
         raw_masks = raw_masks*label_valid_repeat
         cam = (raw_masks>0.00)*raw_masks
