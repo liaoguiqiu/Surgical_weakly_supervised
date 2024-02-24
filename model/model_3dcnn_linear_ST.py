@@ -137,8 +137,8 @@ class _VideoCNN_S(nn.Module):
             Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
         
         slice_valid = Maxpool_keepD(input)
-        final = Maxpool_keepC(slice_valid)
-        # final = self.Top_rank_pooling(slice_valid,10)
+        # final = Maxpool_keepC(slice_valid)
+        final = self.Top_rank_pooling(slice_valid,4)
         # final = self.Threshold_pooling(slice_valid)
 
         #Note: how about add a number of object loss here ??
@@ -199,7 +199,7 @@ class _VideoCNN_S(nn.Module):
         # final = self.classifier(pooled)
         flag =random. choice([False, False])
         cam =  self.classifier(cat_feature)
-        cam = activationLU(cam)
+        # cam = activationLU(cam)
 
         if flag== True:
             # bz, ch, D, H, W = out.size()
