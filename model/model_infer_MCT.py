@@ -147,6 +147,7 @@ class _Model_infer(object):
         self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
         max_p,_ =  torch.max(self.c_logits,dim=2)
         self.output =max_p.reshape(bz, class_num,1,1,1)
+        self.raw_cam = self.cam3D
         if Display_final_SAM:
             with torch.no_grad():
                 activationLU = nn.ReLU()

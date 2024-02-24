@@ -52,7 +52,7 @@ def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, p
     predic_mask_3D = predic_mask_3D>0.1
     predic_mask_3D = torch.clamp(predic_mask_3D,0,1)
 
-    output_video_label = (output_video_label > 0.05) * 1
+    output_video_label = (output_video_label > 0.5) * 1
 
     output_video_label_expanded = output_video_label.reshape(ch, 1, 1, 1) 
     output_video_label_expanded = output_video_label_expanded.repeat(1, D, H, W)

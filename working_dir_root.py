@@ -45,7 +45,7 @@ if Linux_computer == True:
     train_sam_feature_dir = working_pcaso_raid+ "cholec80/train_sam_feature/"
     sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
 
-Fintune= True
+Fintune= False
 
 Evaluation = True
 img_size = 256
@@ -88,8 +88,8 @@ Save_sam_mask = False
 Load_flow = False
 Weight_decay =0.00001
 Max_lr = 0.001
-learningR = 0.0001
-learningR_res = 0.0001
+learningR = 0.00001
+learningR_res = 0.00001
 Call_gradcam = False 
 
 class Para(object):

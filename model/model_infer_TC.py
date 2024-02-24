@@ -86,9 +86,9 @@ class _Model_infer(object):
         self.Vit_encoder.to(device)
         self.sam_model .to (device)
         if Evaluation:
-             
-             self.VideoNets.eval()
-             self.VideoNets_S.eval()
+            pass
+            #  self.VideoNets.eval()
+            #  self.VideoNets_S.eval()
         else:
             self.VideoNets.train(True)
             self.VideoNets_S.train(True)

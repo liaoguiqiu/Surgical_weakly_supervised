@@ -55,7 +55,8 @@ class _Model_infer(object):
         self.resnet .to(device)
         self.cam = LayerCAM(self.resnet, 'layer4')
         if Evaluation:
-            self.resnet.eval()
+            pass
+            #self.resnet.eval()
         else:
             self.resnet.train(True)
            
@@ -121,9 +122,11 @@ class _Model_infer(object):
             with torch.no_grad():
                 activationLU = nn.ReLU()
 
-                post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,self.output)
-                # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
-
+                post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D),input,self.output)
+                # new_ch, new_bz,D, new_H, new_W = post_processed_masks.size()
+                # # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
+                # logits_repeat = self.logits >0.5
+                # logits_repeat =  logits_repeat.reshape(bz, new_ch,D, 1, 1 ).repeat(1, 1, 1, new_H, new_W)
                 
                 self.cam3D = post_processed_masks 
         # self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
