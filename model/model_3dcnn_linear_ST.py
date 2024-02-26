@@ -20,7 +20,7 @@ class _VideoCNN_S(nn.Module):
         # 256*256 - 128*256
         # limit=1024
         self.Random_mask_temporal =False
-        Drop_out = False
+        Drop_out = True
         if Evaluation == True:
             Drop_out = False
             self.Random_mask_temporal = False
@@ -166,7 +166,7 @@ class _VideoCNN_S(nn.Module):
         features=[]
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
-            if  j>0:
+            if  j>10:
 
                 out = Pure_down_pool(out)
 

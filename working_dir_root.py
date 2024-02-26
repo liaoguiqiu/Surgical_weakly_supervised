@@ -47,20 +47,20 @@ if Linux_computer == True:
 
 Fintune= False
 
-Evaluation = True
+Evaluation = False
 img_size = 256
 GPU_mode= True
 
 Continue_flag = True
-Test_on_cholec_seg8k= True
+Test_on_cholec_seg8k= False
 
 Visdom_flag = True
 if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
-Display_flag = True
-Display_student = True
-Display_final_SAM = True
+Display_flag = False
+Display_student = False
+Display_final_SAM = False
 Display_images= False
 Save_flag =True
 loadmodel_index = '4.pth'
@@ -80,7 +80,7 @@ if Load_feature == True:
 if Save_feature_OLG == True:
     Batch_size=1
 
-Enable_student = True
+Enable_student = False
 if Evaluation:
     Enable_student = True
 

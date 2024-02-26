@@ -96,7 +96,7 @@ Model_infer = model_infer_MCT._Model_infer(GPU_mode,num_gpus)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list='else')
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list='train')
  
 read_id = 0
 print(Model_infer.resnet)
@@ -158,17 +158,17 @@ while (1):
         epoch +=1
 
         print("finished epoch" + str (epoch) )
-        print ("all_labels")
+        print("all_labels")
         print(label_sum)
-        print ("all framez")
+        print("all framez")
         print(all_frame_sum)
         dataLoader.all_read_flag = 0
         read_id=0
     if Creat_balance_set == True:
-        if np.all(label_sum_appended > 200):
+        if np.all(label_sum_appended > 800):
             
                     
-                pkl_file_name = "train_set.pkl"
+                pkl_file_name = "train_set_balance_no8K.pkl"
                 pkl_file_path = os.path.join(train_test_list_dir, pkl_file_name)
                 with open(pkl_file_path, 'wb') as file:
                                 pickle.dump(training_list, file)

@@ -6,7 +6,7 @@ from dataset.dataset import myDataloader
 import model.base_models as block_buider
 from dataset.dataset import Obj_num, Seperate_LR
 import random
-from working_dir_root import Evaluation,Fintune
+from working_dir_root import Evaluation,Fintune,Enable_student
 # Seperate_LR = True # seperate left and right
 from model import model_operator 
 class _VideoCNN(nn.Module):
@@ -19,11 +19,14 @@ class _VideoCNN(nn.Module):
         # a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         # limit=1024
-        self.Random_mask_temporal =False
+        # self.Random_mask_temporal =False
         Drop_out = True
         if Evaluation == True:
             Drop_out = False
             self.Random_mask_temporal = False
+        if Enable_student == True:
+            Drop_out = False
+        self.Random_mask_temporal = False
         self.blocks = nn.ModuleList()
 
         #
@@ -166,7 +169,7 @@ class _VideoCNN(nn.Module):
         features=[]
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
-            if j>=10:
+            if j>=1:
 
                 out = Pure_down_pool(out)
 
@@ -197,9 +200,9 @@ class _VideoCNN(nn.Module):
         # pooled = pooled.view(out.size(0), -1)
         # Check the size of the final feature map
         # final = self.classifier(pooled)
-        flag =random. choice([True, False])
+        flag =random. choice([False, False])
         cam =  self.classifier(cat_feature)
-        # cam = activationLU(cam)
+        cam = activationLU(cam)
 
         if flag== True:
             # bz, ch, D, H, W = out.size()

@@ -62,13 +62,15 @@ def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool =
         bz_i, ch_i, D_i, H_i, W_i = input.size()
 
         bz, ch, D, H, W = raw_masks.size()
-        video_predict = video_predict>0.05
+        video_predict = video_predict>0.5
         label_valid_repeat = video_predict.reshape(bz,ch,1,1,1).repeat(1,1,D,H,W)
         raw_masks = raw_masks*label_valid_repeat
         cam = (raw_masks>0.00)*raw_masks
-        raw_masks = cam -torch.min(cam)
-        mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
-        raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001) *2
+        #channel wise 
+        for i in range(ch):
+            raw_masks[:,i,:,:,:] = cam[:,i,:,:,:] -torch.min(cam[:,i,:,:,:])
+            mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
+            raw_masks[:,i,:,:,:] = raw_masks[:,i,:,:,:] /(torch.max(raw_masks[:,i,:,:,:])+0.0000001) *2
         # raw_masks = raw_masks /(50+0.0000001) 
 
         # raw_masks = torch.clamp(raw_masks,0,1)    
