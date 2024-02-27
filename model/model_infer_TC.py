@@ -12,7 +12,7 @@ from image_operator import basic_operator
 import pydensecrf.densecrf as dcrf
 from pydensecrf.utils import unary_from_softmax
 from SAM.segment_anything import  SamPredictor, sam_model_registry
-from working_dir_root import Enable_student,Random_mask_temporal_feature,Random_mask_patch_feature
+from working_dir_root import Enable_student,Random_mask_temporal_feature,Random_mask_patch_feature,Display_fuse_TC_ST
 from model import model_operator
 # from MobileSAM.mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from dataset.dataset import label_mask,Mask_out_partial_label
@@ -195,7 +195,10 @@ class _Model_infer(object):
             output = self.output.detach().clone()
         if Display_student:
             with torch.no_grad():
-                self.cam3D = (self.cam3D_s.detach().clone() + self.cam3D)/2
+                if Display_fuse_TC_ST == True:
+                    self.cam3D = (self.cam3D_s.detach().clone() + self.cam3D)/2
+                else:
+                    self.cam3D = self.cam3D_s.detach().clone()
                 
                 output = self.output_s.detach().clone()
         self.raw_cam = self.cam3D.detach().clone()
@@ -210,7 +213,8 @@ class _Model_infer(object):
         # self.cam3D = self. sam_mask.to(self.device)  
         # self.cam3D = self.cam3D+stack
                 # self.cam3D = post_processed_masks
-
+        with torch.no_grad():
+            self.final_output = output.detach().clone()
     def loss_of_one_scale(self,output,label,BCEtype = 1):
         out_logits = output.view(label.size(0), -1)
         bz,length = out_logits.size()
@@ -262,7 +266,7 @@ class _Model_infer(object):
 
             # self.loss_s_pix = self.customeBCE_mask(self.cam3D_s_low  , self.cam3D_target   )
 
-            self.loss_s = self.loss_s_v  + 0.002*self.loss_s_pix
+            self.loss_s = self.loss_s_v  + 0.00001*self.loss_s_pix
             # self.set_requires_grad(self.VideoNets, False)
             self.loss_s.backward()
             self.optimizer_s.step()

@@ -169,7 +169,7 @@ class _VideoCNN(nn.Module):
         features=[]
         for j, name in enumerate(self.blocks):
             out = self.blocks[j](out)
-            if j>=1:
+            if j>=10:
 
                 out = Pure_down_pool(out)
 

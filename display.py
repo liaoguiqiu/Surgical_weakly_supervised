@@ -36,12 +36,12 @@ class Display(object):
     def train_display(self,MODEL_infer,mydata_loader, read_id,Output_root):
         # copy all the input videos and labels
         # cv2.destroyAllWindows()
-        if type(MODEL_infer.output) is list:
-            self.Model_infer.output= MODEL_infer.output[0]
+        if type(MODEL_infer.final_output) is list:
+            self.Model_infer.output= MODEL_infer.final_output[0]
 
             print("It's a list!")
         else:
-            self.Model_infer.output= MODEL_infer.output
+            self.Model_infer.output= MODEL_infer.final_output
 
             print("It's not a list.")
         # self.Model_infer.slice_valid = MODEL_infer.slice_valid

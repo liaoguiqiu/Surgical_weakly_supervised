@@ -45,22 +45,23 @@ if Linux_computer == True:
     train_sam_feature_dir = working_pcaso_raid+ "cholec80/train_sam_feature/"
     sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
 
-Fintune= False
+Fintune= True
 
-Evaluation = False
+Evaluation = True
 img_size = 256
 GPU_mode= True
 
 Continue_flag = True
-Test_on_cholec_seg8k= False
+Test_on_cholec_seg8k= True
 
 Visdom_flag = True
 if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
-Display_flag = False
-Display_student = False
-Display_final_SAM = False
+Display_flag = True
+Display_student = True
+Display_fuse_TC_ST = False
+Display_final_SAM = True
 Display_images= False
 Save_flag =True
 loadmodel_index = '4.pth'
@@ -80,7 +81,7 @@ if Load_feature == True:
 if Save_feature_OLG == True:
     Batch_size=1
 
-Enable_student = False
+Enable_student = True
 if Evaluation:
     Enable_student = True
 
@@ -88,8 +89,8 @@ Save_sam_mask = False
 Load_flow = False
 Weight_decay =0.00001
 Max_lr = 0.001
-learningR = 0.00001
-learningR_res = 0.00001
+learningR = 0.0001
+learningR_res = 0.0001
 Call_gradcam = False 
 
 class Para(object):

@@ -70,7 +70,7 @@ def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool =
         for i in range(ch):
             raw_masks[:,i,:,:,:] = cam[:,i,:,:,:] -torch.min(cam[:,i,:,:,:])
             mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
-            raw_masks[:,i,:,:,:] = raw_masks[:,i,:,:,:] /(torch.max(raw_masks[:,i,:,:,:])+0.0000001) *2
+            raw_masks[:,i,:,:,:] = raw_masks[:,i,:,:,:] /(torch.max(raw_masks[:,i,:,:,:])+0.0000001) *4
         # raw_masks = raw_masks /(50+0.0000001) 
 
         # raw_masks = torch.clamp(raw_masks,0,1)    

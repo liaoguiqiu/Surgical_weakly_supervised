@@ -135,6 +135,11 @@ class myDataloader(object):
             else:
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec)
             if Train_list == "train":
+                # train_set_no8k
+                # self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set')
+
+                # self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set_no8k')
+
                 self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set_balance_no8K')
             if Test_on_cholec_seg8k ==True:
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec8k)
