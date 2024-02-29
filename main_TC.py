@@ -52,7 +52,7 @@ else:
     device = torch.device("cpu")
 
 # dataroot = "../dataset/CostMatrix/"
-torch.set_num_threads(2)
+# torch.set_num_threads(8)
  # create the model
 
 if Visdom_flag == True:

@@ -54,6 +54,9 @@ class Display(object):
         self.Model_infer.input_resample = MODEL_infer.input_resample
         self.dataLoader.all_raw_labels = mydata_loader.all_raw_labels
        
+
+        self.Model_infer.direct_frame_output  = MODEL_infer.direct_frame_output
+
         if Test_on_cholec_seg8k:
             self.dataLoader.this_label_mask = mydata_loader.this_label_mask
             self.dataLoader.this_frame_label = mydata_loader.this_frame_label
@@ -66,7 +69,8 @@ class Display(object):
 
             # self.Model_infer.cam3D[0,2:7,:,:]*=0
             # label_mask[2:7,:,:]*=0
-            eval.cal_all_metrics(read_id,Output_root,label_mask,frame_label,video_label, self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach())
+            eval.cal_all_metrics(read_id,Output_root,label_mask,frame_label,video_label, 
+                                 self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach(),self.Model_infer.direct_frame_output[0])
             
             
             # print("iou" + str(this_iou))

@@ -215,6 +215,7 @@ class _Model_infer(object):
                 # self.cam3D = post_processed_masks
         with torch.no_grad():
             self.final_output = output.detach().clone()
+            self.direct_frame_output = None
     def loss_of_one_scale(self,output,label,BCEtype = 1):
         out_logits = output.view(label.size(0), -1)
         bz,length = out_logits.size()

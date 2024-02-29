@@ -39,8 +39,9 @@ class _Model_infer(object):
         self.imageNets.train(True)
         self.resnet.train(True)
         if Evaluation:
-             self.imageNets.eval( )
-             self.resnet.eval( )
+            pass
+            #  self.imageNets.eval( )
+            #  self.resnet.eval( )
 
         
         weight_tensor = torch.tensor(class_weights, dtype=torch.float)
@@ -84,6 +85,7 @@ class _Model_infer(object):
         self.cam3D=  self.cam2d.reshape (bz,D,new_ch,new_H, new_W).permute(0,2,1,3,4)
         # self.logits = self.output.reshape (bz,D,ch).permute(0,2,1)
         self.output = self.logits.max(dim=0)[0].reshape(bz, new_ch,1,1,1)
+        self.logits = self.logits.reshape (bz,D,new_ch).permute(0,2,1)
         # self.output, self.cam2d= self.imageNets(self.f)
         self.raw_cam = self.cam3D
 
@@ -97,7 +99,9 @@ class _Model_infer(object):
                 
                 self.cam3D = post_processed_masks 
         # self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
-
+        with torch.no_grad():
+            self.final_output = self.output.detach().clone()
+            self.direct_frame_output = self.logits.detach().clone()
     def optimization(self, frame_label):
         new_bz, D, ch= frame_label.size()
         frame_label = frame_label.reshape(new_bz*D,ch)

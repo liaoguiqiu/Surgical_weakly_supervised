@@ -129,7 +129,10 @@ class _Model_infer(object):
                 # logits_repeat =  logits_repeat.reshape(bz, new_ch,D, 1, 1 ).repeat(1, 1, 1, new_H, new_W)
                 
                 self.cam3D = post_processed_masks 
+                self.direct_frame_output = self.logits.detach().clone()
+                self.final_output = self.output.detach().clone()
         # self.output, self.slice_valid, self. cam3D= self.VideoNets(self.f,self.c_logits,self.p_logits)
+
     def optimization(self, label,frame_label):
         new_bz, D, ch= frame_label.size()
         frame_label = frame_label.reshape(new_bz*D,ch)

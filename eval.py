@@ -41,7 +41,7 @@ def cal_ap_frame(true, predict):
 
     return average_precision_frame
 
-def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, predic_mask_3D, output_video_label):
+def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, predic_mask_3D, output_video_label,output_frame_label):
     device = label_mask.device
     predic_mask_3D=predic_mask_3D.to(device)
     ch, D, H, W = label_mask.size()
@@ -72,6 +72,11 @@ def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, p
     video_ap = cal_ap_video(video_label, output_video_label)
     print("Video AP from model output:", video_ap)
     predic_frame = (predic_frame > 20) * 1
+    if output_frame_label is not None:
+        predic_frame = (output_frame_label > 0.5) * 1
+
+
+
     frame_ap = cal_ap_frame(frame_label, predic_frame)
     print("Frame AP from model output:", frame_ap)
 

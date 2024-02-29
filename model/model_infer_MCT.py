@@ -157,6 +157,9 @@ class _Model_infer(object):
 
                 
                 self.cam3D = post_processed_masks 
+        with torch.no_grad():
+            self.final_output = self.output.detach().clone()
+            self.direct_frame_output = self.c_logits.detach().clone()
     def optimization(self, label,frame_label):
         new_bz, D, ch= frame_label.size()
         frame_label = frame_label.reshape(new_bz*D,ch)

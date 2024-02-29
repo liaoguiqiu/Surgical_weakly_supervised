@@ -106,7 +106,7 @@ if Continue_flag == False:
     # Model_infer.Vit_encoder.apply(weights_init)
 
 else:
-    pretrained_dict = torch.load(Output_root + 'outNets_res' + loadmodel_index )
+    pretrained_dict = torch.load(Output_root + 'outNets_res' + loadmodel_index, map_location=device )
     # model_dict = Model_infer.VideoNets.state_dict()
 
     # # 1. filter out unnecessary keys
