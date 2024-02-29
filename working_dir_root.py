@@ -82,6 +82,7 @@ if Save_feature_OLG == True:
     Batch_size=1
 
 Enable_student = True
+Enable_teacher = False
 if Evaluation:
     Enable_student = True
 

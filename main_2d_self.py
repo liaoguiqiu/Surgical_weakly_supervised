@@ -98,7 +98,7 @@ Model_infer = model_infer_2d_self._Model_infer(GPU_mode,num_gpus,Name=Name)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=False,Train_list="else")
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=False,Train_list="train")
 
 if Continue_flag == False:
      

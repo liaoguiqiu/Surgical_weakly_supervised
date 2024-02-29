@@ -6,6 +6,7 @@ import cv2
 from model.model_3dcnn_linear_TC import _VideoCNN
 from model.model_3dcnn_linear_ST import _VideoCNN_S
 from working_dir_root import learningR,learningR_res,SAM_pretrain_root,Load_feature,Weight_decay,Evaluation,Display_student,Display_final_SAM
+from working_dir_root import Enable_teacher
 from dataset.dataset import class_weights
 import numpy as np
 from image_operator import basic_operator   
@@ -266,8 +267,11 @@ class _Model_infer(object):
             self.loss_s_pix = self.customeBCE_mask(predit_mask,  target_mask)
 
             # self.loss_s_pix = self.customeBCE_mask(self.cam3D_s_low  , self.cam3D_target   )
-
-            self.loss_s = self.loss_s_v  + 0.00001*self.loss_s_pix
+            if Enable_teacher:
+                self.loss_s = self.loss_s_v  + 0.00001*self.loss_s_pix
+            else:
+                self.loss_s = self.loss_s_v  
+            
             # self.set_requires_grad(self.VideoNets, False)
             self.loss_s.backward()
             self.optimizer_s.step()
