@@ -70,7 +70,7 @@ class Display(object):
             # self.Model_infer.cam3D[0,2:7,:,:]*=0
             # label_mask[2:7,:,:]*=0
             eval.cal_all_metrics(read_id,Output_root,label_mask,frame_label,video_label, 
-                                 self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach(),self.Model_infer.direct_frame_output[0])
+                                 self.Model_infer.cam3D[0],self.Model_infer.output[0,:,0,0,0].detach(),self.Model_infer.direct_frame_output)
             
             
             # print("iou" + str(this_iou))

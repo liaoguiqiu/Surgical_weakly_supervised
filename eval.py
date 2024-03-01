@@ -73,7 +73,7 @@ def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, p
     print("Video AP from model output:", video_ap)
     predic_frame = (predic_frame > 20) * 1
     if output_frame_label is not None:
-        predic_frame = (output_frame_label > 0.5) * 1
+        predic_frame = (output_frame_label[0] > 0.5) * 1
 
 
 
