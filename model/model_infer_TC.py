@@ -24,7 +24,7 @@ if Evaluation == True:
     Weight_decay=0
 # learningR = 0.0001
 class _Model_infer(object):
-    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True):
+    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True):
         if GPU_mode ==True:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -48,7 +48,7 @@ class _Model_infer(object):
         sam_predictor = SamPredictor(sam)
         self.sam_model = sam_predictor.model
         self.VideoNets = _VideoCNN()
-        self.VideoNets_S = _VideoCNN_S()
+        self.VideoNets_S = _VideoCNN_S(Using_spatial_conv)
         self.input_size = 1024
         resnet18 = models.resnet18(pretrained=True)
         self.gradcam = None
@@ -177,7 +177,7 @@ class _Model_infer(object):
         else:
             with torch.no_grad():
                 self.f = features
-        flag =random. choice([False, True])
+        flag =random. choice([True, True])
         self.fm =self.f
         if  Random_mask_temporal_feature == True:
             self.fm =   model_operator.random_mask_out_dimension(self.fm, 0.5, dim=2)
