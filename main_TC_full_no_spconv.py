@@ -214,9 +214,9 @@ while (1):
         
         if read_id % 50== 0 and Visdom_flag == True  :
             
-            plotter.plot('l0', 'l0', 'l0', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
+            plotter.plot('l0full_no_spatial', 'l0full_no_spatial', 'l0full_no_spatial', visdom_id, Model_infer.lossDisplay.cpu().detach().numpy())
             if Enable_student:
-                plotter.plot('1ls', '1ls', 'l1s', visdom_id, Model_infer.lossDisplay_s.cpu().detach().numpy())
+                plotter.plot('1lsfull_no_spatial', '1lsfull_no_spatial', 'l1sfull_no_spatial', visdom_id, Model_infer.lossDisplay_s.cpu().detach().numpy())
         if read_id % 1== 0   :
             print(" epoch" + str (epoch) )
             print(" loss" + str (Model_infer.lossDisplay.cpu().detach().numpy()) )
