@@ -48,7 +48,7 @@ class _Model_infer(object):
         sam_predictor = SamPredictor(sam)
         self.sam_model = sam_predictor.model
         self.VideoNets = _VideoCNN()
-        self.VideoNets_S = _VideoCNN_S(Using_spatial_conv)
+        self.VideoNets_S = _VideoCNN_S(Using_spatial_conv=Using_spatial_conv)
         self.input_size = 1024
         resnet18 = models.resnet18(pretrained=True)
         self.gradcam = None
