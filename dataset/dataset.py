@@ -146,7 +146,7 @@ class myDataloader(object):
             if Test_on_cholec_seg8k ==True:
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec8k)
         self.video_num = len (self.all_video_dir_list)
-
+        self.all_video_dir_list = sorted(self.all_video_dir_list)
         #Guiqiu modified for my computer
         # self.com_dir =  Generator_Contour_sheath().com_dir # this dir is for the OLG
         # if self.OLG_flag == True:
