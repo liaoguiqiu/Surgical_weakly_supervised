@@ -24,7 +24,7 @@ if Evaluation == True:
     Weight_decay=0
 # learningR = 0.0001
 class _Model_infer(object):
-    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True):
+    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True,Student_be_teacher=False):
         if GPU_mode ==True:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -47,7 +47,10 @@ class _Model_infer(object):
         self.Vit_encoder = sam.image_encoder
         sam_predictor = SamPredictor(sam)
         self.sam_model = sam_predictor.model
-        self.VideoNets = _VideoCNN()
+        if Student_be_teacher==False:
+            self.VideoNets = _VideoCNN()
+        else:
+            self.VideoNets =  _VideoCNN_S(Using_spatial_conv=Using_spatial_conv)
         self.VideoNets_S = _VideoCNN_S(Using_spatial_conv=Using_spatial_conv)
         self.input_size = 1024
         resnet18 = models.resnet18(pretrained=True)

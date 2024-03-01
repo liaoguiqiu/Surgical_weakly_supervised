@@ -32,7 +32,7 @@ from dataset import io
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
-Output_root = Output_root+ "temporal consistent_full_no_spatial/"
+Output_root = Output_root+ "temporal consistent_full_no_spatial_student_be_teacher/"
 io.self_check_path_create(Output_root)
 
 import pickle
@@ -102,7 +102,7 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus,Enable_teacher=True,Using_spatial_conv=False)
+Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus,Enable_teacher=True,Using_spatial_conv=False,Student_be_teacher=True)
 # if GPU_mode == True:
 #     if num_gpus > 1:
 #         Model_infer.VideoNets = torch.nn.DataParallel(Model_infer.VideoNets)
@@ -153,6 +153,7 @@ displayer = Display(GPU_mode)
 epoch =0
 features =None
 visdom_id=0
+Enable_student=False
 while (1):
     start_time = time()
     input_videos, labels= dataLoader.read_a_batch()
@@ -238,8 +239,7 @@ while (1):
 
     read_id+=1
     visdom_id+=1
-    if epoch>8:
-        Enable_student =True
+     
     # print(labels)
 
     # pass

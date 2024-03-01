@@ -47,11 +47,11 @@ if Linux_computer == True:
 
 Fintune= True
 
-Evaluation = True
+Evaluation = False
 img_size = 256
 GPU_mode= True
 
-Continue_flag = True
+Continue_flag = False
 Test_on_cholec_seg8k= True
 
 Visdom_flag = True
@@ -59,7 +59,7 @@ if Evaluation == True:
     Continue_flag = True
     Visdom_flag= False
 Display_flag = True
-Display_student = True
+Display_student = False
 Display_fuse_TC_ST = False
 Display_final_SAM = True
 Display_images= False
