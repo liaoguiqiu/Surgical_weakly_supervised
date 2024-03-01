@@ -141,6 +141,8 @@ class myDataloader(object):
                 # self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set_no8k')
 
                 self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set_balance_no8K')
+            elif Train_list == "train_raw":
+                self.all_video_dir_list = io.read_a_pkl(train_test_list_dir, 'train_set_no8k')
             if Test_on_cholec_seg8k ==True:
                 self.all_video_dir_list = os.listdir(Dataset_video_pkl_cholec8k)
         self.video_num = len (self.all_video_dir_list)

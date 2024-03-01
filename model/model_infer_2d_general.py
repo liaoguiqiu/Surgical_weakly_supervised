@@ -15,8 +15,9 @@ from timm.utils import NativeScaler
 from model import model_operator
 import torchvision.models as models
 
-from torchcam.methods import CAM,LayerCAM,GradCAM
+from torchcam.methods import CAM,LayerCAM,GradCAM,SmoothGradCAMpp,XGradCAM
 Show_cam = False
+Activation_base= False
 # learningR = 0.0001
 class _Model_infer(object):
     def __init__(self, GPU_mode =True,num_gpus=1,Name= None):
@@ -36,7 +37,7 @@ class _Model_infer(object):
         # self.set_requires_grad(self.Vit_encoder, True)
 
        
-        self.input_size = 512
+        self.input_size = 384
         # resnet18 = models_torch.resnet18(pretrained=True)
         self.gradcam = None
         # Remove the fully connected layers at the end
@@ -53,7 +54,9 @@ class _Model_infer(object):
                
          
         self.resnet .to(device)
-        self.cam = LayerCAM(self.resnet, 'layer4')
+        # self.cam = GradCAM(self.resnet, 'layer4')
+        self.cam = XGradCAM(self.resnet, 'layer3')
+
         if Evaluation:
             pass
             #self.resnet.eval()
@@ -104,11 +107,16 @@ class _Model_infer(object):
             for id in range(Obj_num):
                 # self.optimizer.zero_grad()
                         # Call the cam function for the current class index
-                self.concatenated_tensor = self.resnet((flattened_tensor-128.0)/60.0)
-                
-                cam_tensor = self.cam(class_idx=id,scores=self.concatenated_tensor)  # Assuming cam() is a function defined elsewhere
-                # Append the cam tensor to the list
-                cam_tensors.append(cam_tensor[0])
+                if Activation_base == False:
+                    self.concatenated_tensor = self.resnet((flattened_tensor-128.0)/60.0)
+                    
+                    cam_tensor = self.cam(class_idx=id,scores=self.concatenated_tensor)  # Assuming cam() is a function defined elsewhere
+                    # Append the cam tensor to the list
+                    cam_tensors.append(cam_tensor[0])
+                else:
+                    cam_tensor = self.cam(class_idx=id)  # Assuming cam() is a function defined elsewhere
+                    # Append the cam tensor to the list
+                    cam_tensors.append(cam_tensor[0])
 
             cam_tensor_stack = torch.stack(cam_tensors, dim=0)
             new_ch, new_bz, new_H, new_W = cam_tensor_stack.size()

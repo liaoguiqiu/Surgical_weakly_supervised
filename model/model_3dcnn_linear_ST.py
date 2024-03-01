@@ -199,7 +199,7 @@ class _VideoCNN_S(nn.Module):
         # final = self.classifier(pooled)
         flag =random. choice([False, False])
         cam =  self.classifier(cat_feature)
-        cam = activationLU(cam)
+        # cam = activationLU(cam)
 
         if flag== True:
             # bz, ch, D, H, W = out.size()

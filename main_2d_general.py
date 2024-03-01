@@ -25,7 +25,7 @@ from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag 
 from working_dir_root import Evaluation
 Load_feature = False
 
-Name = "Layer_cam"
+Name = "Grad_cam"
 # GPU_mode= True
 # Continue_flag = True
 # Visdom_flag = False

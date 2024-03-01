@@ -32,7 +32,7 @@ from dataset import io
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
-Output_root = Output_root+ "temporal consistent/"
+Output_root = Output_root+ "temporal consistent_raw_train/"
 io.self_check_path_create(Output_root)
 
 import pickle
@@ -109,7 +109,8 @@ Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus,Enable_teacher=False
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list='train')
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,
+                          Load_flow=Load_flow, Load_feature=Load_feature,Train_list='train_raw')
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
