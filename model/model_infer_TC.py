@@ -23,11 +23,27 @@ if Evaluation == True:
     learningR=0
     Weight_decay=0
 # learningR = 0.0001
+def select_gpus(gpu_selection):
+    if torch.cuda.is_available():
+        num_gpus = torch.cuda.device_count()
+        print("Number of GPUs available:", num_gpus)
+        if gpu_selection == "all":
+            device = torch.device("cuda:0" if num_gpus > 0 else "cpu")
+            if num_gpus > 1:
+                device = torch.device("cuda:0" + "," + ",".join([str(i) for i in range(1, num_gpus)]))
+        elif gpu_selection.isdigit():
+            gpu_index = int(gpu_selection)
+            device = torch.device("cuda:" + str(gpu_index) if gpu_index < num_gpus else "cpu")
+        else:
+            device = torch.device("cpu")
+    else:
+        device = torch.device("cpu")
+    return device
 class _Model_infer(object):
-    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True,Student_be_teacher=False):
+    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True,Student_be_teacher=False,gpu_selection = "all"):
         if GPU_mode ==True:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+            # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device = select_gpus(gpu_selection)
         else:
             device = torch.device("cpu")
         self.device = device
@@ -68,7 +84,7 @@ class _Model_infer(object):
         #     self.VideoNets.cuda()
         
         if GPU_mode == True:
-            if num_gpus > 1:
+            if num_gpus > 1 and gpu_selection == "all":
                 # self.VideoNets.classifier = torch.nn.DataParallel(self.VideoNets.classifier)
                 # self.VideoNets.blocks = torch.nn.DataParallel(self.VideoNets.blocks)
                 self.VideoNets = torch.nn.DataParallel(self.VideoNets)
@@ -211,7 +227,7 @@ class _Model_infer(object):
                 post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,output)
                 # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
 
-                # post_processed_masks =model_operator.sam_mask_prompt_decode(self.sam_model,post_processed_masks,self.f)
+                post_processed_masks =model_operator.sam_mask_prompt_decode(self.sam_model,post_processed_masks,self.f)
                 self.cam3D = post_processed_masks.to(self.device) 
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  

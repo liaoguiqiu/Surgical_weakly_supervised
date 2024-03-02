@@ -164,7 +164,7 @@ class Display(object):
                 stack = cv2.applyColorMap(stack.astype((np.uint8)), cv2.COLORMAP_JET)
                 # stack = cv2.merge((stack, stack, stack))
 
-                alpha= 0.5
+                alpha= 0.6
                 overlay = cv2.addWeighted(stack1.astype((np.uint8)), 1 - alpha, stack.astype((np.uint8)), alpha, 0)
                 # stack =  stack - np.min(stack)
                 infor_image = this_image*0

@@ -102,14 +102,14 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus,Enable_teacher=False)
+Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus,Enable_teacher=True)
 # if GPU_mode == True:
 #     if num_gpus > 1:
 #         Model_infer.VideoNets = torch.nn.DataParallel(Model_infer.VideoNets)
 #     Model_infer.VideoNets.to(device)
 
 # Model.cuda()
-dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list='train')
+dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read_from_pkl= True,Save_pkl = False,Load_flow=Load_flow, Load_feature=Load_feature,Train_list='small')
 
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)

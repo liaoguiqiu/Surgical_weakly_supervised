@@ -55,7 +55,7 @@ def hide_patch(video_feature, patch_num=32, hide_prob=0.5, value=0,image_level= 
 def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool = False):
         bz, ch, D, H, W = raw_masks.size()
         
-        process_size =128
+        process_size =256
         raw_masks =   F.interpolate(raw_masks,  size=(D, process_size, process_size), mode='trilinear', align_corners=False)
         input =   F.interpolate(input,  size=(D, process_size, process_size), mode='trilinear', align_corners=False)
 
@@ -64,15 +64,15 @@ def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool =
         bz, ch, D, H, W = raw_masks.size()
         video_predict = video_predict>0.5
         label_valid_repeat = video_predict.reshape(bz,ch,1,1,1).repeat(1,1,D,H,W)
-        raw_masks = raw_masks*label_valid_repeat
+        
         cam = (raw_masks>0.00)*raw_masks
         #channel wise 
         for i in range(ch):
             raw_masks[:,i,:,:,:] = cam[:,i,:,:,:] -torch.min(cam[:,i,:,:,:])
             mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
-            raw_masks[:,i,:,:,:] = raw_masks[:,i,:,:,:] /(torch.max(raw_masks[:,i,:,:,:])+0.0000001)*4
+            raw_masks[:,i,:,:,:] = raw_masks[:,i,:,:,:] /(torch.max(raw_masks[:,i,:,:,:] )+0.0000001)
         # raw_masks = raw_masks /(50+0.0000001) 
-
+        raw_masks = raw_masks*label_valid_repeat
         # raw_masks = torch.clamp(raw_masks,0,1)    
         # mask_resample =   F.interpolate(raw_masks,  size=(D, H_i, W_i), mode='trilinear', align_corners=False)
         binary_mask =   raw_masks 
@@ -102,10 +102,13 @@ def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool =
                         this_input_image=  flattened_video[j,:,:,:]
 
                         this_input_mask =  flattened_mask[j,i,:,:]
+                        this_input_mask =(this_input_mask >0.25) 
+
                         forground_num =  int(torch.sum(this_input_mask>0.2).item())
                         if forground_num>30:
-                        # this_input_mask =(this_input_mask >0.2) 
-                            this_input_mask= torch.tensor( post_process_softmask(this_input_mask,this_input_image))
+                            # this_input_mask= torch.tensor( post_process_softmask(this_input_mask,this_input_image))
+                            this_input_mask= torch.tensor( post_process_softmask2(this_input_mask))
+
                             # this_input_mask= torch.tensor( post_process_softmask2(this_input_mask))
 
 
@@ -158,7 +161,7 @@ def sam_mask_prompt_decode(sam_model,raw_masks,features,multimask_output: bool =
 
                         this_input_mask =  flattened_mask[j,i,:,:]
                         this_feature= flattened_feature[j:j+1,:,:,:]
-                        this_input_mask =(this_input_mask >0.1)*1
+                        this_input_mask =(this_input_mask >0.5)*1
                       
                         # this_input_mask =(this_input_mask>125)*1.0
                         
@@ -166,7 +169,7 @@ def sam_mask_prompt_decode(sam_model,raw_masks,features,multimask_output: bool =
                         # coordinates= coordinates.cuda()
                         # labels = torch.ones(bz * D,1)
                         forground_num =  int(torch.sum(this_input_mask).item())
-                        if forground_num>30:
+                        if forground_num>40:
                             foreground_indices = torch.nonzero(this_input_mask > 0.5, as_tuple=False)
                             # cntral = extract_central_point_coordinates(this_input_mask)
                                 # Extract coordinates from indices
@@ -189,7 +192,7 @@ def decode_mask_with_multi_coord(sam_model,foreground_coordinates,this_feature):
         N = foreground_coordinates.size(0)
 
 # Calculate the step size
-        step = N // 30
+        step = N // 10
 
         # Sample coordinates using the step size
         if step == 0:
@@ -229,7 +232,7 @@ def decode_mask_with_multi_coord(sam_model,foreground_coordinates,this_feature):
             masks.append(this_mask)
         masks = torch.stack(masks)
         sum_mask = torch.sum(masks,dim=0)
-        out_mask= (sum_mask>(15))*1.0
+        out_mask= (sum_mask>(5))*1.0
         # out_mask = this_mask
         return out_mask
      
@@ -252,20 +255,9 @@ def extract_central_point_coordinates(masks):
         
         # Return centroid coordinates reshaped to [bz, 1, 2]
         return centroid.view(1, 1, 2)
+
 def post_process_softmask(mask,image):
-        def apply_opening(mask, kernel_size=3):
-            """
-            Apply opening operation to the mask.
-            
-            Parameters:
-                mask (ndarray): Binary mask array.
-                kernel_size (int): Size of the kernel for morphological opening.
-            
-            Returns:
-                ndarray: Mask after applying morphological opening.
-            """
-            kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        
         
         image= image.permute(1,2,0)
         # mask = (mask>0.05)*mask
@@ -289,9 +281,7 @@ def post_process_softmask(mask,image):
         # # Apply morphological opening if needed
         final_seg = apply_opening(final_seg.astype(np.uint8), kernel_size=5)
         return final_seg
-
-def post_process_softmask2(mask ):
-        def apply_opening(mask, kernel_size=3):
+def apply_opening(mask, kernel_size=3):
             """
             Apply opening operation to the mask.
             
@@ -304,6 +294,21 @@ def post_process_softmask2(mask ):
             """
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+def apply_closing(mask, kernel_size=3):
+    """
+    Apply closing operation to the mask.
+    
+    Parameters:
+        mask (ndarray): Binary mask array.
+        kernel_size (int): Size of the kernel for morphological closing.
+    
+    Returns:
+        ndarray: Mask after applying morphological closing.
+    """
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+    return cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+def post_process_softmask2(mask ):
+        
         
         
         # mask = mask -torch.min(mask)
@@ -321,6 +326,15 @@ def post_process_softmask2(mask ):
 
         # Apply morphological opening if needed
         final_seg = apply_opening(mask_uint8.astype(np.uint8), kernel_size=5)
+        final_seg = apply_closing(final_seg.astype(np.uint8), kernel_size=5)
+        final_seg = apply_closing(final_seg.astype(np.uint8), kernel_size=5)
+
+        final_seg = apply_opening(final_seg.astype(np.uint8), kernel_size=5)
+        final_seg = apply_closing(final_seg.astype(np.uint8), kernel_size=3)
+        final_seg = apply_closing(final_seg.astype(np.uint8), kernel_size=3)
+
+
+
         return final_seg
 
 def CAM_to_slice_hardlabel(cam,video_predict):

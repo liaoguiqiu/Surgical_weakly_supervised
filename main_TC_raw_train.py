@@ -45,11 +45,11 @@ if torch.cuda.is_available():
     print(torch.cuda.is_available())
     num_gpus = torch.cuda.device_count()
     print("Number of GPUs available:", num_gpus)
-if GPU_mode ==True:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# if GPU_mode ==True:
+#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-else:
-    device = torch.device("cpu")
+# else:
+#     device = torch.device("cpu")
 
 # dataroot = "../dataset/CostMatrix/"
 # torch.set_num_threads(8)
@@ -102,7 +102,8 @@ else:
     print("No external drives found.")
 ############ for the linux to find the extenral drive
 
-Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus,Enable_teacher=True)
+Model_infer = model_infer_TC._Model_infer(GPU_mode,num_gpus,Enable_teacher=True,gpu_selection="1")
+device = Model_infer.device
 # if GPU_mode == True:
 #     if num_gpus > 1:
 #         Model_infer.VideoNets = torch.nn.DataParallel(Model_infer.VideoNets)

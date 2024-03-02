@@ -85,6 +85,7 @@ class _Model_infer(object):
 
         # max_p,_ =  torch.max(self.c_logits,dim=2)
         # self.output =max_p.reshape(bz, class_num,1,1,1)
+        self.raw_cam = self.cam3D
         if Display_final_SAM:
             with torch.no_grad():
                 activationLU = nn.ReLU()
@@ -94,6 +95,9 @@ class _Model_infer(object):
 
                 
                 self.cam3D = post_processed_masks 
+        with torch.no_grad():
+            self.final_output = self.output.detach().clone()
+            self.direct_frame_output = None
     def optimization(self, label):
         self.optimizer.zero_grad()
         self.set_requires_grad(self.VideoNets, True)
