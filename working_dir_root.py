@@ -52,7 +52,7 @@ img_size = 256
 GPU_mode= True
 
 Continue_flag = True
-Test_on_cholec_seg8k= False
+Test_on_cholec_seg8k= True
 
 Visdom_flag = True
 if Evaluation == True:

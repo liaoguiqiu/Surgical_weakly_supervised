@@ -192,7 +192,7 @@ def decode_mask_with_multi_coord(sam_model,foreground_coordinates,this_feature):
         N = foreground_coordinates.size(0)
 
 # Calculate the step size
-        step = N // 10
+        step = N // 20
 
         # Sample coordinates using the step size
         if step == 0:
@@ -232,7 +232,7 @@ def decode_mask_with_multi_coord(sam_model,foreground_coordinates,this_feature):
             masks.append(this_mask)
         masks = torch.stack(masks)
         sum_mask = torch.sum(masks,dim=0)
-        out_mask= (sum_mask>(5))*1.0
+        out_mask= (sum_mask>(2))*1.0
         # out_mask = this_mask
         return out_mask
      
