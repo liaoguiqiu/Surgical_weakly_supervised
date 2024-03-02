@@ -30,7 +30,7 @@ def select_gpus(gpu_selection):
         if gpu_selection == "all":
             device = torch.device("cuda:0" if num_gpus > 0 else "cpu")
             if num_gpus > 1:
-                device = torch.device("cuda:0" + "," + ",".join([str(i) for i in range(1, num_gpus)]))
+                device = torch.device("cuda:0" + ("," if num_gpus > 1 else "") + ",".join([str(i) for i in range(1, num_gpus)]))
         elif gpu_selection.isdigit():
             gpu_index = int(gpu_selection)
             device = torch.device("cuda:" + str(gpu_index) if gpu_index < num_gpus else "cpu")
