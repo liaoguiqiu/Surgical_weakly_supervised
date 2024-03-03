@@ -70,7 +70,7 @@ def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool =
         for i in range(ch):
             raw_masks[:,i,:,:,:] = cam[:,i,:,:,:] -torch.min(cam[:,i,:,:,:])
             mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
-            raw_masks[:,i,:,:,:] = raw_masks[:,i,:,:,:] /(torch.max(raw_masks[:,i,:,:,:] )+0.0000001)
+            raw_masks[:,i,:,:,:] = raw_masks[:,i,:,:,:] /(torch.max(raw_masks[:,i,:,:,:] )+0.0000001)*4
         # raw_masks = raw_masks /(50+0.0000001) 
         raw_masks = raw_masks*label_valid_repeat
         # raw_masks = torch.clamp(raw_masks,0,1)    
@@ -102,12 +102,13 @@ def Cam_mask_post_process(raw_masks,input,video_predict,multimask_output: bool =
                         this_input_image=  flattened_video[j,:,:,:]
 
                         this_input_mask =  flattened_mask[j,i,:,:]
-                        this_input_mask =(this_input_mask >0.25) 
+                        # this_input_mask =(this_input_mask >0.25) 
 
                         forground_num =  int(torch.sum(this_input_mask>0.2).item())
                         if forground_num>30:
-                            # this_input_mask= torch.tensor( post_process_softmask(this_input_mask,this_input_image))
-                            this_input_mask= torch.tensor( post_process_softmask2(this_input_mask))
+                            this_input_mask= torch.tensor( post_process_softmask(this_input_mask,this_input_image))
+                            # this_input_mask= torch.tensor( post_process_softmask2(this_input_mask))
+                            binary_mask =  clear_boundary(binary_mask)
 
                             # this_input_mask= torch.tensor( post_process_softmask2(this_input_mask))
 
@@ -354,7 +355,7 @@ def CAM_to_slice_hardlabel(cam,video_predict):
         slice_hard_label = (count_masks>20)*1.0
         return slice_hard_label,binary_mask
 def clear_boundary(masks):
-        boundary_size =5
+        boundary_size =10
         masks[:,:,:,:boundary_size, :] = 0
         masks[:,:,:,-boundary_size:, :] = 0
         masks[:,:,:,:, :boundary_size] = 0

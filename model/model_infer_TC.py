@@ -220,14 +220,14 @@ class _Model_infer(object):
                 else:
                     self.cam3D = self.cam3D_s.detach().clone()
                 
-                output = self.output_s.detach().clone()
+                #output = self.output_s.detach().clone()
         self.raw_cam = self.cam3D.detach().clone()
         if Display_final_SAM:
             with torch.no_grad():
                 post_processed_masks=model_operator.Cam_mask_post_process(activationLU(self.cam3D), input,output)
                 # self.sam_mask_prompt_decode(activationLU(self.cam3D),self.f,input)
 
-                post_processed_masks =model_operator.sam_mask_prompt_decode(self.sam_model,post_processed_masks,self.f)
+                # post_processed_masks =model_operator.sam_mask_prompt_decode(self.sam_model,post_processed_masks,self.f)
                 self.cam3D = post_processed_masks.to(self.device) 
         # self. sam_mask =   F.interpolate(self. sam_mask,  size=(D, 32, 32), mode='trilinear', align_corners=False)
         # self.cam3D = self. sam_mask.to(self.device)  
