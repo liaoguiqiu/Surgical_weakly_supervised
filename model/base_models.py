@@ -26,7 +26,7 @@ def build_3dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
 
                 nn.LeakyReLU(0.2),
                 # nn.ReLU(),
-                nn.Dropout(0.5)
+                nn.Dropout(0.2)
             )
 
     else:
@@ -65,7 +65,7 @@ def build_2dconv_block(indepth, outdepth, k, s, p, Drop_out = False, final=False
 
                 nn.LeakyReLU(0.2),
                 # nn.ReLU(),
-                nn.Dropout(0.5)
+                nn.Dropout(0.2)
             )
 
     else:

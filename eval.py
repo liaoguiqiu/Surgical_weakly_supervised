@@ -63,8 +63,8 @@ def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, p
     # Sum along the spatial dimensions to get frame-level predictions
     predic_frame = torch.sum(predic_mask_3D, dim=(-1, -2))
     # Sum along the frame dimension to get video-level predictions
-    predic_video_from_cam = torch.sum(predic_frame, dim=(-1))
-    predic_video_from_cam = (predic_video_from_cam > 200) * 1
+    predic_video_from_cam = torch.max(predic_frame, dim=(-1))[0]
+    predic_video_from_cam = (predic_video_from_cam > 1000) * 1
     # Calculate video-level AP from camera
     video_ap_from_cam = cal_ap_video(video_label, predic_video_from_cam)
     print("Video AP from cam:", video_ap_from_cam)
@@ -72,7 +72,7 @@ def cal_all_metrics(read_id,Output_root, label_mask, frame_label, video_label, p
     # Calculate video-level AP from model output
     video_ap = cal_ap_video(video_label, output_video_label)
     print("Video AP from model output:", video_ap)
-    predic_frame = (predic_frame > 20) * 1
+    predic_frame = (predic_frame > 100) * 1
     if output_frame_label is not None:
         predic_frame = (output_frame_label[0] > 0.5) * 1
 
