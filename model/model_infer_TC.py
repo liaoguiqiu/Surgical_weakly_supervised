@@ -40,7 +40,7 @@ def select_gpus(gpu_selection):
         device = torch.device("cpu")
     return device
 class _Model_infer(object):
-    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True,Student_be_teacher=False,gpu_selection = "all"):
+    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True,Student_be_teacher=False,gpu_selection = "all",pooling="rank"):
         if GPU_mode ==True:
             # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             device = select_gpus(gpu_selection)
@@ -64,10 +64,10 @@ class _Model_infer(object):
         sam_predictor = SamPredictor(sam)
         self.sam_model = sam_predictor.model
         if Student_be_teacher==False:
-            self.VideoNets = _VideoCNN()
+            self.VideoNets = _VideoCNN(pooling=pooling)
         else:
-            self.VideoNets =  _VideoCNN_S(Using_spatial_conv=Using_spatial_conv)
-        self.VideoNets_S = _VideoCNN_S(Using_spatial_conv=Using_spatial_conv)
+            self.VideoNets =  _VideoCNN_S(Using_spatial_conv=Using_spatial_conv,pooling=pooling)
+        self.VideoNets_S = _VideoCNN_S(Using_spatial_conv=Using_spatial_conv,pooling=pooling)
         self.input_size = 1024
         resnet18 = models.resnet18(pretrained=True)
         self.gradcam = None

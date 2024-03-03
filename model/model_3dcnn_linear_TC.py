@@ -12,7 +12,7 @@ from model import model_operator
 class _VideoCNN(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, inputC=256,base_f=256):
+    def __init__(self, inputC=256,base_f=256,pooling="rank"):
         super(_VideoCNN, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
@@ -20,6 +20,7 @@ class _VideoCNN(nn.Module):
         # 256*256 - 128*256
         # limit=1024
         # self.Random_mask_temporal =False
+        self.pooling = pooling
         Drop_out = True
         if Evaluation == True:
             Drop_out = False
@@ -141,7 +142,14 @@ class _VideoCNN(nn.Module):
         
         slice_valid = Maxpool_keepD(input)
         # final = Maxpool_keepC(slice_valid)
-        final = self.Top_rank_pooling(slice_valid,14)
+        if self.pooling == "avg":
+            Maxpool_keepC = nn.AvgPool3d((D,1,1),stride=(1,1,1))
+            final = Maxpool_keepC(slice_valid)
+        elif self.pooling == "max":
+            Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
+            final = Maxpool_keepC(slice_valid)
+        else:
+            final = self.Top_rank_pooling(slice_valid,14)
         # final = self.Threshold_pooling(slice_valid)
 
         #Note: how about add a number of object loss here ??
