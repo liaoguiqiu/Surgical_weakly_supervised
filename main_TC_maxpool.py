@@ -116,7 +116,7 @@ dataLoader = myDataloader(img_size = img_size,Display_loading_video = False,Read
 if Continue_flag == False:
     Model_infer.VideoNets.apply(weights_init)
 else:
-    pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index )
+    pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index, map_location = device)
     # model_dict = Model_infer.VideoNets.state_dict()
     if Linux_computer ==False:
         pretrained_dict = remove_module_prefix(pretrained_dict)
@@ -127,7 +127,7 @@ else:
     # 3. load the new state dict
     Model_infer.VideoNets.load_state_dict(pretrained_dict )
 
-    pretrained_dict2 = torch.load(Output_root + 'outNets_s' + loadmodel_index )
+    pretrained_dict2 = torch.load(Output_root + 'outNets_s' + loadmodel_index, map_location = device )
     # model_dict = Model_infer.resnet.state_dict()
     if Linux_computer ==False:
 
@@ -140,8 +140,9 @@ else:
     # 3. load the new state dict
     Model_infer.VideoNets_S.load_state_dict(pretrained_dict2 )
 read_id = 0
-print(Model_infer.resnet)
 print(Model_infer.VideoNets)
+print(Model_infer.VideoNets_S)
+
 
 epoch = 0
 # transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))

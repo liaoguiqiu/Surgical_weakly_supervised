@@ -341,13 +341,12 @@ def post_process_softmask2(mask ):
 def CAM_to_slice_hardlabel(cam,video_predict):
 
         bz, ch, D, H, W = cam.size()
-        cam = (cam>0.05)*cam
+        cam = (cam>0.0)*cam
         raw_masks = cam -torch.min(cam)
-        mean = torch.sum ((raw_masks>0.0)* raw_masks)/ torch.sum (raw_masks>0.0)
-        raw_masks = raw_masks /(mean+0.0000001)        
+        raw_masks = raw_masks /(torch.max(raw_masks)+0.0000001)        
         binary_mask = (raw_masks >0.1)*1.0
         binary_mask =  clear_boundary(binary_mask)
-        video_predict = video_predict>0.5
+        video_predict = video_predict>0.9
         label_valid_repeat = video_predict.reshape(bz,ch,1,1,1).repeat(1,1,D,H,W)
         binary_mask = binary_mask*label_valid_repeat
         # flatten_mask = binary_mask.view(bz,ch)

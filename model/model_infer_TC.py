@@ -279,9 +279,9 @@ class _Model_infer(object):
             
             label_valid_repeat = label.reshape(bz,ch,1,1,1).repeat(1,1,D,H,W)
             valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
-            valid_masks_repeated = valid_masks_repeated * label_valid_repeat
+            # valid_masks_repeated = valid_masks_repeated * label_valid_repeat
             predit_mask= self.cam3D_s * valid_masks_repeated
-            target_mask= self.cam3D_target  * valid_masks_repeated
+            target_mask= self.cam3D_target *label_valid_repeat * valid_masks_repeated
             # self.loss_s_pix = self.customeBCE_mask(predit_mask, self.binary_masks * target_mask)
             self.loss_s_pix = self.customeBCE_mask(predit_mask,  target_mask)
 
