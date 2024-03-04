@@ -40,7 +40,7 @@ def select_gpus(gpu_selection):
         device = torch.device("cpu")
     return device
 class _Model_infer(object):
-    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True,Student_be_teacher=False,gpu_selection = "all",pooling="rank"):
+    def __init__(self, GPU_mode =True,num_gpus=1,Enable_teacher=True,Using_spatial_conv=True,Student_be_teacher=False,gpu_selection = "all",pooling="rank",TPC=True):
         if GPU_mode ==True:
             # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             device = select_gpus(gpu_selection)
@@ -54,6 +54,7 @@ class _Model_infer(object):
         model_type = "vit_h"
         model_type = "vit_l"
         model_type = "vit_b"
+        self.TPC = TPC
         
         # model_type = "vit_t"
         # sam_checkpoint = "./MobileSAM/weights/mobile_sam.pt"
@@ -280,8 +281,12 @@ class _Model_infer(object):
             label_valid_repeat = label.reshape(bz,ch,1,1,1).repeat(1,1,D,H,W)
             valid_masks_repeated = self.slice_hard_label.repeat(1, 1, 1, H, W)
             # valid_masks_repeated = valid_masks_repeated * label_valid_repeat
-            predit_mask= self.cam3D_s * valid_masks_repeated
-            target_mask= self.cam3D_target *label_valid_repeat * valid_masks_repeated
+            if self.TPC == True:
+                predit_mask= self.cam3D_s * valid_masks_repeated
+                target_mask= self.cam3D_target *label_valid_repeat * valid_masks_repeated
+            else:
+                predit_mask= self.cam3D_s  
+                target_mask= self.cam3D_target 
             # self.loss_s_pix = self.customeBCE_mask(predit_mask, self.binary_masks * target_mask)
             self.loss_s_pix = self.customeBCE_mask(predit_mask,  target_mask)
 
