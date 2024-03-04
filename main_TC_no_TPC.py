@@ -32,7 +32,7 @@ from dataset import io
 # Visdom_flag = False
 # Display_flag = False
 # loadmodel_index = '3.pth'
-Output_root = Output_root+ "temporal consistent_maxpool/"
+Output_root = Output_root+ "temporal consistent_no_TPC/"
 io.self_check_path_create(Output_root)
 
 import pickle
