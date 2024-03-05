@@ -153,7 +153,7 @@ class _VideoCNN_S(nn.Module):
             Maxpool_keepC = nn.MaxPool3d((D,1,1),stride=(1,1,1))
             final = Maxpool_keepC(slice_valid)
         else:
-            final = self.Top_rank_pooling(slice_valid,14)
+            final = self.Top_rank_pooling(slice_valid,7)
         # final = self.Threshold_pooling(slice_valid)
 
         #Note: how about add a number of object loss here ??
