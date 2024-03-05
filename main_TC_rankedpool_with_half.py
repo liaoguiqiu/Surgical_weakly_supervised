@@ -118,8 +118,8 @@ if Continue_flag == False:
 else:
     pretrained_dict = torch.load(Output_root + 'outNets' + loadmodel_index, map_location = device)
     # model_dict = Model_infer.VideoNets.state_dict()
-    if Linux_computer ==False:
-        pretrained_dict = remove_module_prefix(pretrained_dict)
+    # if Linux_computer ==False:
+    pretrained_dict = remove_module_prefix(pretrained_dict)
     # # 1. filter out unnecessary keys
     # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
     # # 2. overwrite entries in the existing state dict
@@ -129,9 +129,9 @@ else:
 
     pretrained_dict2 = torch.load(Output_root + 'outNets_s' + loadmodel_index, map_location = device )
     # model_dict = Model_infer.resnet.state_dict()
-    if Linux_computer ==False:
+    # if Linux_computer ==False:
 
-        pretrained_dict2= remove_module_prefix(pretrained_dict2)
+    pretrained_dict2= remove_module_prefix(pretrained_dict2)
 
     # # 1. filter out unnecessary keys
     # pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
