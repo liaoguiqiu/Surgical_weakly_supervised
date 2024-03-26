@@ -23,7 +23,7 @@ Dataset_video_pkl_flow_root = working_root + "training_data/video_clips_pkl_flow
 Dataset_video_pkl_cholec = working_root + "training_data/video_clips_pkl_cholec/"
 Dataset_video_pkl_cholec = working_root + "cholec80/output_pkl/"
 if Linux_computer == True:
-      Dataset_video_pkl_cholec = working_pcaso_raid + "cholec80/output_pkl/"
+    Dataset_video_pkl_cholec = working_pcaso_raid + "cholec80/output_pkl/"
 
 Dataset_label_root =  working_root + "training_data/"
 config_root =   working_root + "config/"
