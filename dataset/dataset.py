@@ -25,6 +25,7 @@ from dataset import format_convertor
 from working_dir_root import Dataset_video_root, Dataset_label_root, Dataset_video_pkl_root,Dataset_video_pkl_flow_root,Batch_size,Random_mask
 from working_dir_root import Dataset_video_pkl_cholec,Random_Full_mask,output_folder_sam_feature,Data_aug,train_test_list_dir
 from working_dir_root import Test_on_cholec_seg8k, Dataset_video_pkl_cholec8k, output_folder_sam_feature_cholec8k
+from working_dir_root import sam_feature_OLG_dir
 
 if Test_on_cholec_seg8k == True:
    output_folder_sam_feature=  output_folder_sam_feature_cholec8k
@@ -394,7 +395,11 @@ class myDataloader(object):
                             this_flow_buff = io.read_a_pkl(Dataset_video_pkl_flow_root, clip_name)
                             self.flow_buffer = this_flow_buff
                     if self.Load_feature == True:
-                            this_features = io.read_a_pkl(output_folder_sam_feature, clip_name)
+                            if Cholec_data_flag:
+                                this_features = io.read_a_pkl(output_folder_sam_feature, clip_name)
+                            else:
+                                this_features = io.read_a_pkl(sam_feature_OLG_dir, clip_name)
+
                             self.this_features=this_features
                             this_features = this_features.permute(1,0,2,3).float()
                             

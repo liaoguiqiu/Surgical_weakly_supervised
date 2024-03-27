@@ -206,6 +206,8 @@ while (1):
         read_id=0
         if Evaluation:
             break
+        if Save_feature_OLG:
+            break
         
 
         # break

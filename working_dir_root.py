@@ -73,7 +73,7 @@ Batch_size =1
 Data_aug = False
 Random_mask = False
 Random_Full_mask = False
-Load_feature = False
+Load_feature = True
 Save_feature_OLG = False
 
 if Load_feature == True:
