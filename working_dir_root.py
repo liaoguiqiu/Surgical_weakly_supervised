@@ -43,7 +43,8 @@ if Linux_computer == True:
     Dataset_video_pkl_cholec8k =  working_pcaso_raid+ "cholecseg8k_working/output_pkl/"
     output_folder_sam_feature_cholec8k = working_pcaso_raid + "cholecseg8k_working/output_sam_features/"
     train_sam_feature_dir = working_pcaso_raid+ "cholec80/train_sam_feature/"
-    sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
+    # sam_feature_OLG_dir= working_pcaso_raid+ "cholec80/sam_feature_OLG/"
+    sam_feature_OLG_dir= working_pcaso_raid+ "sam_feature_OLG/"
 
 Fintune= False
 
