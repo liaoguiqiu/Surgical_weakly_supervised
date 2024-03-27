@@ -32,7 +32,7 @@ if Test_on_cholec_seg8k == True:
 Seperate_LR = False
 Mask_out_partial_label = False
 input_ch = 3 # input channel of each image/video
-Cholec_data_flag = True
+Cholec_data_flag = False
 categories_count = [17, 13163, 17440, 576, 1698, 4413, 11924, 10142, 866, 2992,131, 17, 181, 1026]
 
 total_samples = sum(categories_count)
@@ -56,6 +56,22 @@ categories = [
     'tip-up fenestrated grasper', #12       -181
     'vessel sealer' #13                  -1026
 ]
+category_colors = {
+    'bipolar dissector': (255, 0, 0),    # Red
+    'bipolar forceps': (0, 255, 0),      # Green
+    'cadiere forceps': (0, 0, 255),      # Blue
+    'clip applier': (255, 128, 0),       # Orange
+    'force bipolar': (128, 0, 128),     # Purple
+    'grasping retractor': (0, 255, 255), # Cyan
+    'monopolar curved scissors': (255, 128, 128), # Light Red
+    'needle driver': (128, 128, 0),     # Olive
+    'permanent cautery hook/spatula': (128, 0, 255), # Indigo
+    'prograsp forceps': (0, 128, 128),  # Teal
+    'stapler': (255, 0, 128),           # Pink
+    'suction irrigator': (128, 255, 0), # Lime
+    'tip-up fenestrated grasper': (255, 128, 0),    # Light Orange
+    'vessel sealer': (0, 128, 255)      # Light Blue
+}
 
 if Cholec_data_flag == True:
     categories = [
@@ -412,8 +428,9 @@ class myDataloader(object):
                         binary_vector_r = 0
                     # load the squess and unsquess
                     self.this_label = binary_vector
-                    self.this_raw_labels = self.this_frame_label
-                    self.all_raw_labels . append(self.this_frame_label)
+                    if Cholec_data_flag == True:
+                        self.this_raw_labels = self.this_frame_label
+                        self.all_raw_labels . append(self.this_frame_label)
                     if self.Display_loading_video == True:
                         cv2.imshow("SS First Frame R", this_video_buff[0,15, :, :].astype((np.uint8)))
                         cv2.imshow("SS First Frame G", this_video_buff[1,15, :, :].astype((np.uint8)))

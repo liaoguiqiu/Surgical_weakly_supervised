@@ -24,7 +24,7 @@ import torch.distributed as dist
 import scheduler
 from working_dir_root import GPU_mode ,Continue_flag ,Visdom_flag ,Display_flag ,loadmodel_index  ,img_size,Load_flow,Load_feature
 from working_dir_root import Max_lr, learningR,learningR_res,Save_feature_OLG,sam_feature_OLG_dir, Evaluation,Save_sam_mask,output_folder_sam_masks
-from working_dir_root import Enable_student
+from working_dir_root import Enable_student,Batch_size
 from dataset import io
 
 # GPU_mode= True
@@ -174,7 +174,7 @@ while (1):
         Model_infer.optimization(labels_GPU,Enable_student) 
 
     if  Save_feature_OLG== True:
-        this_features= Model_infer.f[0].permute(1,0,2,3).half()
+        this_features= Model_infer.f[Batch_size-1].permute(1,0,2,3).half()
         sam_pkl_file_name = dataLoader.this_file_name
         sam_pkl_file_path = os.path.join(sam_feature_OLG_dir, sam_pkl_file_name)
 

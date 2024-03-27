@@ -19,12 +19,12 @@ if GPU_mode ==True:
 
 else:
     device = torch.device("cpu")
-sam_checkpoint = SAM_pretrain_root+"sam_vit_h_4b8939.pth"
-sam_checkpoint = SAM_pretrain_root+"sam_vit_l_0b3195.pth"
+# sam_checkpoint = SAM_pretrain_root+"sam_vit_h_4b8939.pth"
+# sam_checkpoint = SAM_pretrain_root+"sam_vit_l_0b3195.pth"
 sam_checkpoint =SAM_pretrain_root+ "sam_vit_b_01ec64.pth"
 # self.inter_bz =1
-model_type = "vit_h"
-model_type = "vit_l"
+# model_type = "vit_h"
+# model_type = "vit_l"
 model_type = "vit_b"
 
 # model_type = "vit_t"
